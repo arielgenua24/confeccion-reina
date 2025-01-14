@@ -5,12 +5,14 @@ import Orders from './pages/Orders'
 import NewOrder from './pages/NewOrder'
 import BackNav from './components/navbar'
 import { FirestoreProvider } from './context/firestoreContext'
+import Product from './pages/Products'
 
 function AppRouter() {
   let router = useRoutes([
     { path: '/', element: <Home />},
     { path: '/home', element: <Home />},
     { path:'/inventory' , element: <Inventory /> },
+    { path:'/product/:id' , element: <Product /> },
     { path:'/orders' , element: <Orders /> }, 
     { path:'/new-order' , element: <NewOrder /> }, 
   ])

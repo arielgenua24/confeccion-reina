@@ -1,0 +1,63 @@
+  
+  .QR-buttonContainer {
+    margin-top: 10px;
+  }
+  
+  .QR-qrButton {
+    background-color: #f1f7ff;
+    color: #0e93ff;
+    border: 1px solid #0e93ff;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .QR-qrButton:hover {
+    background-color: #0e93ff;
+    color: white;
+  }
+  
+  .QR-modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .QR-modalContent {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+    position: relative;
+  }
+  
+  .QR-closeButton {
+    margin-top: 20px;
+    background-color: #f1f7ff;
+    color: #0e93ff;
+    border: 1px solid #0e93ff;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  
+  .QR-closeButton:hover {
+    background-color: #0e93ff;
+    color: white;
+  }
+  
+  .QR-productTitle,
+  .QR-productDetail {
+    margin: 5px 0;
+  }
+  

@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import useFirestoreContext from '../../hooks/useFirestoreContext';
 import ProductFormModal from '../../modals/ProductFormModal';
+import QRModal from '../../modals/Qrmodal';
 import './styles.css';
 
 const Inventory = () => {
   const [products, setProducts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+  const [QRcode, setQRcode] = useState('');
   const [newProduct, setNewProduct] = useState({
     name: '',
     price: '',
@@ -52,7 +55,20 @@ const Inventory = () => {
                 <p className="productDetail">Stock: {product.stock}</p>
                 <p className="productDetail">Talle: {product.size}</p>
                 <p className="productDetail">Color: {product.color}</p>
+
+                <div className="QR-buttonContainer">
+                  <button className="QR-qrButton" onClick={() => {
+                    setQRcode(product.productCode)
+                    setIsQRModalOpen(true)
+                    }}>
+                    Obtener QR
+                  </button>
+                </div>
+
+
               </div>
+
+
             ))
           )}
         </div>
@@ -68,6 +84,15 @@ const Inventory = () => {
       {isModalOpen && (
         <ProductFormModal handleSubmit={handleSubmit} newProduct={newProduct} setNewProduct={setNewProduct} setIsModalOpen={setIsModalOpen}/>
       )}
+
+      {isQRModalOpen && (
+        <QRModal 
+          setIsQRModalOpen={setIsQRModalOpen}
+          QRcode={QRcode}
+
+        />
+      )}
+
     </div>
   );
 };
