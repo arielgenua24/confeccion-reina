@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from "react-router-dom";
 import useFirestoreContext from '../../hooks/useFirestoreContext';
 import ProductFormModal from '../../modals/ProductFormModal';
 import QRModal from '../../modals/Qrmodal';
@@ -17,6 +18,9 @@ const Inventory = () => {
     stock: ''
   });
   
+  const navigate = useNavigate();
+
+
   const { getProducts, addProduct } = useFirestoreContext();
 
   useEffect(() => {
@@ -64,6 +68,14 @@ const Inventory = () => {
                     Obtener QR
                   </button>
                 </div>
+
+
+                <button
+                    className="navigateButton"
+                    onClick={() => navigate(`/product/${product.id}`)}
+                  >
+                    EDITAR
+                  </button>
 
 
               </div>

@@ -71,8 +71,9 @@ const useFirestore = () => {
   // Obtener un producto por ID
   const getProduct = async (productId) => {
     try {
-      const productRef = doc(db, "productss", productId);
+      const productRef = doc(db, "products", productId);
       const productSnap = await getDoc(productRef);
+      console.log(productSnap);
       if (productSnap.exists()) {
         return {productRef, id: productSnap.id, ...productSnap.data() };
       } else {
