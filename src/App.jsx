@@ -4,7 +4,7 @@ import Inventory from './pages/Inventory'
 import Orders from './pages/Orders'
 import NewOrder from './pages/NewOrder'
 import BackNav from './components/navbar'
-
+import { FirestoreProvider } from './context/firestoreContext'
 
 function AppRouter() {
   let router = useRoutes([
@@ -25,7 +25,7 @@ function Home() {
           <button className="pages-btn">Nuevo Pedido</button>
         </Link>
         <Link to="/orders">
-          <button className="pages-btn">Pedidos</button>
+          <button className="pages-btn">orders</button>
         </Link>
       </div>
       <Link to="/inventory">
@@ -38,8 +38,10 @@ function Home() {
 export default function App() {
   return (
     <HashRouter>
-      <BackNav />
-      <AppRouter />
+      <FirestoreProvider >
+        <BackNav />
+        <AppRouter />
+      </ FirestoreProvider>
     </HashRouter>
   );
 }
