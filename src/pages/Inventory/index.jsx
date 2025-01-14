@@ -47,6 +47,7 @@ const Inventory = () => {
             products.map(product => (
               <div key={product.id} className="productCard">
                 <h3 className="productTitle">{product.name}</h3>
+                <p className="productDetail">{product.productCode}</p>
                 <p className="productDetail">Precio: ${product.price}</p>
                 <p className="productDetail">Stock: {product.stock}</p>
                 <p className="productDetail">Talle: {product.size}</p>

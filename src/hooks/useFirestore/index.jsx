@@ -27,6 +27,7 @@ const useFirestore = () => {
     try {
         //obtenemos el codigo de el producto
     const productCode = await incrementProductCode();  
+    console.log(productCode);
       const docRef = await addDoc(collection(db, "products"), {
         productCode,
         name,
@@ -136,6 +137,7 @@ const useFirestore = () => {
     try {
       const codeRef = doc(db, "counters", "productCode");
       const codeSnap = await getDoc(codeRef);
+      console.log(codeSnap);
       if (codeSnap.exists()) {
         const currentCode = codeSnap.data().value;
         await updateDoc(codeRef, {
@@ -144,7 +146,7 @@ const useFirestore = () => {
         return `#${String(currentCode).padStart(3, "0")}`;
       } else {
         // Si no existe el documento, crearlo
-        await setDoc(codeRef, { value: 1 });
+        await setDoc(codeRef, { value: 2 });
         return "#001";
       }
     } catch (error) {
