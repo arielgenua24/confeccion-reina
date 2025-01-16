@@ -1,10 +1,9 @@
 /* eslint-disable react/prop-types */
-import React, { useState } from 'react';
 import './styles.css';
 import { QRCodeCanvas } from 'qrcode.react';
 
-function QRmodal({QRcode, setIsQRModalOpen}) {
-    console.log(QRcode);
+function QRmodal({QRcode, setQRcode}) {
+    console.log(QRcode); //se repite constantemente
     return (
         <div className="QR-modalOverlay">
           <div className="QR-modalContent">
@@ -14,7 +13,7 @@ function QRmodal({QRcode, setIsQRModalOpen}) {
     code: QRCODE,
   })} */}
             <QRCodeCanvas value={QRcode} size={200} />
-            <button className="QR-closeButton" onClick={() => setIsQRModalOpen(false)}>
+            <button className="QR-closeButton" onClick={() => setQRcode(null)}>
               Cerrar
             </button>
           </div>

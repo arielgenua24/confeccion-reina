@@ -9,7 +9,7 @@ const Inventory = () => {
   const [products, setProducts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
-  const [QRcode, setQRcode] = useState('');
+  const [QRcode, setQRcode] = useState(null);
   const [newProduct, setNewProduct] = useState({
     name: '',
     price: '',
@@ -29,7 +29,7 @@ const Inventory = () => {
       setProducts(fetchedProducts);
     };
     loadProducts();
-  }, [getProducts]);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -63,7 +63,6 @@ const Inventory = () => {
                 <div className="QR-buttonContainer">
                   <button className="QR-qrButton" onClick={() => {
                     setQRcode(product.productCode)
-                    setIsQRModalOpen(true)
                     }}>
                     Obtener QR
                   </button>
@@ -97,10 +96,10 @@ const Inventory = () => {
         <ProductFormModal handleSubmit={handleSubmit} newProduct={newProduct} setNewProduct={setNewProduct} setIsModalOpen={setIsModalOpen}/>
       )}
 
-      {isQRModalOpen && (
+      {QRcode && (
         <QRModal 
-          setIsQRModalOpen={setIsQRModalOpen}
           QRcode={QRcode}
+          setQRcode={setQRcode}
 
         />
       )}
