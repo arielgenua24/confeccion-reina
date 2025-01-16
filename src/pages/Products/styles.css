@@ -1,0 +1,25 @@
+.product-card {
+    display: flex;
+    flex-direction: column;
+    height: 80vh;
+    justify-content: space-around;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-around;
+    margin: 10px;
+}
+
+.submit-button {
+    background-color: #0071e3;
+    border: 1px solid;
+    padding: 15px;
+    border-radius: 12px;
+    color: #fff;
+    bottom: 0;
+    width: 100%; /* Ensure the button spans the full width */
+    left: 0; /* Align the button to the left */
+}
