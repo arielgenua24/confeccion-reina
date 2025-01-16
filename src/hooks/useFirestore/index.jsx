@@ -57,11 +57,11 @@ const useFirestore = () => {
     }
   };
 
-  const updateProductQuantity = async (productId, quantity) => {
+  const updateProduct = async (productId, values) => {
     const { productRef } = await getProduct(productId);
 
     return updateDoc(productRef, {
-      stock: quantity,
+     ...values
     });
   }
 
@@ -187,7 +187,7 @@ const useFirestore = () => {
     getProduct,
     incrementProductCode,
     incrementOrdersCode,
-    updateProductQuantity,
+    updateProduct,
     products
   };
 };
