@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import useFirestoreContext from '../../hooks/useFirestoreContext';
+
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+
+
 import './styles.css';
 
 function Product() {
@@ -9,9 +14,10 @@ function Product() {
 
   const [product, setProduct] = useState({});
   const [changes, setChanges] = useState(null);
+  const [newSavedProduct, setNewSavedProduct] = useState(null);
 
   //fetching the product
-  const { getProduct } = useFirestoreContext();
+  const { getProduct, updateProduct } = useFirestoreContext();
 
   const [name, setName] = useState(product.name);
     const [price, setPrice] = useState(product.price);
@@ -33,7 +39,7 @@ function Product() {
         setColor(fetchedProduct.color);
       };
       loadProducts();
-    }, [getProduct, id]);
+    }, [getProduct, id, newSavedProduct]);
 
     const handleInputChange = (setter) => (e) => {
       setter(e.target.value); // Actualiza el valor del campo
@@ -41,7 +47,11 @@ function Product() {
     };
   
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
+      const currentDate = new Date();
+      const formattedDate = format(currentDate, 'yyyy-MM-dd HH:mm:ss', { locale: es });
+
+
       e.preventDefault(); // Prevents the page from reloading
       const updatedProduct = {
         id,
@@ -50,10 +60,18 @@ function Product() {
         stock,
         size,
         color,
+        updatedAt: formattedDate,
       };
-      console.log("Product updated:", updatedProduct);
-      // Add code here to save the updated product (e.g., send it to a backend)
-      navigate('/inventory')
+      try {
+        // Esperar a que se complete la actualización
+        await updateProduct(updatedProduct.id, updatedProduct);
+        
+        // Una vez completada la actualización, navegar al inventario
+        navigate('/inventory');
+      } catch (error) {
+        console.error("Error al actualizar el producto:", error);
+        // Aquí puedes manejar el error como prefieras (mostrar un mensaje, etc.)
+      }
     };
 
   return (

@@ -1,4 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+
 
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
@@ -21,6 +24,8 @@ import {
 const useFirestore = () => {
   const [products, setProducts] = useState([]);
 
+  const currentDate = new Date();
+  const formattedDate = format(currentDate, 'yyyy-MM-dd HH:mm:ss', { locale: es });
 
   //OKAY, producto agregado
   const addProduct = async (name, price, size, color, stock) => {
@@ -35,6 +40,7 @@ const useFirestore = () => {
         size,
         color,
         stock,
+        updatedAt: formattedDate,
       });
       console.log("Producto agregado con ID: ", docRef.id);
       const productId = docRef.id;
@@ -57,19 +63,9 @@ const useFirestore = () => {
     }
   };
 
-  const updateProduct = async (productId, values) => {
-    const { productRef } = await getProduct(productId);
-
-    return updateDoc(productRef, {
-     ...values
-    });
-  }
-
-  
-
-
   // Obtener un producto por ID
   const getProduct = async (productId) => {
+    console.log(productId);
     try {
       const productRef = doc(db, "products", productId);
       const productSnap = await getDoc(productRef);
@@ -84,6 +80,22 @@ const useFirestore = () => {
       throw error;
     }
   };
+
+
+  const updateProduct = async (productId, values) => {
+    const { productRef } = await getProduct(productId);
+    console.log(productRef);
+
+    return updateDoc(productRef, {
+     ...values,
+    updatedAt: formattedDate,
+    });
+  }
+
+  
+
+
+  
 
 
 //Ejecutaremos esta funcion una vez el usuario llego a la instacia final de la orden
