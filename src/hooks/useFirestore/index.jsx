@@ -17,7 +17,8 @@ import {
   getDocs,
   increment,
   updateDoc,
-  setDoc
+  setDoc,
+  deleteDoc
 } from "firebase/firestore";
 
 
@@ -92,6 +93,16 @@ const useFirestore = () => {
     });
   }
 
+  const deleteProduct = async (productId) => {
+    try {
+      const { productRef } = await getProduct(productId);
+      await deleteDoc(productRef);
+      return true; // Para indicar que la eliminación fue exitosa
+    } catch (error) {
+      console.error("Error al eliminar el producto:", error);
+      throw error; // Propaga el error para manejarlo en el componente
+    }
+  };
   
 
 
@@ -197,6 +208,7 @@ const useFirestore = () => {
     addProduct,
     getProducts,
     getProduct,
+    deleteProduct,
     incrementProductCode,
     incrementOrdersCode,
     updateProduct,

@@ -17,6 +17,7 @@ function FirestoreProvider({children}) {
         incrementProductCode,
         incrementOrdersCode,
         updateProduct,
+        deleteProduct,
         products
         } = useFirestore();
 
@@ -33,6 +34,7 @@ function FirestoreProvider({children}) {
                 incrementProductCode,
                 incrementOrdersCode,
                 updateProduct,
+                deleteProduct,
                 products
                 }}>
                 {children}

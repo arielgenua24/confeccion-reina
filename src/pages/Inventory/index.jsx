@@ -8,7 +8,7 @@ import './styles.css';
 const Inventory = () => {
   const [products, setProducts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [QRcode, setQRcode] = useState(null);
   const [newProduct, setNewProduct] = useState({
     name: '',
@@ -19,9 +19,7 @@ const Inventory = () => {
   });
   
   const navigate = useNavigate();
-
-
-  const { getProducts, addProduct } = useFirestoreContext();
+  const { getProducts, addProduct, deleteProduct } = useFirestoreContext();
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -41,6 +39,50 @@ const Inventory = () => {
     setNewProduct({ name: '', price: '', size: '', color: '', stock: '' });
   };
 
+
+  const modalOverlayStyles = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000
+  };
+  
+  const modalContentStyles = {
+    backgroundColor: 'white',
+    padding: '24px',
+    borderRadius: '8px',
+    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+    textAlign: 'center'
+  };
+  const spinnerStyles = {
+    width: '32px',
+    height: '32px',
+    margin: '16px auto 0',
+    border: '4px solid #f3f3f3',
+    borderTop: '4px solid #3498db',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite'
+  };
+  
+  const handleDelete = async (productId) => {
+    if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+      try {
+        setIsLoading(true);
+        await deleteProduct(productId);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error al eliminar el producto:", error);
+        setIsLoading(false);
+      }
+    }
+  };
+
   return (
     <div className="container">
       <h1 className="TITLE">CATÁLOGO</h1>
@@ -53,6 +95,31 @@ const Inventory = () => {
           ) : (
             products.map(product => (
               <div key={product.id} className="productCard">
+
+              <div className='deleteButtonContainer'>
+              <button
+                  className="deleteButton"
+                  style={{backgroundColor: 'red', color: 'white'}}
+                  onClick={async () => {
+                    if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+                      try {
+                        await handleDelete(product.id);
+                        // Opcional: mostrar algún mensaje de éxito
+                        window.location.reload(); // O usar alguna función para actualizar la lista
+                      } catch (error) {
+                        console.error("Error al eliminar el producto:", error);
+                        // Opcional: mostrar mensaje de error
+                      }
+                    }
+                  }}
+                >
+                  ELIMINAR
+                </button>
+              </div>
+               
+
+
+
                 <h3 className="productTitle">{product.name}</h3>
                 <p className="productDetail">{product.productCode}</p>
                 <p className="productDetail">Precio: ${product.price}</p>
@@ -67,6 +134,7 @@ const Inventory = () => {
                     Obtener QR
                   </button>
                 </div>
+
 
 
                 <button
@@ -103,6 +171,14 @@ const Inventory = () => {
 
         />
       )}
+      {isLoading && (
+      <div style={modalOverlayStyles}>
+        <div style={modalContentStyles}>
+          <p style={{ fontSize: '18px', color: '#333' }}>Aguarde un momento...</p>
+          <div style={spinnerStyles}></div>
+        </div>
+      </div>
+    )}
 
     </div>
   );

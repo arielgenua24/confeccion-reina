@@ -8,7 +8,7 @@ function BackNav() {
 
     console.log(location.pathname)
     
-    if(location.pathname !== '/') {
+    if(location.pathname !== '/' && location.pathname !== '/home') {
         return (
             <nav style={{
               height: '44px',
@@ -18,7 +18,7 @@ function BackNav() {
               padding: '0 16px',
               borderBottom: '1px solid #e0e0e0' }}>
               <button 
-                onClick={() => navigate(-1)}
+                onClick={() => navigate('/home')}
                 style={{
                   background: 'none',
                   border: 'none',
