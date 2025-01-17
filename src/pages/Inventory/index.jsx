@@ -103,28 +103,25 @@ const Inventory = () => {
               <div key={product.id} className="productCard">
 
               <div className='deleteButtonContainer'>
-              <button
-                  className="deleteButton"
-                  style={{backgroundColor: 'red', color: 'white'}}
-                  onClick={async () => {
-                    if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
-                      try {
-                        await handleDelete(product.id);
-                        // Opcional: mostrar algún mensaje de éxito
-                        window.location.reload(); // O usar alguna función para actualizar la lista
-                      } catch (error) {
-                        console.error("Error al eliminar el producto:", error);
-                        // Opcional: mostrar mensaje de error
+                <button
+                    className="deleteButton"
+                    style={{backgroundColor: 'red', color: 'white'}}
+                    onClick={async () => {
+                      if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+                        try {
+                          await handleDelete(product.id);
+                          // Opcional: mostrar algún mensaje de éxito
+                          window.location.reload(); // O usar alguna función para actualizar la lista
+                        } catch (error) {
+                          console.error("Error al eliminar el producto:", error);
+                          // Opcional: mostrar mensaje de error
+                        }
                       }
-                    }
-                  }}
-                >
-                  ELIMINAR
+                    }}
+                  >
+                    ELIMINAR
                 </button>
               </div>
-               
-
-
 
                 <h3 className="productTitle">{product.name}</h3>
                 <p className="productDetail">{product.productCode}</p>
@@ -135,7 +132,7 @@ const Inventory = () => {
 
                 <div className="QR-buttonContainer">
                   <button className="QR-qrButton" onClick={() => {
-                    setQRcode(product.productCode)
+                    setQRcode(product)
                     }}>
                     Obtener QR
                   </button>
