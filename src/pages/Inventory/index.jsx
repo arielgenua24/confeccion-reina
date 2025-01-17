@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import useFirestoreContext from '../../hooks/useFirestoreContext';
 import ProductFormModal from '../../modals/ProductFormModal';
 import QRModal from '../../modals/Qrmodal';
+
+
 import './styles.css';
 
 const Inventory = () => {
@@ -86,6 +88,10 @@ const Inventory = () => {
   return (
     <div className="container">
       <h1 className="TITLE">CATÁLOGO</h1>
+
+      <button onClick={() => {
+        navigate('/qrsearch');
+      }}> BUSCAR POR QR</button>
       
       <section>
         <h2 className="subtitle">TODO TU CATÁLOGO</h2>

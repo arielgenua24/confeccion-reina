@@ -4,6 +4,7 @@ import Inventory from './pages/Inventory'
 import Orders from './pages/Orders'
 import NewOrder from './pages/NewOrder'
 import BackNav from './components/navbar'
+import QrSearchHandler from './components/QrSearchHandler'
 import { FirestoreProvider } from './context/firestoreContext'
 import Product from './pages/Products'
 
@@ -15,6 +16,7 @@ function AppRouter() {
     { path:'/product/:id' , element: <Product /> },
     { path:'/orders' , element: <Orders /> }, 
     { path:'/new-order' , element: <NewOrder /> }, 
+    { path:'/qrsearch' , element: <QrSearchHandler /> }, 
   ])
   return router;
 }
