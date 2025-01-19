@@ -14,6 +14,7 @@ function SelectProductAmount({ onClose }) {
   const [stock, setStock] = useState(0);
   const [size, setSize] = useState('');
   const [color, setColor] = useState('');
+  const [code, setCode] = useState('');
 
   const { getProduct } = useFirestoreContext();
 
@@ -26,6 +27,7 @@ function SelectProductAmount({ onClose }) {
       setStock(fetchedProduct.stock);
       setSize(fetchedProduct.size);
       setColor(fetchedProduct.color);
+      setCode(fetchedProduct.productCode);
     };
     loadProducts();
   }, [getProduct, id]);
@@ -42,7 +44,7 @@ function SelectProductAmount({ onClose }) {
   return (
     <div className="productAmountContainer">
       <h1 className="productAmountContainer-name">{name}</h1>
-      <h2 className="productAmountContainer-code">Código: {id}</h2>
+      <h2 className="productAmountContainer-code">Código: {code}</h2>
 
       <div className="productAmountContainer-details-grid">
         <span className="productAmountContainer-detail-item">Precio: ${price}</span>
