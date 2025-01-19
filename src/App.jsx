@@ -4,9 +4,9 @@ import Inventory from './pages/Inventory'
 import Orders from './pages/Orders'
 import NewOrder from './pages/NewOrder'
 import BackNav from './components/navbar'
-import QrSearchHandler from './components/QrSearchHandler'
 import SelectProducts from './pages/Select-products'
 import SelectProductAmount from './modals/SelectProductAmount'
+import QrSearchHandler from './components/QrSearchHandler'
 
 import { FirestoreProvider } from './context/firestoreContext'
 import { OrderProvider } from './context/OrderContext'
@@ -22,8 +22,8 @@ function AppRouter() {
     { path:'/orders' , element: <Orders /> }, 
     { path:'/new-order' , element: <NewOrder /> }, 
     { path:'/Select-products' , element: <SelectProducts /> }, 
-    { path:'/select-product-amount/:id' , element: <SelectProductAmount /> }, 
-
+    { path:'/select-product-amount/:id' , element: <SelectProductAmount /> },
+    { path:'/qrsearch' , element: <QrSearchHandler /> }, 
   ])
   return router;
 }

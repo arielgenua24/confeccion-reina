@@ -3,7 +3,7 @@ import './styles.css';
 import { QRCodeCanvas } from 'qrcode.react';
 
 function QRmodal({QRcode, setQRcode}) {
-    console.log(QRcode.productCode); //se repite constantemente
+    console.log(QRcode.productCode);
     return (
         <div className="QR-modalOverlay">
           <div className="QR-modalContent">

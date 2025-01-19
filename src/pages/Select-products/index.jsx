@@ -4,28 +4,56 @@ import useFirestoreContext from "../../hooks/useFirestoreContext";
 
 function SelectProducts() {
       const [products, setProducts] = useState([]);
+      const [isLoading, setIsLoading] = useState(false);
+
       const navigate = useNavigate();
       const { getProducts, } = useFirestoreContext();
 
        useEffect(() => {
           const loadProducts = async () => {
+            setIsLoading(true);
             const fetchedProducts = await getProducts();
             setProducts(fetchedProducts);
+            setIsLoading(false);
           };
           loadProducts();
         }, []);
 
-    
+
+        const modalOverlayStyles = {
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        };
+        const modalContentStyles = {
+          backgroundColor: 'white',
+          padding: '24px',
+          borderRadius: '8px',
+          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+          textAlign: 'center'
+        };
+        const spinnerStyles = {
+          width: '32px',
+          height: '32px',
+          margin: '16px auto 0',
+          border: '4px solid #f3f3f3',
+          borderTop: '4px solid #3498db',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        };
 
 
     return (
         <div className="container">
-          <h1 className="TITLE">ELIJA LOS PRODUCTOS</h1>
+          <h1 className="TITLE">AGREGUE LOS PRODUCTOS AL CARRITO</h1>
     
-         {/**El problema de este QR search es que si yo voy desde select-products
-          * va a llevarme a buscar con el QR y luego a editar un producto, y lo que yo quiero
-          * es buscar con el qr para ahora AGREGAR un producto, debo corregir esta logica
-          */}
           <button onClick={() => {
             navigate('/qrsearch?redirect=select-product');
           }}> BUSCAR POR QR</button>
@@ -39,26 +67,6 @@ function SelectProducts() {
                 products.map(product => (
                   <div key={product.id} className="productCard">
     
-                  <div className='deleteButtonContainer'>
-                    <button
-                        className="deleteButton"
-                        style={{backgroundColor: 'red', color: 'white'}}
-                        onClick={async () => {
-                          if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
-                            try {
-                              await handleDelete(product.id);
-                              // Opcional: mostrar algún mensaje de éxito
-                              window.location.reload(); // O usar alguna función para actualizar la lista
-                            } catch (error) {
-                              console.error("Error al eliminar el producto:", error);
-                              // Opcional: mostrar mensaje de error
-                            }
-                          }
-                        }}
-                      >
-                        ELIMINAR
-                    </button>
-                  </div>
     
                     <h3 className="productTitle">{product.name}</h3>
                     <p className="productDetail">{product.productCode}</p>
@@ -67,21 +75,11 @@ function SelectProducts() {
                     <p className="productDetail">Talle: {product.size}</p>
                     <p className="productDetail">Color: {product.color}</p>
     
-                    <div className="QR-buttonContainer">
-                      <button className="QR-qrButton" onClick={() => {
-                        setQRcode(product)
-                        }}>
-                        Obtener QR
-                      </button>
-                    </div>
-    
-    
-    
                     <button
-                        className="navigateButton"
-                        onClick={() => navigate(`/product/${product.id}`)}
+                        className="add-to-cart-button"
+                        onClick={() => navigate(`/select-product-amount/${product.id}`)}
                       >
-                        EDITAR
+                        AGREGAR AL CARRITO
                       </button>
     
     
@@ -93,24 +91,6 @@ function SelectProducts() {
             </div>
           </section>
     
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="addButton"
-          >
-            + Agregar Producto
-          </button>
-    
-          {isModalOpen && (
-            <ProductFormModal handleSubmit={handleSubmit} newProduct={newProduct} setNewProduct={setNewProduct} setIsModalOpen={setIsModalOpen}/>
-          )}
-    
-          {QRcode && (
-            <QRModal 
-              QRcode={QRcode}
-              setQRcode={setQRcode}
-    
-            />
-          )}
           {isLoading && (
           <div style={modalOverlayStyles}>
             <div style={modalContentStyles}>
