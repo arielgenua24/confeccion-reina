@@ -5,7 +5,12 @@ import Orders from './pages/Orders'
 import NewOrder from './pages/NewOrder'
 import BackNav from './components/navbar'
 import QrSearchHandler from './components/QrSearchHandler'
+import SelectProducts from './pages/Select-products'
+import SelectProductAmount from './modals/SelectProductAmount'
+
 import { FirestoreProvider } from './context/firestoreContext'
+import { OrderProvider } from './context/OrderContext'
+
 import Product from './pages/Products'
 
 function AppRouter() {
@@ -16,7 +21,9 @@ function AppRouter() {
     { path:'/product/:id' , element: <Product /> },
     { path:'/orders' , element: <Orders /> }, 
     { path:'/new-order' , element: <NewOrder /> }, 
-    { path:'/qrsearch' , element: <QrSearchHandler /> }, 
+    { path:'/Select-products' , element: <SelectProducts /> }, 
+    { path:'/select-product-amount/:id' , element: <SelectProductAmount /> }, 
+
   ])
   return router;
 }
@@ -43,8 +50,10 @@ export default function App() {
   return (
     <HashRouter>
       <FirestoreProvider >
-        <BackNav />
-        <AppRouter />
+        <OrderProvider >
+          <BackNav />
+          <AppRouter />
+        </OrderProvider>
       </ FirestoreProvider>
     </HashRouter>
   );

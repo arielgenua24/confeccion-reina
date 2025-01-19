@@ -1,0 +1,88 @@
+import  { createContext, useState} from 'react';
+
+const OrderContext = createContext();
+
+// eslint-disable-next-line react/prop-types
+const OrderProvider = ({ children }) => {
+
+  const [cart, setCart] = useState(() => {
+    const savedCart = localStorage.getItem('cart');
+    return savedCart ? JSON.parse(savedCart) : [];
+  });
+
+  function findItem(item) {
+    const foundIndex = cart.findIndex((cartItem) => {
+      //enviar objeto literal simple
+      return cartItem?.id === item?.id
+    });
+    if (foundIndex !== -1) {
+      console.log(item)
+      item = cart[foundIndex]
+      return { item, index: foundIndex };
+    }
+    return null;
+  }
+
+
+    function addItem(item, quantity) {
+      if (!findItem(item)) {
+        console.log('añadiendo items al carrito en el localStorage')
+        console.log(item)
+        setCart((prevState) => [...prevState, {item, quantity }]); //asi se vera el array
+      } else {
+        console.log('el jean ya se encuentra agregado')
+      }
+    }
+
+    function updateQuantity(item, totalQuantity) {
+      console.log('ejecutando la funcion updateQuantity')
+      //console.log(item, newQuantity) //hasta aca yo se que me llego el item, y la cantidad
+  
+      const foundItem = findItem(item);
+      if (foundItem) {
+        const newCart = [...cart];
+        const updatedItem = {
+          ...item,  // Incrementa la cantidad
+          totalQuantity,
+          totalPrice: totalQuantity*(item.price)
+        };
+        
+        newCart[foundItem.index] = updatedItem; //esto funciona, pero primero se inicializan y luego se hace el console.log
+        setCart(newCart); 
+        console.log(newCart)
+        console.log(cart)
+  
+  
+        localStorage.setItem('cart', JSON.stringify(newCart))
+        console.log('primero me imprimo yo, newCart sin actualizar')
+        console.log(newCart)
+      }
+    }
+
+    function deleteItem(item) {
+      const foundItem = findItem(item);
+      if(foundItem) {
+        console.log('delete item', item)
+        const newCart = [...cart];
+        newCart.splice(foundItem.index, 1)
+        localStorage.setItem('cart', JSON.stringify(newCart))
+        setCart(newCart); 
+      }
+    }
+
+
+    const [order, setOrder] = useState({
+      customerName: '',
+      phone: '',
+      address: '',
+      products: cart,
+    });
+
+  return (
+    <OrderContext.Provider value={{ order, setOrder, addItem, updateQuantity, deleteItem, findItem }}>
+      {children}
+    </OrderContext.Provider>
+  );
+};
+
+export { OrderContext, OrderProvider };

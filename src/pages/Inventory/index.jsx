@@ -40,7 +40,18 @@ const Inventory = () => {
     //reset newProduct state
     setNewProduct({ name: '', price: '', size: '', color: '', stock: '' });
   };
-
+  const handleDelete = async (productId) => {
+    if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+      try {
+        setIsLoading(true);
+        await deleteProduct(productId);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error al eliminar el producto:", error);
+        setIsLoading(false);
+      }
+    }
+  };
 
   const modalOverlayStyles = {
     position: 'fixed',
@@ -54,7 +65,6 @@ const Inventory = () => {
     justifyContent: 'center',
     zIndex: 1000
   };
-  
   const modalContentStyles = {
     backgroundColor: 'white',
     padding: '24px',
@@ -72,25 +82,13 @@ const Inventory = () => {
     animation: 'spin 1s linear infinite'
   };
   
-  const handleDelete = async (productId) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
-      try {
-        setIsLoading(true);
-        await deleteProduct(productId);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error al eliminar el producto:", error);
-        setIsLoading(false);
-      }
-    }
-  };
 
   return (
     <div className="container">
       <h1 className="TITLE">CATÁLOGO</h1>
 
       <button onClick={() => {
-        navigate('/qrsearch');
+        navigate('/qrsearch?redirect=product_data');
       }}> BUSCAR POR QR</button>
       
       <section>
