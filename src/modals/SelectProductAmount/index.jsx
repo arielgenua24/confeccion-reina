@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import useFirestoreContext from '../../hooks/useFirestoreContext';
+import { useOrder } from '../../hooks/useOrder';
 import './styles.css';
 
 function SelectProductAmount({ onClose }) {
@@ -17,6 +18,8 @@ function SelectProductAmount({ onClose }) {
   const [code, setCode] = useState('');
 
   const { getProduct } = useFirestoreContext();
+  const {order, setOrder, addItem, updateQuantity, deleteItem, findItem} = useOrder();
+
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -38,7 +41,9 @@ function SelectProductAmount({ onClose }) {
 
   const handleAddToCart = () => {
     console.log('Adding product to cart:', product, 'with amount:', amount);
-    // onClose();
+    addItem(product, amount);
+    // NO OLVIDES QUE TENES QUE RESTAR EN LA BASE DE DATOS LOS PRODUCTOS AGREGADOS AL CARRITO
+    navigate('/select-products');
   };
 
   return (

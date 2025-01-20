@@ -6,14 +6,18 @@ const OrderContext = createContext();
 const OrderProvider = ({ children }) => {
 
   const [cart, setCart] = useState(() => {
-    const savedCart = localStorage.getItem('cart');
+    const savedCart = localStorage.getItem('cart-r-v1');
     return savedCart ? JSON.parse(savedCart) : [];
   });
 
   function findItem(item) {
     const foundIndex = cart.findIndex((cartItem) => {
-      //enviar objeto literal simple
-      return cartItem?.id === item?.id
+      console.group('findItem')
+        console.log(cartItem.item.id)
+        console.log(item.id)
+      console.groupEnd()
+      return cartItem?.item.id === item?.id
+      
     });
     if (foundIndex !== -1) {
       console.log(item)
@@ -29,8 +33,9 @@ const OrderProvider = ({ children }) => {
         console.log('añadiendo items al carrito en el localStorage')
         console.log(item)
         setCart((prevState) => [...prevState, {item, quantity }]); //asi se vera el array
+        localStorage.setItem('cart-r-v1', JSON.stringify([...cart, {item, quantity}]))
       } else {
-        console.log('el jean ya se encuentra agregado')
+        console.log('el producto ya se encuentra agregado')
       }
     }
 
@@ -53,7 +58,7 @@ const OrderProvider = ({ children }) => {
         console.log(cart)
   
   
-        localStorage.setItem('cart', JSON.stringify(newCart))
+        localStorage.setItem('cart-r-v1', JSON.stringify(newCart))
         console.log('primero me imprimo yo, newCart sin actualizar')
         console.log(newCart)
       }
@@ -65,7 +70,7 @@ const OrderProvider = ({ children }) => {
         console.log('delete item', item)
         const newCart = [...cart];
         newCart.splice(foundItem.index, 1)
-        localStorage.setItem('cart', JSON.stringify(newCart))
+        localStorage.setItem('cart-r-v1', JSON.stringify(newCart))
         setCart(newCart); 
       }
     }
