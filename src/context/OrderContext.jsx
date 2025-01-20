@@ -54,7 +54,7 @@ const OrderProvider = ({ children }) => {
           quantity,
         };
         newCart[foundItem.index] = updatedItem; //esto funciona, pero primero se inicializan y luego se hace el console.log
-        // setCart(newCart); 
+        setCart(newCart); 
         console.log(newCart)
         console.log(cart)
   
@@ -64,6 +64,11 @@ const OrderProvider = ({ children }) => {
         console.log('primero me imprimo yo, newCart sin actualizar')
         console.log(newCart)
       }
+    }
+
+    function finditems() {
+      let parsedItems = JSON.parse(localStorage.getItem('cart-r-v1.1'))
+      return parsedItems
     }
 
     function deleteItem(item) {
@@ -86,7 +91,7 @@ const OrderProvider = ({ children }) => {
     });
 
   return (
-    <OrderContext.Provider value={{ order, setOrder, addItem, updateQuantity, deleteItem, findItem }}>
+    <OrderContext.Provider value={{ order, setOrder, addItem, updateQuantity, deleteItem, findItem, finditems, cart }}>
       {children}
     </OrderContext.Provider>
   );
