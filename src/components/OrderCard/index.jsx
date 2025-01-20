@@ -116,7 +116,7 @@ const OrderCard = ({ product }) => {
       Eliminar del pedido
     </button>
 
-    <DeleteConfirmationModal show={showModal} onClose={() => setShowModal(false)} />
+    {/*<DeleteConfirmationModal show={showModal} onClose={() => setShowModal(false)} /> */}
 
     </div>
   );
