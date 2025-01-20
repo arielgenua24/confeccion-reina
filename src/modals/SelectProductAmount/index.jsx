@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import useFirestoreContext from '../../hooks/useFirestoreContext';
 import { useOrder } from '../../hooks/useOrder';
 import './styles.css';
@@ -7,6 +7,9 @@ import './styles.css';
 function SelectProductAmount({ onClose }) {
   const { id } = useParams();
   const navigate = useNavigate();
+
+ // Accede a los parámetros de búsqueda
+ const [searchParams] = useSearchParams();
 
   const [product, setProduct] = useState({});
   const [amount, setAmount] = useState(1);
@@ -21,6 +24,10 @@ function SelectProductAmount({ onClose }) {
   const {order, setOrder, addItem, updateQuantity, deleteItem, findItem} = useOrder();
 
 
+  const isInCart = searchParams.get('in-cart') === 'true';
+  console.log('isInCart:', isInCart);
+
+
   useEffect(() => {
     const loadProducts = async () => {
       const fetchedProduct = await getProduct(id);
@@ -33,6 +40,7 @@ function SelectProductAmount({ onClose }) {
       setCode(fetchedProduct.productCode);
     };
     loadProducts();
+
   }, [getProduct, id]);
 
   const handleAmountChange = (e) => {
@@ -40,6 +48,16 @@ function SelectProductAmount({ onClose }) {
   };
 
   const handleAddToCart = () => {
+    console.log(isInCart);
+    console.log(findItem(product));
+    if(isInCart) {
+      console.log('Updating product in cart:', product, 'with amount:', amount);
+      console.log('llamado a updateQuantity');
+      updateQuantity(product, amount);
+      navigate('/select-products');
+      return;
+    }
+
     console.log('Adding product to cart:', product, 'with amount:', amount);
     addItem(product, amount);
     // NO OLVIDES QUE TENES QUE RESTAR EN LA BASE DE DATOS LOS PRODUCTOS AGREGADOS AL CARRITO

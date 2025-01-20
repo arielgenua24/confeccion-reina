@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useFirestoreContext from "../../hooks/useFirestoreContext";
+import  { useOrder }  from "../../hooks/useOrder";
 
 function SelectProducts() {
       const [products, setProducts] = useState([]);
       const [isLoading, setIsLoading] = useState(false);
 
       const navigate = useNavigate();
+
       const { getProducts, } = useFirestoreContext();
+      const { findItem, } = useOrder();
 
        useEffect(() => {
           const loadProducts = async () => {
@@ -66,7 +69,8 @@ function SelectProducts() {
               ) : (
                 products.map(product => (
                   <div key={product.id} className="productCard">
-    
+                    {console.log(product) }
+                    {console.log(product.id)}
     
                     <h3 className="productTitle">{product.name}</h3>
                     <p className="productDetail">{product.productCode}</p>
@@ -74,14 +78,22 @@ function SelectProducts() {
                     <p className="productDetail">Stock: {product.stock}</p>
                     <p className="productDetail">Talle: {product.size}</p>
                     <p className="productDetail">Color: {product.color}</p>
-    
-                    <button
+
+
+                    {
+                    findItem(product) ? 
+                    ( <button
+                        className="edit-in-cart-button"
+                        onClick={() => navigate(`/select-product-amount/${product.id}?in-cart=true`)}
+                      >
+                        MODIFICAR CANTIDAD
+                      </button>
+                      ):(<button
                         className="add-to-cart-button"
                         onClick={() => navigate(`/select-product-amount/${product.id}`)}
                       >
                         AGREGAR AL CARRITO
-                      </button>
-    
+                      </button>) }
     
                   </div>
     
