@@ -2,6 +2,8 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { IoArrowBack } from "react-icons/io5"
 import { useOrder } from '../../hooks/useOrder';
 import { useState, useEffect } from 'react';
+import cartIcon from '../../assets/icons/icons8-trolley-94.png'
+import './styles.css'
 
 
 function BackNav() {
@@ -26,8 +28,10 @@ function BackNav() {
       width: '100%',
       display: 'flex',
       alignItems: 'center',
-      padding: '0 16px', borderBottom: '1px solid #e0e0e0'
-    }
+      justifyContent: 'space-between',
+      padding: '0 16px', 
+      borderBottom: '1px solid #e0e0e0', 
+    };
     
     if(location.pathname !== '/' && location.pathname !== '/home') {
         return (
@@ -45,23 +49,25 @@ function BackNav() {
               </button>
 
               <div className="relative">
-          <button
-            onClick={() => navigate('/cart')}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '8px'
-            }}
-          >
-            Carrito
-            {cartCount > 0 && (
-              <div className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                {cartCount}
+                <button 
+                  onClick={() => navigate('/cart')} 
+                  className="cart-button">
+                  <img
+                    src={cartIcon}
+                    alt="Cart"
+                    width={30}
+                    height={30}
+                  />
+                  <span>
+                    PEDIDO
+                  </span>
+                  {cartCount > 0 && (
+                    <div className="cart-count">
+                      {cartCount}
+                    </div>
+                  )}
+                </button>
               </div>
-            )}
-          </button>
-        </div>
 
             </nav>
           ) 
