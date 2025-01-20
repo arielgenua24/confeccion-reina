@@ -16,6 +16,9 @@ const Cart = () => {
     return (
         <div>
             <OrderSummary order={order} cart={cart}/>
+
+            <span style={{height: '300px', margin: '20px'}}>DETALLES DE LA ORDEN</span>
+
             <ul>
                 {product.map((item, index) => (
                     <OrderCard key={index} product={item.item} />

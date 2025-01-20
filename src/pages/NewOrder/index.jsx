@@ -11,6 +11,8 @@ const NewOrder = () => {
   });
 
   const navigate = useNavigate();
+  console.log(order.products.length)
+
 
   const handleChange = (e) => {
     setCustomerData({ ...customerData, [e.target.name]: e.target.value });
@@ -21,9 +23,16 @@ const NewOrder = () => {
     navigate('/select-products'); // Navegar a la siguiente ventana
   };
 
+  const areProductsInOrder = order.products.length
+
   return (
     <div>
-      <h2>Nuevo Pedido</h2>
+      {!areProductsInOrder ? 
+        (<h2>Nuevo Pedido</h2> ):
+        (<h2>Continuar el pedido de: {customerData.customerName}</h2> )
+        }
+        <span> Revise los del pedido:</span>
+      
       <input
         type="text"
         name="customerName"

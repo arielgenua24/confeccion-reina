@@ -48,26 +48,30 @@ function BackNav() {
                 <IoArrowBack size={24} />
               </button>
 
-              <div className="relative">
-                <button 
-                  onClick={() => navigate('/cart')} 
-                  className="cart-button">
-                  <img
-                    src={cartIcon}
-                    alt="Cart"
-                    width={30}
-                    height={30}
-                  />
-                  <span>
-                    PEDIDO
-                  </span>
-                  {cartCount > 0 && (
-                    <div className="cart-count">
-                      {cartCount}
-                    </div>
-                  )}
-                </button>
-              </div>
+                { location.pathname !== '/new-order' && (
+                    <div className="relative">
+                    <button 
+                      onClick={() => navigate('/cart')} 
+                      className="cart-button">
+                      <img
+                        src={cartIcon}
+                        alt="Cart"
+                        width={30}
+                        height={30}
+                      />
+                      <span>
+                        PEDIDO
+                      </span>
+                      {cartCount > 0 && (
+                        <div className="cart-count">
+                          {cartCount}
+                        </div>
+                      )}
+                    </button>
+                  </div>
+                ) }
+
+              
 
             </nav>
           ) 

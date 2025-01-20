@@ -64,6 +64,14 @@ function SelectProductAmount({ onClose }) {
     navigate('/select-products');
   };
 
+  const handleDelete = () => {
+    if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+      deleteItem(product); // Llama a la función para eliminar el producto
+      navigate('/select-products'); // Navega a la ruta especificada
+    }
+  };
+
+
   return (
     <div className="productAmountContainer">
       <h1 className="productAmountContainer-name">{name}</h1>
@@ -101,6 +109,21 @@ function SelectProductAmount({ onClose }) {
       <button className="add-to-cart-button" onClick={handleAddToCart}>
         Agregar al pedido
       </button>
+
+      <button
+      className="delete-from-cart-button"
+      onClick={handleDelete}
+      style={{
+        backgroundColor: "red",
+        color: "#fff",
+        borderRadius: "20px",
+        border: "none",
+        padding: "10px 20px",
+        cursor: "pointer",
+      }}
+    >
+      Eliminar del pedido
+    </button>
     </div>
   );
 }
