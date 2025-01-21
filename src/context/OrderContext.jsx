@@ -1,10 +1,11 @@
-import  { createContext, useState} from 'react';
+import  { createContext, useEffect, useState} from 'react';
 
 const OrderContext = createContext();
 
 // eslint-disable-next-line react/prop-types
 const OrderProvider = ({ children }) => {
 
+  const [nullCart, setNullCart] = useState(false);
   const [cart, setCart] = useState(() => {
     const savedCart = localStorage.getItem('cart-r-v1.1');
     return savedCart ? JSON.parse(savedCart) : [];
@@ -88,10 +89,48 @@ const OrderProvider = ({ children }) => {
       phone: '',
       address: '',
       products: cart,
-    });
+    });    
+
+    useEffect(() => {
+      setOrder((prevState) => ({
+        ...prevState, // Propaga las propiedades existentes de `order`
+        products: cart, // Actualiza la propiedad `products` con el nuevo valor de `cart`
+      }));
+    }, [cart]);
+
+
+
+
+
+    function clearCustomerData() {
+      localStorage.removeItem('customer-reina-v1.2');
+    }
+
+    function getCustomerData() {
+      return JSON.parse(localStorage.getItem('customer-reina-v1.2'));
+    }
+
+    useEffect(() => {
+      function addCustomerData() {
+        localStorage.setItem('customer-reina-v1.2', JSON.stringify(order));
+      }
+      addCustomerData()
+      console.log(getCustomerData())
+    }, [order]);
+
+    useEffect(() => {
+      function addCustomerData() {
+        localStorage.setItem('customer-reina-v1.2', JSON.stringify(order));
+      }
+      addCustomerData()
+      console.log(getCustomerData())
+    }, [order]);
+
+    
+    
 
   return (
-    <OrderContext.Provider value={{ order, setOrder, addItem, updateQuantity, deleteItem, findItem, finditems, cart }}>
+    <OrderContext.Provider value={{ order, setCart, setNullCart, setOrder, addItem, updateQuantity, deleteItem, findItem, finditems, cart, clearCustomerData, getCustomerData }}>
       {children}
     </OrderContext.Provider>
   );

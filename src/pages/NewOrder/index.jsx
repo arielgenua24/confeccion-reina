@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useOrder } from '../../hooks/useOrder';
 
 const NewOrder = () => {
-  const { order, setOrder } = useOrder();
+  const { order, setOrder, clearCustomerData, setCart } = useOrder();
   const [customerData, setCustomerData] = useState({
     customerName: order.customerName || '',
     phone: order.phone || '',
@@ -23,7 +23,32 @@ const NewOrder = () => {
     navigate('/select-products'); // Navegar a la siguiente ventana
   };
 
+  const handleClearData = () => {
+    if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+      setCart([])
+      clearCustomerData();
+      setCustomerData({
+        customerName: '',
+        phone: '',
+        address: '',
+      });
+      setOrder({
+        customerName: '',
+        phone: '',
+        address: '',
+        products: [],
+      });
+  
+      localStorage.clear('cart-r-v1.1');
+      console.log('pedido eliminado')
+      console.log(JSON.parse(localStorage.getItem('cart-r-v1.1')))
+  
+    }
+
+  };
+
   const areProductsInOrder = order.products.length
+  console.log(areProductsInOrder)
 
   return (
     <div>
@@ -31,7 +56,7 @@ const NewOrder = () => {
         (<h2>Nuevo Pedido</h2> ):
         (<h2>Continuar el pedido de: {customerData.customerName}</h2> )
         }
-        <span> Revise los del pedido:</span>
+        <span> Revise los del cliente:</span>
       
       <input
         type="text"
@@ -55,6 +80,9 @@ const NewOrder = () => {
         onChange={handleChange}
       />
       <button onClick={handleNext}>Siguiente</button>
+      <button onClick={handleClearData} 
+      style={{backgroundColor: 'red', 
+        color: '#fff'}}>Eliminar pedido</button>
     </div>
   );
 };
