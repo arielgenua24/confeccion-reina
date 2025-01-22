@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import useFirestoreContext from '../../hooks/useFirestoreContext';
 import ProductFormModal from '../../modals/ProductFormModal';
 import QRModal from '../../modals/Qrmodal';
+import ProductSearch from '../../components/ProductSearch';
+import EditProductBtn from '../../components/EditProduct';
+import QRButton from '../../components/QrGenerateBtn';
 
 
 import './styles.css';
@@ -91,6 +94,8 @@ const Inventory = () => {
         navigate('/qrsearch?redirect=product_data');
       }}> BUSCAR POR QR</button>
       
+      <ProductSearch products={products} setQRcode={setQRcode}/>
+
       <section>
         <h2 className="subtitle">TODO TU CATÁLOGO</h2>
         <div className="inventory">
@@ -128,23 +133,14 @@ const Inventory = () => {
                 <p className="productDetail">Talle: {product.size}</p>
                 <p className="productDetail">Color: {product.color}</p>
 
-                <div className="QR-buttonContainer">
-                  <button className="QR-qrButton" onClick={() => {
-                    setQRcode(product)
-                    }}>
-                    Obtener QR
-                  </button>
-                </div>
+
+                <QRButton 
+                    product={product}
+                    onQRGenerate={() => setQRcode(product)}
+                  />
 
 
-
-                <button
-                    className="navigateButton"
-                    onClick={() => navigate(`/product/${product.id}`)}
-                  >
-                    EDITAR
-                  </button>
-
+                <EditProductBtn product_id={product.id}/>
 
               </div>
 
@@ -169,7 +165,6 @@ const Inventory = () => {
         <QRModal 
           QRcode={QRcode}
           setQRcode={setQRcode}
-
         />
       )}
       {isLoading && (
