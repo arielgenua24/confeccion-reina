@@ -28,8 +28,10 @@ const Inventory = () => {
 
   useEffect(() => {
     const loadProducts = async () => {
+      setIsLoading(true)
       const fetchedProducts = await getProducts();
       setProducts(fetchedProducts);
+      setIsLoading(false)
     };
     loadProducts();
   }, []);
