@@ -83,12 +83,20 @@ const OrderProvider = ({ children }) => {
       }
     }
 
-    const [order, setOrder] = useState({
-      customerName: '',
-      phone: '',
-      address: '',
-      products: cart,
-    });    
+
+
+    const getInitialOrder = () => {
+      const savedOrder = localStorage.getItem('customer-reina-v1.2');
+      return savedOrder ? JSON.parse(savedOrder) : {
+        customerName: '',
+        phone: '',
+        address: '',
+        products: cart,
+      };
+    };
+    
+    // Luego, usa esta función en el useState
+    const [order, setOrder] = useState(getInitialOrder());  
 
     useEffect(() => {
       setOrder((prevState) => ({
@@ -96,9 +104,6 @@ const OrderProvider = ({ children }) => {
         products: cart, // Actualiza la propiedad `products` con el nuevo valor de `cart`
       }));
     }, [cart]);
-
-
-
 
 
     function clearCustomerData() {
@@ -116,17 +121,6 @@ const OrderProvider = ({ children }) => {
       addCustomerData()
       console.log(getCustomerData())
     }, [order]);
-
-    useEffect(() => {
-      function addCustomerData() {
-        localStorage.setItem('customer-reina-v1.2', JSON.stringify(order));
-      }
-      addCustomerData()
-      console.log(getCustomerData())
-    }, [order]);
-
-    
-    
 
   return (
     <OrderContext.Provider value={{ order, setCart, setNullCart, setOrder, addItem, updateQuantity, deleteItem, findItem, finditems, cart, clearCustomerData, getCustomerData }}>
