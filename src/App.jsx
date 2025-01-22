@@ -8,6 +8,7 @@ import BackNav from './components/navbar'
 import SelectProducts from './pages/Select-products'
 import SelectProductAmount from './modals/SelectProductAmount'
 import QrSearchHandler from './components/QrSearchHandler'
+import SuccededOrder from './pages/Succeded-order'
 import Home from './pages/Home'
 
 import { FirestoreProvider } from './context/firestoreContext'
@@ -27,6 +28,7 @@ function AppRouter() {
     { path:'/Select-products' , element: <SelectProducts /> }, 
     { path:'/select-product-amount/:id' , element: <SelectProductAmount /> },
     { path:'/qrsearch' , element: <QrSearchHandler /> }, 
+    { path:'/succeeded-order' , element: <SuccededOrder /> }, 
   ])
   return router;
 }
