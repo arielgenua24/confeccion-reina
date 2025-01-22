@@ -106,42 +106,8 @@ const useFirestore = () => {
   
 
 
-  
-
-
 //Ejecutaremos esta funcion una vez el usuario llego a la instacia final de la orden
-  const createOrderWithProducts = async (fecha, cliente, telefono, direccion, products) => {  
-    try {
-        //obtenemos el codigo de la ordern
-        const orderCode = await incrementOrdersCode();  
-
-      // Agregar el pedido principal
-      const pedidoRef = await addDoc(collection(db, "orders"), {
-        orderCode,
-        fecha,
-        cliente,
-        telefono,
-        direccion,
-      });
   
-      // Agregar products a la subcolección
-      for (const product of products) {
-        const productRef = doc(db, "products", product.productoId);
-        await addDoc(collection(db, `orders/${pedidoRef.id}/products`), {
-          productRef,
-          cantidad: product.cantidad
-        });
-
-        await updateDoc(productRef, {
-            cantidad: increment(-product.cantidad), // Disminuye la cantidad en Firestore
-          });
-      }
-  
-      console.log("Pedido creado con ID: ", pedidoRef.id);
-    } catch (e) {
-      console.error("Error creando pedido: ", e);
-    }
-  };
     // Obtener todos los orders
     const getOrders = async () => {
       try {
@@ -192,8 +158,8 @@ const useFirestore = () => {
           });
           return `#${String(currentCode).padStart(3, "0")}`;
         } else {
-          // Create document if doesn't exist
-          await setDoc(codeRef, { value: 1 });
+          // Si no existe el documento, crearlo
+          await setDoc(codeRef, { value: 2 });
           return "#001";
         }
       } catch (error) {
@@ -201,6 +167,48 @@ const useFirestore = () => {
         throw error;
       }
   };
+
+  const createOrderWithProducts = async (fecha, cliente, telefono, direccion, products) => {  
+    console.log('llamado exitoso')
+    console.log(fecha, cliente, telefono, direccion, products)
+    try {
+        //obtenemos el codigo de la ordern
+        const orderCode = await incrementOrdersCode();  
+
+      // Agregar el pedido principal
+      const pedidoRef = await addDoc(collection(db, "orders"), {
+        orderCode,
+        fecha,
+        cliente,
+        telefono,
+        direccion,
+      });
+  
+      // Agregar products a la subcolección
+      for (const element of products) {
+        const product = element.item
+        const productRef = doc(db, "products", product.id);
+        await addDoc(collection(db, `orders/${pedidoRef.id}/products`), {
+          productRef,
+          quantity: element.quantity
+        });
+
+        await updateDoc(productRef, {
+          quantity: increment(-element.cantidad), // Disminuye la cantidad en Firestore
+          });
+      }
+
+      console.log("Pedido creado con ID: ", pedidoRef.id);
+      return 'pedido agredo'
+    } catch (e) {
+      console.error("Error creando pedido: ", e);
+    }
+  };
+
+  const createSuperOrder = () => {
+    return 'hello'
+  }
+
 
   return {
     getOrders,
