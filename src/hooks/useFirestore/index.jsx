@@ -121,7 +121,6 @@ const useFirestore = () => {
     };
 
 
-
   // Incrementar el código del producto (ej: #001, #002)
   const incrementProductCode = async () => {
     try {
@@ -174,29 +173,46 @@ const useFirestore = () => {
     try {
         //obtenemos el codigo de la ordern
         const orderCode = await incrementOrdersCode();  
+  
+      // Agregar products a la subcolección
+      for (const element of products) {
+        const product = element.item
+        const productRef = doc(db, "products", product.id);
 
-      // Agregar el pedido principal
-      const pedidoRef = await addDoc(collection(db, "orders"), {
+
+        // Leer el stock actual
+        const productSnapshot = await getDoc(productRef);
+        if (!productSnapshot.exists()) {
+          console.error(`El producto con ID ${product.id} no existe en la base de datos.`);
+          continue; // Saltar al siguiente producto si no existe
+        }
+
+        const currentStock = productSnapshot.data().stock;
+
+        // Verificar si hay suficiente stock para la operación
+        if (currentStock < element.quantity) {
+          console.error(`Stock insuficiente para el producto con ID ${product.id}. Stock actual: ${currentStock}, cantidad solicitada: ${element.quantity}`);
+          return `Stock insuficiente para el producto con ID ${product.id}. Stock actual: ${currentStock}, cantidad solicitada: ${element.quantity}`; // Saltar al siguiente producto si no hay suficiente stock
+        }
+
+        await addDoc(collection(db, `orders/${pedidoRef.id}/products`), {
+          productRef,
+          stock: element.quantity
+        });
+
+        await updateDoc(productRef, {
+          stock: increment(-element.quantity), // podriamos controlar si es posible que se pueda restar, es decir, si la cantidad no es negativa? porque quizas no queda en stock.
+          });
+       
+      }
+       // Agregar el pedido principal
+       const pedidoRef = await addDoc(collection(db, "orders"), {
         orderCode,
         fecha,
         cliente,
         telefono,
         direccion,
       });
-  
-      // Agregar products a la subcolección
-      for (const element of products) {
-        const product = element.item
-        const productRef = doc(db, "products", product.id);
-        await addDoc(collection(db, `orders/${pedidoRef.id}/products`), {
-          productRef,
-          quantity: element.quantity
-        });
-
-        await updateDoc(productRef, {
-          quantity: increment(-element.cantidad), // Disminuye la cantidad en Firestore
-          });
-      }
 
       console.log("Pedido creado con ID: ", pedidoRef.id);
       return 'pedido agredo'
@@ -204,10 +220,6 @@ const useFirestore = () => {
       console.error("Error creando pedido: ", e);
     }
   };
-
-  const createSuperOrder = () => {
-    return 'hello'
-  }
 
 
   return {
