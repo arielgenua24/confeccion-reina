@@ -20,6 +20,8 @@ function SelectProductAmount({ onClose }) {
   const [color, setColor] = useState('');
   const [code, setCode] = useState('');
 
+  const [error, setError ] = useState(false)
+
   const { getProduct } = useFirestoreContext();
   const {order, setOrder, addItem, updateQuantity, deleteItem, findItem} = useOrder();
 
@@ -50,6 +52,24 @@ function SelectProductAmount({ onClose }) {
   const handleAddToCart = () => {
     console.log(isInCart);
     console.log(findItem(product));
+    console.log(typeof stock) // 10000
+    console.log(typeof amount) // 88
+
+    console.log(stock < amount) //me dice que no puedo porque 10000 < 88
+
+    const stockNumber = Number(stock)
+    const amountNumber = Number(amount)
+
+    if(stockNumber < amountNumber) {
+      console.log('errrorrr')
+      setError(true)
+      return (
+        <h1>
+            error, no hay suficiente stock
+        </h1>
+        )
+    }
+
     if(isInCart) {
       console.log('Updating product in cart:', product, 'with amount:', amount);
       console.log('llamado a updateQuantity');
@@ -57,6 +77,9 @@ function SelectProductAmount({ onClose }) {
       navigate('/select-products');
       return;
     }
+    console.log(stock, amount)
+
+  
 
     console.log('Adding product to cart:', product, 'with amount:', amount);
     addItem(product, amount);
@@ -81,6 +104,7 @@ function SelectProductAmount({ onClose }) {
         <span className="productAmountContainer-detail-item">Precio: ${price}</span>
         <span className="productAmountContainer-detail-item">Color: {color}</span>
         <span className="productAmountContainer-detail-item">Talle: {size}</span>
+        <span className="productAmountContainer-detail-item">En inventario: {stock} unidades</span>
       </div>
 
       <div className="amount-container">
@@ -124,6 +148,47 @@ function SelectProductAmount({ onClose }) {
     >
       Eliminar del pedido
     </button>
+
+      {error && (
+        <div style={{
+          backgroundColor: "red",
+          color: "#fff",
+          borderRadius: "20px",
+          border: "none",
+          padding: "10px 20px",
+          cursor: "pointer",
+          position: 'absolute',
+          top: '0px',
+          left: '0px',
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'Column',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+             <h1> ERROR, cantidad insuficiente </h1>
+             <div>
+              <span style={{ fontSize: '1.4em', textDecoration: 'underline' }}>Haz querido agregar una cantidad de {amount} {name}, pero tienes en stock {stock} </span>
+              <span>Revisa tu stock actual o dile a tu cliente que no tienes suficiente stock </span>
+             </div>
+          
+             <buton 
+              style={{width: '100px', 
+                padding: '20px' ,
+                backgroundColor: '#fff', 
+                color: '#000', 
+                fontWeight: '400',
+                borderRadius: '20px',
+                fontSize: '24px'
+              }}
+              onClick={() => setError(false)}
+              >Entendido
+              </buton>
+        </div>
+      )}
+
+
     </div>
   );
 }

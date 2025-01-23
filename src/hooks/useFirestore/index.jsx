@@ -171,53 +171,55 @@ const useFirestore = () => {
     console.log('llamado exitoso')
     console.log(fecha, cliente, telefono, direccion, products)
     try {
-        //obtenemos el codigo de la ordern
-        const orderCode = await incrementOrdersCode();  
-  
-      // Agregar products a la subcolección
+      // Primero, validar el stock de todos los productos
       for (const element of products) {
-        const product = element.item
+        const product = element.item;
         const productRef = doc(db, "products", product.id);
-
-
-        // Leer el stock actual
+    
         const productSnapshot = await getDoc(productRef);
         if (!productSnapshot.exists()) {
-          console.error(`El producto con ID ${product.id} no existe en la base de datos.`);
-          continue; // Saltar al siguiente producto si no existe
+          console.error(`Producto ${product.id} no existe`);
+          return false;
         }
-
+    
         const currentStock = productSnapshot.data().stock;
-
-        // Verificar si hay suficiente stock para la operación
         if (currentStock < element.quantity) {
-          console.error(`Stock insuficiente para el producto con ID ${product.id}. Stock actual: ${currentStock}, cantidad solicitada: ${element.quantity}`);
-          return `Stock insuficiente para el producto con ID ${product.id}. Stock actual: ${currentStock}, cantidad solicitada: ${element.quantity}`; // Saltar al siguiente producto si no hay suficiente stock
+          console.error(`Stock insuficiente para ${product.id}`);
+          return false;
         }
-
-        await addDoc(collection(db, `orders/${pedidoRef.id}/products`), {
-          productRef,
-          stock: element.quantity
-        });
-
-        await updateDoc(productRef, {
-          stock: increment(-element.quantity), // podriamos controlar si es posible que se pueda restar, es decir, si la cantidad no es negativa? porque quizas no queda en stock.
-          });
-       
       }
-       // Agregar el pedido principal
-       const pedidoRef = await addDoc(collection(db, "orders"), {
+
+      const orderCode = await incrementOrdersCode();
+      // Si todos los productos tienen stock, crear el pedido
+      const pedidoRef = await addDoc(collection(db, "orders"), {
         orderCode,
         fecha,
         cliente,
         telefono,
         direccion,
       });
-
-      console.log("Pedido creado con ID: ", pedidoRef.id);
-      return 'pedido agredo'
-    } catch (e) {
-      console.error("Error creando pedido: ", e);
+    
+      // Procesar productos y actualizar stock
+      for (const element of products) {
+        const product = element.item;
+        const productRef = doc(db, "products", product.id);
+    
+        await addDoc(collection(db, `orders/${pedidoRef.id}/products`), {
+          productRef,
+          stock: element.quantity
+        });
+    
+        //bug-> me fija la cantidad, en vez de restar, la agrega como una string.
+        console.log(element.quantity)
+        await updateDoc(productRef, {
+          stock: increment(element.quantity * -1)
+        });
+      }
+    
+      return true;
+    } catch (error) {
+      console.error("Error en el procesamiento del pedido:", error);
+      return false;
     }
   };
 

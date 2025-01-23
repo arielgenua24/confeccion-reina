@@ -4,9 +4,11 @@ import useFirestoreContext from '../../hooks/useFirestoreContext'
 import OrderCard from '../../components/OrderCard';
 import OrderSummary from '../../components/OrderSumary';
 import { useNavigate } from 'react-router-dom';
+import { MdOutlineBorderStyle } from 'react-icons/md';
 
 const Cart = () => {
     const { cart, order } = useOrder();
+    const [error, setError ] = useState(false)
     const { createOrderWithProducts } = useFirestoreContext()
     console.log(createOrderWithProducts)
     console.log(cart)
@@ -46,8 +48,16 @@ const Cart = () => {
             order.address, 
             products
           );
+          console.log(MdOutlineBorderStyle)
+          if(orderResult) {
+            navigate('/succeeded-order');
+          } else {
+              setError(true)
+              window.scrollTo(0, 0);
+          }
+
           console.log("Orden creada:", orderResult);
-          navigate('/succeeded-order');
+          
         } catch(e) {
           console.error("Error al crear la orden:", e);
           // Aquí puedes manejar el error, por ejemplo mostrar una notificación al usuario
@@ -98,6 +108,48 @@ const Cart = () => {
                     Finalizar Pedido
                 </button>
             </div>
+
+            {error && (
+        <div style={{
+          backgroundColor: "red",
+          color: "#fff",
+          borderRadius: "20px",
+          border: "none",
+          padding: "10px 20px",
+          cursor: "pointer",
+          position: 'absolute',
+          top: '0px',
+          left: '0px',
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'Column',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          zIndex: '10000'
+        }}>
+             <h1> ERROR, cantidad insuficiente </h1>
+             <div>
+              <span>Parece que hubo un problema con el stock. Revisa tu stock actual o dile a tu cliente que no tienes suficiente stock </span>
+             </div>
+          
+             <buton 
+              style={{width: '100px', 
+                padding: '20px' ,
+                backgroundColor: '#fff', 
+                color: '#000', 
+                fontWeight: '400',
+                borderRadius: '20px',
+                fontSize: '24px'
+              }}
+              onClick={() => {
+                setError(false)
+                navigate('/select-products')
+              }}
+              >Entendido
+              </buton>
+        </div>
+              )}
         </div>
     );
 };
