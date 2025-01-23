@@ -48,7 +48,6 @@ const Cart = () => {
             order.address, 
             products
           );
-          console.log(MdOutlineBorderStyle)
           if(orderResult) {
             navigate('/succeeded-order');
           } else {

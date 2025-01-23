@@ -71,9 +71,9 @@ function SelectProductAmount({ onClose }) {
     }
 
     if(isInCart) {
-      console.log('Updating product in cart:', product, 'with amount:', amount);
+      console.log('Updating product in cart:', product, 'with amount:', amountNumber);
       console.log('llamado a updateQuantity');
-      updateQuantity(product, amount);
+      updateQuantity(product, amountNumber);
       navigate('/select-products');
       return;
     }
@@ -82,7 +82,7 @@ function SelectProductAmount({ onClose }) {
   
 
     console.log('Adding product to cart:', product, 'with amount:', amount);
-    addItem(product, amount);
+    addItem(product, amountNumber);
     // NO OLVIDES QUE TENES QUE RESTAR EN LA BASE DE DATOS LOS PRODUCTOS AGREGADOS AL CARRITO
     navigate('/select-products');
   };
