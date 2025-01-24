@@ -114,6 +114,18 @@ const OrderProvider = ({ children }) => {
       return JSON.parse(localStorage.getItem('customer-reina-v1.2'));
     }
 
+
+    function resetOrderValues(){
+      clearCustomerData();
+      setCart([])
+      setOrder({
+        customerName: '',
+        phone: '',
+        address: '',
+        products: [],
+      })
+    }
+
     useEffect(() => {
       function addCustomerData() {
         localStorage.setItem('customer-reina-v1.2', JSON.stringify(order));
@@ -123,7 +135,7 @@ const OrderProvider = ({ children }) => {
     }, [order]);
 
   return (
-    <OrderContext.Provider value={{ order, setCart, setNullCart, setOrder, addItem, updateQuantity, deleteItem, findItem, finditems, cart, clearCustomerData, getCustomerData }}>
+    <OrderContext.Provider value={{ order, setCart, resetOrderValues,setNullCart, setOrder, addItem, updateQuantity, deleteItem, findItem, finditems, cart, clearCustomerData, getCustomerData }}>
       {children}
     </OrderContext.Provider>
   );

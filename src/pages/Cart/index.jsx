@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { MdOutlineBorderStyle } from 'react-icons/md';
 
 const Cart = () => {
-    const { cart, order } = useOrder();
+    const { cart, order, resetOrderValues } = useOrder();
     const [error, setError ] = useState(false)
     const { createOrderWithProducts } = useFirestoreContext()
     console.log(createOrderWithProducts)
@@ -53,6 +53,7 @@ const Cart = () => {
             products
           );
           if(orderResult) {
+            resetOrderValues();
             navigate('/succeeded-order');
           } else {
               setError(true)
