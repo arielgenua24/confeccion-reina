@@ -4,16 +4,16 @@ import useFirestoreContext from '../../hooks/useFirestoreContext'
 import OrderCard from '../../components/OrderCard';
 import OrderSummary from '../../components/OrderSumary';
 import { useNavigate } from 'react-router-dom';
-import { MdOutlineBorderStyle } from 'react-icons/md';
+import LoadingComponent from '../../components/Loading';
 
 const Cart = () => {
     const { cart, order, resetOrderValues } = useOrder();
     const [error, setError ] = useState(false)
     const { createOrderWithProducts } = useFirestoreContext()
-    console.log(createOrderWithProducts)
-    console.log(cart)
+
     const [products, setProduct] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+
 
     const navigate = useNavigate();
 
@@ -40,6 +40,7 @@ const Cart = () => {
     }, [cart]);
 
     const handleSubmit = async () => {
+      setIsLoading(true)
         if(cart.length < 1) {
           setError(true)
           return null
@@ -57,7 +58,9 @@ const Cart = () => {
           if (orderResultId) {
             resetOrderValues();
             navigate(`/succeeded-order/${orderResultId}`);
+            setIsLoading(false)
         } else {
+            setIsLoading(false)
               setError(true)
               window.scrollTo(0, 0);
           }
@@ -65,6 +68,7 @@ const Cart = () => {
           console.log("Orden creada:", orderResultId);
           
         } catch(e) {
+          setIsLoading(false)
           console.error("Error al crear la orden:", e);
           // Aquí puedes manejar el error, por ejemplo mostrar una notificación al usuario
         }
@@ -74,6 +78,8 @@ const Cart = () => {
 
     return (
         <div>
+            <LoadingComponent isLoading={isLoading}/>
+
             <OrderSummary order={order} cart={cart}/>
 
             <span style={{height: '300px', margin: '20px'}}>DETALLES DE LA ORDEN</span>
