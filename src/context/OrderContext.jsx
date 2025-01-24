@@ -83,6 +83,9 @@ const OrderProvider = ({ children }) => {
       }
     }
 
+    function clearCartData(){
+      localStorage.removeItem('cart-r-v1.1');
+    }
 
 
     const getInitialOrder = () => {
@@ -117,6 +120,7 @@ const OrderProvider = ({ children }) => {
 
     function resetOrderValues(){
       clearCustomerData();
+      clearCartData();
       setCart([])
       setOrder({
         customerName: '',
