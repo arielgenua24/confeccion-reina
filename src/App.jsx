@@ -28,7 +28,7 @@ function AppRouter() {
     { path:'/Select-products' , element: <SelectProducts /> }, 
     { path:'/select-product-amount/:id' , element: <SelectProductAmount /> },
     { path:'/qrsearch' , element: <QrSearchHandler /> }, 
-    { path:'/succeeded-order' , element: <SuccededOrder /> }, 
+    { path:'/succeeded-order/:id' , element: <SuccededOrder /> }, 
   ])
   return router;
 }

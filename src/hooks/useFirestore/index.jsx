@@ -120,6 +120,24 @@ const useFirestore = () => {
       }
     };
 
+    const getOrderById = async (orderId) => {
+      console.log(orderId)
+      try {
+        const orderDocRef = doc(db, "orders", orderId);
+        const orderSnapshot = await getDoc(orderDocRef);
+        
+        if (orderSnapshot.exists()) {
+          return { id: orderSnapshot.id, ...orderSnapshot.data() };
+        } else {
+          console.error("No such order exists");
+          return null;
+        }
+      } catch (error) {
+        console.error("Error fetching order:", error);
+        throw error;
+      }
+    };
+
 
   // Incrementar el código del producto (ej: #001, #002)
   const incrementProductCode = async () => {
@@ -220,7 +238,7 @@ const useFirestore = () => {
         });
       }
     
-      return true;
+      return pedidoRef.id;
     } catch (error) {
       console.error("Error en el procesamiento del pedido:", error);
       return false;
@@ -238,6 +256,7 @@ const useFirestore = () => {
     incrementProductCode,
     incrementOrdersCode,
     updateProduct,
+    getOrderById,
     products
   };
 };

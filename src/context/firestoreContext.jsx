@@ -18,6 +18,7 @@ function FirestoreProvider({children}) {
         incrementOrdersCode,
         updateProduct,
         deleteProduct,
+        getOrderById,
         products
         } = useFirestore();
 
@@ -34,8 +35,9 @@ function FirestoreProvider({children}) {
                 incrementProductCode,
                 incrementOrdersCode,
                 updateProduct,
+                getOrderById,
                 deleteProduct,
-                products
+                products,
                 }}>
                 {children}
          </FirestoreContext.Provider>

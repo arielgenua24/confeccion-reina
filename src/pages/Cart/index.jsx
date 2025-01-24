@@ -13,6 +13,8 @@ const Cart = () => {
     console.log(createOrderWithProducts)
     console.log(cart)
     const [products, setProduct] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+
     const navigate = useNavigate();
 
     const formatDate = (dateString) => {
@@ -45,22 +47,22 @@ const Cart = () => {
         console.log(products)
         try {
           const currentDateTime = getCurrentDateTime();
-          const orderResult = await createOrderWithProducts(
+          const orderResultId = await createOrderWithProducts(
             currentDateTime, 
             order.customerName, 
             order.phone, 
             order.address, 
             products
           );
-          if(orderResult) {
+          if (orderResultId) {
             resetOrderValues();
-            navigate('/succeeded-order');
-          } else {
+            navigate(`/succeeded-order/${orderResultId}`);
+        } else {
               setError(true)
               window.scrollTo(0, 0);
           }
 
-          console.log("Orden creada:", orderResult);
+          console.log("Orden creada:", orderResultId);
           
         } catch(e) {
           console.error("Error al crear la orden:", e);
