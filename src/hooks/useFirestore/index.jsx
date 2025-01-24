@@ -203,19 +203,25 @@ const useFirestore = () => {
       for (const element of products) {
         const product = element.item;
         const productRef = doc(db, "products", product.id);
-        console.log(product)
+        const productSnapshot = await getDoc(productRef);
+        const currentStock = Number(productSnapshot.data().stock);
+        console.log(currentStock)
+        console.log(typeof currentStock)
+    
+       
     
         const quantityNumber = Number(element.quantity)
-        console.log(typeof quantityNumber) // number
         await addDoc(collection(db, `orders/${pedidoRef.id}/products`), {
           productRef,
           stock: quantityNumber
         });
     
         //bug-> me fija la cantidad, en vez de restar, la agrega como una string.
-        console.log(element.quantity)
+        console.log(quantityNumber)
+        console.log(currentStock - quantityNumber)
+        const newStockInt = currentStock - quantityNumber
         await updateDoc(productRef, {
-          stock: increment(-quantityNumber)
+          stock: newStockInt
         });
       }
     

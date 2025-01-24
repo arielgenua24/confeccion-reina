@@ -38,6 +38,10 @@ const Cart = () => {
     }, [cart]);
 
     const handleSubmit = async () => {
+        if(cart.length < 1) {
+          setError(true)
+          return null
+        }
         console.log(products)
         try {
           const currentDateTime = getCurrentDateTime();
@@ -90,22 +94,40 @@ const Cart = () => {
                 padding: '0 16px',
                 boxShadow: '0px -2px 10px rgba(0,0,0,0.1)'
             }}>
-                <button 
-                    onClick={() => handleSubmit()}
+              { cart.length >= 1 ? (
+                   <button 
+                   onClick={() => handleSubmit()}
+                   style={{
+                       backgroundColor: '#0FCA37',
+                       color: 'white',
+                       width: '100%',
+                       height: '44px',
+                       borderRadius: '20px',
+                       border: 'none',
+                       fontSize: '16px',
+                       fontWeight: 'bold',
+                       cursor: 'pointer'
+                   }}>
+                      Finalizar Pedido
+                   </button>
+                    ) : (
+                    <button 
+                      onClick={() => navigate('/select-products')}
+
                     style={{
-                        backgroundColor: '#0FCA37',
-                        color: 'white',
-                        width: '100%',
-                        height: '44px',
-                        borderRadius: '20px',
-                        border: 'none',
-                        fontSize: '16px',
-                        fontWeight: 'bold',
-                        cursor: 'pointer'
-                    }}
-                >
-                    Finalizar Pedido
-                </button>
+                      backgroundColor: '#f1f1f1',
+                      color: '#000',
+                      width: '100%',
+                      height: '44px',
+                      borderRadius: '20px',
+                      border: 'none',
+                      fontSize: '16px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer'
+                  }}> Volver al inventario para agregar productos </button>
+                )
+              }
+               
             </div>
 
             {error && (
@@ -129,7 +151,7 @@ const Cart = () => {
         }}>
              <h1> ERROR, cantidad insuficiente </h1>
              <div>
-              <span>Parece que hubo un problema con el stock. Revisa tu stock actual o dile a tu cliente que no tienes suficiente stock </span>
+              <span>Parece que hubo un problema con el stock o tu pedido. Revisa tu stock actual o dile a tu cliente que no tienes suficiente stock </span>
              </div>
           
              <buton 
