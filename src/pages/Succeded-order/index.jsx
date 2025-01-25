@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import useFirestoreContext from '../../hooks/useFirestoreContext';
 import checkIcon from '../../assets/icons/icons8-check-96.png';
 import qrIcon from '../../assets/icons/icons8-qr-100.png';
+import QRmodal from '../../modals/Qrmodal';
 
 
 function SuccededOrder() {
+    const navigate = useNavigate(); 
     const { id } = useParams();
     const { getOrderById } = useFirestoreContext();
     const [orderData, setOrderData] = useState(null);
+    const [qrCode, setQrCode] = useState(null);
 
     useEffect(() => {
         const fetchOrder = async () => {
@@ -27,15 +30,22 @@ function SuccededOrder() {
 
     return (
         <div style={{
-          marginTop: '150px',
+          marginTop: '20px',
           fontFamily: 'Arial, sans-serif'
         }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
+            justifyContent: 'center',
             marginBottom: '20px'
           }}>
-           <img src={checkIcon} alt="Check icon" />
+           <img src={checkIcon} alt="Check icon" 
+            style={{
+              width: '47px',
+              height: '47px',
+            }} 
+           
+           />
             <h1 style={{ 
               color: '#333', 
               fontSize: '24px',
@@ -48,7 +58,8 @@ function SuccededOrder() {
           <h2 style={{
             color: '#666',
             fontSize: '16px',
-            marginBottom: '20px'
+            marginBottom: '20px',
+            marginTop: '75px'
           }}>
             Podrás ver la información del pedido y el código, en la sección pedidos.
           </h2>
@@ -77,22 +88,38 @@ function SuccededOrder() {
               alignItems: 'center',
               justifyContent: 'center'
             }}>
-              <button style={{
+              <button 
+                onClick={() => {
+                  setQrCode(orderData)
+                  console.log(orderData.orderCode)
+                
+                }}
+                style={{
                 backgroundColor: '#F1F7FF',
                 border: '1px solid #0990FF',
                 borderRadius: '20px',
+                color: '#0990FF',
+                fontSize: '16px',
+                fontWeight: 'bold',
                 padding: '10px 15px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '5px'
               }}>
                 VER QR
-                <img src={qrIcon} alt="Qr icon" />
+                <img src={qrIcon} alt="Qr icon" style={{
+                  width: '47px',
+                  height: '47px',
+                }} />
               </button>
             </div>
           </div>
     
-          <button style={{
+          <button 
+          onClick={() => {
+            navigate('/orders');
+          }}
+          style={{
             position: 'fixed',
             bottom: '0px',
             left: 0,
@@ -105,6 +132,8 @@ function SuccededOrder() {
           }}>
             OK, IR A PEDIDOS
           </button>
+          {qrCode && <QRmodal QRcode={orderData} setQRcode={setQrCode} orderCode={true} />}
+
         </div>
       );
 }
