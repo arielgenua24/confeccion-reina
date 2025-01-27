@@ -124,8 +124,8 @@ const useFirestore = () => {
       const orders = await getOrders();
       // Ordenar el array
       const filteredOrders = orders.sort((a, b) => {
-        console.log(a.fecha); // Ejemplo: "24/01/2025, 18:19"
-        console.log(b.fecha); // Ejemplo: "25/01/2025, 19:20"
+        // Ejemplo: "24/01/2025, 18:19"
+        // Ejemplo: "25/01/2025, 19:20"
     
         // Función para convertir la fecha al formato correcto
         function parseCustomDate(dateString) {
@@ -139,8 +139,8 @@ const useFirestore = () => {
         const dateA = parseCustomDate(a.fecha);
         const dateB = parseCustomDate(b.fecha);
     
-        console.log(dateA); // Debería mostrar una fecha válida
-        console.log(dateB); // Debería mostrar una fecha válida
+        // Debería mostrar una fecha válida
+        // Debería mostrar una fecha válida
     
         // Ordenar de más reciente a más antiguo
         return dateB - dateA;

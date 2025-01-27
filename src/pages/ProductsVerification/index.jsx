@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import useFirestoreContext from '../../hooks/useFirestoreContext';
 import LoadingComponent from '../../components/Loading';
 import { useParams } from 'react-router-dom';
+import QrVerifyProduct from '../../components/QrVerifyProduct';
 
 import './styles.css';
 
 const ProductVerification = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isSearchByQrEnabled, setisSearchByQrEnabled] = useState(false);
   const { orderId } = useParams();
 
   const {  getOrderById, getProductsByOrder } = useFirestoreContext();
@@ -24,14 +26,19 @@ const ProductVerification = () => {
   }, [orderId]);
 
   const handleVerify = (productId) => {
+    console.log(productId)
     setProducts(prevProducts => 
       prevProducts.map(product => {
-        if (product.id === productId && product.verified < product.stock) {
+        if (product.productRef.id === productId && product.verified < product.stock) {
+          return { ...product, verified: product.verified + 1 };
+        } else if (product.id === productId && product.verified < product.stock) {
           return { ...product, verified: product.verified + 1 };
         }
         return product;
       })
     );
+    setisSearchByQrEnabled(false);
+
   };
 
   const handleReset = (productId) => {
@@ -70,13 +77,20 @@ const ProductVerification = () => {
             Empezar de nuevo la verification
           </button>
           <button style={{background: '#133E87'}}
-            onClick={() => handleReset(product.id)}
+            onClick={() => setisSearchByQrEnabled(true)}
             disabled={product.verified >= product.stock}
           >
             Verificar con escaner de barras
           </button>
+          
         </div>
       ))}
+      {isSearchByQrEnabled && <QrVerifyProduct  
+        handleVerify={handleVerify}
+        setisSearchByQrEnabled={setisSearchByQrEnabled}
+        
+        />}
+
     </div>
   );
 };
