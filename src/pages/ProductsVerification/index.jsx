@@ -3,6 +3,7 @@ import useFirestoreContext from '../../hooks/useFirestoreContext';
 import LoadingComponent from '../../components/Loading';
 import { useParams } from 'react-router-dom';
 import QrVerifyProduct from '../../components/QrVerifyProduct';
+import ProductVerificationStatus from '../../components/ProductVerificationStatus';
 
 import './styles.css';
 
@@ -11,6 +12,7 @@ const ProductVerification = () => {
   const [loading, setLoading] = useState(false);
   const [isSearchByQrEnabled, setisSearchByQrEnabled] = useState(false);
   const { orderId } = useParams();
+  const [verifiedProducts, setVerifiedProducts] = useState(0);
 
   const {  getOrderById, getProductsByOrder } = useFirestoreContext();
 
@@ -56,14 +58,15 @@ const ProductVerification = () => {
   return (
     <div className="products-verification">
         <LoadingComponent isLoading={loading} />
-
+        <h1>Productos Verificados: {verifiedProducts} de {products.length} </h1>
       {products.map((product) => (
         <div key={product.id} className="product-item">
+          <ProductVerificationStatus product={product}/>
 
           <h3>Codigo del producto: {product.productData.productCode}</h3>
           <h3>Nombre: {product.productData.name}</h3>
           <p>
-            Verificados: <span>{product.verified}</span> of {product.stock}
+            Verificados: <span>{product.verified}</span> de {product.stock}
           </p>
             <button 
               onClick={() => handleVerify(product.id)}
@@ -73,11 +76,10 @@ const ProductVerification = () => {
             </button>
             <button style={{background: 'red'}}
               onClick={() => handleReset(product.id)}
-              disabled={product.verified >= product.stock}
             >
               Empezar de nuevo la verification
             </button>
-            <button style={{background: '#133E87'}}
+            <button
               onClick={() => setisSearchByQrEnabled(true)}
               disabled={product.verified >= product.stock}
             >
