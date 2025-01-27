@@ -120,6 +120,35 @@ const useFirestore = () => {
       }
     };
 
+    const filterOrdersByDate = async() => {
+      const orders = await getOrders();
+      // Ordenar el array
+      const filteredOrders = orders.sort((a, b) => {
+        console.log(a.fecha); // Ejemplo: "24/01/2025, 18:19"
+        console.log(b.fecha); // Ejemplo: "25/01/2025, 19:20"
+    
+        // Función para convertir la fecha al formato correcto
+        function parseCustomDate(dateString) {
+            const [datePart, timePart] = dateString.split(', ');
+            const [day, month, year] = datePart.split('/');
+            const formattedDate = `${year}-${month}-${day}`;
+            return new Date(`${formattedDate}T${timePart}`);
+        }
+    
+        // Convertir las fechas a objetos Date válidos
+        const dateA = parseCustomDate(a.fecha);
+        const dateB = parseCustomDate(b.fecha);
+    
+        console.log(dateA); // Debería mostrar una fecha válida
+        console.log(dateB); // Debería mostrar una fecha válida
+    
+        // Ordenar de más reciente a más antiguo
+        return dateB - dateA;
+    });
+      console.log(filteredOrders)
+      return filteredOrders;
+    }
+
     const getOrderById = async (orderId) => {
       console.log(orderId)
       try {
@@ -257,6 +286,7 @@ const useFirestore = () => {
     incrementOrdersCode,
     updateProduct,
     getOrderById,
+    filterOrdersByDate,  
     products
   };
 };

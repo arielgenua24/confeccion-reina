@@ -19,6 +19,7 @@ function FirestoreProvider({children}) {
         updateProduct,
         deleteProduct,
         getOrderById,
+        filterOrdersByDate,
         products
         } = useFirestore();
 
@@ -37,6 +38,7 @@ function FirestoreProvider({children}) {
                 updateProduct,
                 getOrderById,
                 deleteProduct,
+                filterOrdersByDate,
                 products,
                 }}>
                 {children}
