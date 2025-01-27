@@ -149,6 +149,33 @@ const useFirestore = () => {
       return filteredOrders;
     }
 
+    const deleteOrder = async (orderId) => {
+      try {
+        const orderDocRef = doc(db, "orders", orderId);
+        await deleteDoc(orderDocRef);
+        console.log("Order deleted successfully");
+        return true; // Indica que la eliminación fue exitosa
+      } catch (error) {
+        console.error("Error deleting order:", error);
+        throw error;
+      }
+    };
+
+    const updateOrder = async (orderId, updateData) => {
+      try {
+        const orderDocRef = doc(db, "orders", orderId);
+        await updateDoc(orderDocRef, 
+          ...updateData,
+        );
+        console.log("Order updated successfully");
+        return true; // Indica que la actualización fue exitosa
+      } catch (error) {
+        console.error("Error updating order:", error);
+        throw error;
+      }
+    };
+
+
     const getOrderById = async (orderId) => {
       console.log(orderId)
       try {
@@ -166,6 +193,33 @@ const useFirestore = () => {
         throw error;
       }
     };
+
+    const getProductsByOrder = async (orderId) => {
+      try {
+        // Obtener subcolección de productos
+        const productsSnapshot = await getDocs(
+          collection(db, "orders", orderId, "products")
+        );
+    
+        const products = await Promise.all(
+          productsSnapshot.docs.map(async (productDoc) => {
+            const productRef = productDoc.data().productRef;
+            const productSnap = await getDoc(productRef);
+            return {
+              id: productDoc.id,
+              ...productDoc.data(),
+              productData: productSnap.data(),
+            };
+          })
+        );
+    
+        return products;
+      } catch (error) {
+        console.error("Error fetching order products: ", error);
+        throw error;
+      }
+    };
+
 
 
   // Incrementar el código del producto (ej: #001, #002)
@@ -244,6 +298,7 @@ const useFirestore = () => {
         cliente,
         telefono,
         direccion,
+        estado: "pendiente",
       });
     
       // Procesar productos y actualizar stock
@@ -257,7 +312,8 @@ const useFirestore = () => {
         const quantityNumber = Number(element.quantity)
         await addDoc(collection(db, `orders/${pedidoRef.id}/products`), {
           productRef,
-          stock: quantityNumber
+          stock: quantityNumber,
+          verified: 0
         });
     
         //bug-> me fija la cantidad, en vez de restar, la agrega como una string.
@@ -287,6 +343,9 @@ const useFirestore = () => {
     updateProduct,
     getOrderById,
     filterOrdersByDate,  
+    updateOrder,
+    deleteOrder,
+    getProductsByOrder,
     products
   };
 };

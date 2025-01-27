@@ -9,6 +9,7 @@ import SelectProducts from './pages/Select-products'
 import SelectProductAmount from './modals/SelectProductAmount'
 import QrSearchHandler from './components/QrSearchHandler'
 import SuccededOrder from './pages/Succeded-order'
+import ProductVerification from './pages/ProductsVerification'
 import Home from './pages/Home'
 
 import { FirestoreProvider } from './context/firestoreContext'
@@ -24,6 +25,7 @@ function AppRouter() {
     { path:'/cart' , element: <Cart /> },
     { path:'/product/:id' , element: <Product /> },
     { path:'/orders' , element: <Orders /> }, 
+    { path:'/ProductsVerification/:orderId' , element: <ProductVerification /> },
     { path:'/new-order' , element: <NewOrder /> }, 
     { path:'/Select-products' , element: <SelectProducts /> }, 
     { path:'/select-product-amount/:id' , element: <SelectProductAmount /> },

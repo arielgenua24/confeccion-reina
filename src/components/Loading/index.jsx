@@ -1,5 +1,6 @@
 // eslint-disable-next-line react/prop-types
 function LoadingComponent({isLoading}) {
+  console.log(isLoading)
 
     const modalOverlayStyles = {
         position: 'fixed',
