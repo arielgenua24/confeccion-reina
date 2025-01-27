@@ -2,6 +2,8 @@ import useFirestoreContext from '../../hooks/useFirestoreContext'
 import LoadingComponent from '../../components/Loading'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
+import QRmodal from '../../modals/Qrmodal';
+import QRButton from '../../components/QrGenerateBtn';
 import './styles.css'
 
 function Orders() {
@@ -9,6 +11,7 @@ function Orders() {
 
   const [isNewData, setIsNewData] = useState(false)
   const [orders, setOrders] = useState([])
+  const [QRcode, setQRcode] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const {filterOrdersByDate,  updateOrder,
     deleteOrder, } = useFirestoreContext()
@@ -44,6 +47,10 @@ function Orders() {
       <div className="orders-list">
       {orders.map((order) => (
         <div key={order.id} className="order-card">
+          <QRButton 
+            product={order}
+            onQRGenerate={setQRcode}
+          /> 
           <button 
             className="delete-button"
             onClick={() => {
@@ -73,6 +80,13 @@ function Orders() {
       ))}
   </div>
 
+  {QRcode && (
+          <QRmodal 
+          QRcode={QRcode}
+          setQRcode={setQRcode}
+          orderCode={true}
+          />
+      )}
     </div>
   )
 }

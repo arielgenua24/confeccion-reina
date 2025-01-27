@@ -59,29 +59,30 @@ const ProductVerification = () => {
 
       {products.map((product) => (
         <div key={product.id} className="product-item">
+
           <h3>Codigo del producto: {product.productData.productCode}</h3>
           <h3>Nombre: {product.productData.name}</h3>
           <p>
             Verificados: <span>{product.verified}</span> of {product.stock}
           </p>
-          <button 
-            onClick={() => handleVerify(product.id)}
-            disabled={product.verified >= product.stock}
-          >
-            Verificar uno manualmente
-          </button>
-          <button style={{background: 'red'}}
-            onClick={() => handleReset(product.id)}
-            disabled={product.verified >= product.stock}
-          >
-            Empezar de nuevo la verification
-          </button>
-          <button style={{background: '#133E87'}}
-            onClick={() => setisSearchByQrEnabled(true)}
-            disabled={product.verified >= product.stock}
-          >
-            Verificar con escaner de barras
-          </button>
+            <button 
+              onClick={() => handleVerify(product.id)}
+              disabled={product.verified >= product.stock}
+            >
+              Verificar uno manualmente
+            </button>
+            <button style={{background: 'red'}}
+              onClick={() => handleReset(product.id)}
+              disabled={product.verified >= product.stock}
+            >
+              Empezar de nuevo la verification
+            </button>
+            <button style={{background: '#133E87'}}
+              onClick={() => setisSearchByQrEnabled(true)}
+              disabled={product.verified >= product.stock}
+            >
+              Verificar con escaner de barras
+            </button>
           
         </div>
       ))}
@@ -90,6 +91,7 @@ const ProductVerification = () => {
         setisSearchByQrEnabled={setisSearchByQrEnabled}
         
         />}
+      
 
     </div>
   );
