@@ -1,0 +1,97 @@
+.inbox-container {
+    padding: 2rem;
+    min-height: 100vh;
+    background: #f5f5f7;
+  }
+  
+  .orders-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem;
+  }
+  
+  .order-card {
+    background: white;
+    border-radius: 18px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transition: transform 0.2s ease;
+  }
+  
+  .order-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: linear-gradient(135deg, #2c3e50, #3498db);
+    color: white;
+  }
+  
+  .order-date {
+    font-size: 0.9rem;
+    opacity: 0.9;
+  }
+  
+  .confetti {
+    font-size: 1.5rem;
+  }
+  
+  .card-content {
+    padding: 1.5rem;
+  }
+  
+  .total-display {
+    border-radius: 12px;
+    padding: 1.2rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .total-display::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, 
+      transparent, 
+      rgba(255, 255, 255, 0.2), 
+      transparent);
+    transform: rotate(45deg);
+  }
+  
+  .total-text {
+    color: white;
+    font-size: 1.8rem;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .order-details {
+    color: #333;
+  }
+  
+  .detail-line {
+    margin: 0.8rem 0;
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+  
+  .detail-line strong {
+    color: #2c3e50;
+  }
+  
+  .detail-line em {
+    color: #7f8c8d;
+    font-style: normal;
+  }

@@ -29,7 +29,13 @@ function Home() {
 
     return (
       <div className="app-container">
+        <Link to="/inbox">
+          <button className="pages-btn">Dinero y notificaciones</button>
+        </Link>
+
+
         <div className="orders-section">
+
           <Link to="/new-order">
           {!areProductsInOrder ? 
             (<button className="pages-btn">Nuevo Pedido</button> ):

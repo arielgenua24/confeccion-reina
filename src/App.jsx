@@ -10,6 +10,7 @@ import SelectProductAmount from './modals/SelectProductAmount'
 import QrSearchHandler from './components/QrSearchHandler'
 import SuccededOrder from './pages/Succeded-order'
 import ProductVerification from './pages/ProductsVerification'
+import Inbox from './pages/inbox'
 import Home from './pages/Home'
 
 import { FirestoreProvider } from './context/firestoreContext'
@@ -30,7 +31,8 @@ function AppRouter() {
     { path:'/Select-products' , element: <SelectProducts /> }, 
     { path:'/select-product-amount/:id' , element: <SelectProductAmount /> },
     { path:'/qrsearch' , element: <QrSearchHandler /> }, 
-    { path:'/succeeded-order/:id' , element: <SuccededOrder /> }, 
+    { path:'/succeeded-order/:id' , element: <SuccededOrder /> },
+    { path:'/inbox' , element: <Inbox /> },  
   ])
   return router;
 }
