@@ -2,7 +2,7 @@
 import React from 'react';
 import './styles.css';
 
-const ProductVerificationStatus = ({ product }) => {
+const ProductVerificationStatus = ({ product, verifiedProducts, setVerifiedProducts }) => {
   // Función para calcular el porcentaje de verificación
   const calculateVerificationProgress = () => {
     if (!product.stock) return 0;
@@ -22,6 +22,11 @@ const ProductVerificationStatus = ({ product }) => {
     const progress = calculateVerificationProgress();
 
     if (progress === 100) {
+      if(!product.counted) {
+        setVerifiedProducts(verifiedProducts + 1);
+        product.counted = true;
+      }
+      
       return {
         message: "Producto listo para despachar",
         className: "status-success",

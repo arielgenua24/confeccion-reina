@@ -59,7 +59,23 @@ function Orders() {
           > Eliminar
           </button>
           <div className="order-header">
-            <span>Estado: {order.estado}</span>
+            { order.estado === 'listo para despachar' ?  (<div
+>
+  <span style={{ backgroundColor: '#0FCA37', color: '#fff', padding: '0.5rem', borderRadius: '0.25rem' }}>
+    Estado: {order.estado} 🎉
+  </span>
+</div>
+        ) : <span style={{
+          backgroundColor: '#fff9c4', // Amarillo crema
+          padding: '0.2rem 0.5rem',
+          border: '2px solid #fbc02d',
+          borderRadius: '4px',
+          marginLeft: '0.5rem',
+          display: 'inline-flex',
+          alignItems: 'center',
+          animation: 'jump 0.5s infinite alternate', // Animación
+        }}>Estado: {order.estado}⚠️</span> }
+           
             <h3>Código de orden: {order.orderCode}</h3>
             <p>Fecha: {order.fecha}</p>
           </div>

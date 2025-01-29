@@ -165,7 +165,7 @@ const useFirestore = () => {
       try {
         const orderDocRef = doc(db, "orders", orderId);
         await updateDoc(orderDocRef, 
-          ...updateData,
+          updateData,
         );
         console.log("Order updated successfully");
         return true; // Indica que la actualización fue exitosa
