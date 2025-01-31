@@ -12,6 +12,8 @@ import SuccededOrder from './pages/Succeded-order'
 import ProductVerification from './pages/ProductsVerification'
 import Inbox from './pages/inbox'
 import Home from './pages/Home'
+import Login from './pages/Login'
+import AuthRoute from './hooks/AuthRoute'
 
 import { FirestoreProvider } from './context/firestoreContext'
 import { OrderProvider } from './context/OrderContext'
@@ -33,6 +35,7 @@ function AppRouter() {
     { path:'/qrsearch' , element: <QrSearchHandler /> }, 
     { path:'/succeeded-order/:id' , element: <SuccededOrder /> },
     { path:'/inbox' , element: <Inbox /> },  
+    { path:'/login' , element: <Login /> },
   ])
   return router;
 }
@@ -44,7 +47,9 @@ export default function App() {
       <FirestoreProvider >
         <OrderProvider >
           <BackNav />
-          <AppRouter />
+          <AuthRoute>
+            <AppRouter />
+          </AuthRoute>
         </OrderProvider>
       </ FirestoreProvider>
     </HashRouter>

@@ -331,6 +331,8 @@ const useFirestore = () => {
   };
 
 
+  const [user, setUser] = useState(false);
+
   return {
     getOrders,
     createOrderWithProducts,
@@ -346,6 +348,7 @@ const useFirestore = () => {
     updateOrder,
     deleteOrder,
     getProductsByOrder,
+    user, setUser,
     products
   };
 };

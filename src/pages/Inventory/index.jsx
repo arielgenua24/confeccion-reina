@@ -25,7 +25,8 @@ const Inventory = () => {
   });
   
   const navigate = useNavigate();
-  const { getProducts, addProduct, deleteProduct } = useFirestoreContext();
+  const { getProducts, addProduct, deleteProduct, user } = useFirestoreContext();
+  console.log(user)
 
   useEffect(() => {
     const loadProducts = async () => {
