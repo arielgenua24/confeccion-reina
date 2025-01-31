@@ -2,12 +2,8 @@ import { useState } from "react";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
+import { db } from "../../firebaseSetUp";
 
-import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
-import firebaseConfig from '../../firebaseConfig'; // Importa tu configuración
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
  // Importa la configuración de Firebase
 import {
   collection,

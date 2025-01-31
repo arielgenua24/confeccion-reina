@@ -7,6 +7,7 @@ import ProductSearch from '../../components/ProductSearch';
 import EditProductBtn from '../../components/EditProduct';
 import QRButton from '../../components/QrGenerateBtn';
 import LoadingComponent from '../../components/Loading';
+import { auth } from '../../firebaseSetUp';
 
 
 import './styles.css';
@@ -27,6 +28,9 @@ const Inventory = () => {
   const navigate = useNavigate();
   const { getProducts, addProduct, deleteProduct, user } = useFirestoreContext();
   console.log(user)
+
+  console.log(auth.currentUser?.email);
+
 
   useEffect(() => {
     const loadProducts = async () => {

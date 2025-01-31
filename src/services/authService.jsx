@@ -1,10 +1,5 @@
 import { signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { getAuth } from "firebase/auth";
-import { initializeApp } from "firebase/app";
-import firebaseConfig from "../firebaseConfig";
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
+import { auth } from "../firebaseSetUp";
 // Iniciar sesión
 export const login = async (email, password) => {
   try {
