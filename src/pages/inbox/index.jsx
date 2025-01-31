@@ -56,7 +56,7 @@ function Inbox() {
               
               <div className="card-content">
                 <div className="total-display" style={{ backgroundColor: '#0FCA37' }}>
-                  <span className="total-text">${order.total.toLocaleString('es-ES')}</span>
+                  <span className="total-text"> Haz ganado: ${order.total.toLocaleString('es-ES')}</span>
                 </div>
                 
                 <div className="order-details">
