@@ -32,6 +32,11 @@ function BackNav() {
       padding: '0 16px', 
       borderBottom: '1px solid #e0e0e0', 
     };
+
+    const availablePaths = {
+      '/select-products': 'Seleccionar Productos',
+      'select-product-amount': 'Cantidad de Productos',
+    };
     
     if(location.pathname !== '/' && location.pathname !== '/home') {
         return (
@@ -48,7 +53,7 @@ function BackNav() {
                 <IoArrowBack size={24} />
               </button>
 
-                { location.pathname !== '/new-order' && (
+                { location.pathname in availablePaths && (
                     <div className="relative">
                     <button 
                       onClick={() => navigate('/cart')} 
