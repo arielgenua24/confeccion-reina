@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import useFirestoreContext from '../../hooks/useFirestoreContext';
 import LoadingComponent from '../../components/Loading';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import QrVerifyProduct from '../../components/QrVerifyProduct';
 import ProductVerificationStatus from '../../components/ProductVerificationStatus';
+import qrIcon from '../../assets/icons/icons8-qr-100.png';
 
 import './styles.css';
 
 const ProductVerification = () => {
+  const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isSearchByQrEnabled, setisSearchByQrEnabled] = useState(false);
@@ -15,6 +17,9 @@ const ProductVerification = () => {
   const [verifiedProducts, setVerifiedProducts] = useState(0);
 
   const {  updateOrder, getProductsByOrder } = useFirestoreContext();
+
+  const orderEstado = searchParams.get("orderEstado");
+  console.log(orderEstado)
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -44,6 +49,7 @@ const ProductVerification = () => {
   };
 
   const handleReset = (productId) => {
+    if (window.confirm('¿Estás seguro de que empezar de cero la verificacion?')) {
     setProducts(prevProducts =>
       prevProducts.map(product => {
         if (product.id === productId) {
@@ -52,6 +58,7 @@ const ProductVerification = () => {
         return product;
       })
     );
+  }
   };
 
   const handleUpdateOrder = async () => {
@@ -69,32 +76,54 @@ const ProductVerification = () => {
     <div className="products-verification">
         <LoadingComponent isLoading={loading} />
         <h1>Productos Verificados: {verifiedProducts} de {products.length} </h1>
+
+        {orderEstado !== 'listo para despachar' && ( <div style={{display: 'flex', justifyContent: 'center', marginBottom: '2rem', flexDirection: 'column'}}> 
+          <button
+                style={{backgroundColor: 'F1F7FF', color: '#0990FF', border: '1px solid #0990FF', display: 'flex' ,justifyContent: 'space-around', alignItems: 'center'}}
+                className='btn-verify'
+                onClick={() => setisSearchByQrEnabled(true)}
+                disabled={(verifiedProducts === products.length)}
+              >
+                <img src={qrIcon} alt="Qr icon" style={{
+                  width: '47px',
+                  height: '47px',
+              }} />
+
+                Verificar escaner de barras
+              </button>
+              
+        </div>)}
+
+       
+
       {products.map((product) => (
-        <div key={product.id} className="product-item">
-          <ProductVerificationStatus product={product} verifiedProducts={verifiedProducts} setVerifiedProducts={setVerifiedProducts}/>
+        <div key={product.id} className="verification-product-item">
+          <ProductVerificationStatus orderStatus={orderEstado} product={product} verifiedProducts={verifiedProducts} setVerifiedProducts={setVerifiedProducts}/>
 
           <h3>Codigo del producto: {product.productData.productCode}</h3>
           <h3>Nombre: {product.productData.name}</h3>
-          <p>
+          {orderEstado == 'listo para despachar' ? 
+          <h3> Ya han sido han sido verificados todos los productos, en total eran {product.stock}  
+         -{product.productData.name} </h3> : (
+            <p>
             Verificados: <span>{product.verified}</span> de {product.stock}
           </p>
-            <button 
+          )}
+          {orderEstado !== 'listo para despachar' && (<div><button 
+              className='btn-verify'
               onClick={() => handleVerify(product.id)}
               disabled={product.verified >= product.stock}
             >
               Verificar uno manualmente
             </button>
-            <button style={{background: 'red'}}
+            <button 
+            className='btn-verify'
+            style={{background: 'red', color: 'white'}}
               onClick={() => handleReset(product.id)}
             >
               Empezar de nuevo la verification
-            </button>
-            <button
-              onClick={() => setisSearchByQrEnabled(true)}
-              disabled={product.verified >= product.stock}
-            >
-              Verificar con escaner de barras
-            </button>
+            </button></div>)}
+            
           
         </div>
       ))}

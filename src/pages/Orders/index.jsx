@@ -47,17 +47,24 @@ function Orders() {
       <div className="orders-list">
       {orders.map((order) => (
         <div key={order.id} className="order-card">
-          <QRButton 
-            product={order}
-            onQRGenerate={setQRcode}
-          /> 
-          <button 
-            className="delete-button"
-            onClick={() => {
-              handleDelete(order)
-            }}
-          > Eliminar
-          </button>
+          <div style={{width: '100%', display: 'flex', justifyContent: 'space-between', marginBottom: '2rem'}}>
+                <QRButton 
+                      product={order}
+                      onQRGenerate={setQRcode}
+                    /> 
+    
+              <button 
+                style={{backgroundColor: '#f44336', color: '#fff', padding: '0.5rem', borderRadius: '0.25rem'}}
+                className="delete-button"
+                onClick={() => {
+                  handleDelete(order)
+                }}
+              > Eliminar
+              </button>
+
+          </div>
+
+          
           <div className="order-header">
             { order.estado === 'listo para despachar' ?  (<div>
             <span style={{ backgroundColor: '#0FCA37', color: '#fff', padding: '0.5rem', borderRadius: '0.25rem' }}>
@@ -86,7 +93,7 @@ function Orders() {
           <div className="verify-products">
           <button 
             className="verify-button"
-            onClick={() => navigate(`/ProductsVerification/${order.id}`)}
+            onClick={() => navigate(`/ProductsVerification/${order.id}/?orderEstado=${order.estado}`)}
           >
             Verificar Productos
           </button>

@@ -1,12 +1,20 @@
 import useFirestoreContext from '../../hooks/useFirestoreContext'
 import LoadingComponent from '../../components/Loading'
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './styles.css'
+import { use } from 'react'
 
 function Inbox() {
   const [orders, setOrders] = useState([])
   const [isLoading, setIsLoading] = useState(false);
   const { filterOrdersByDate, getProductsByOrder } = useFirestoreContext()
+  const navigate = useNavigate()
+
+  const getOrderNavigation = (id, estado) => { 
+      navigate(`/productsVerification/${id}/?orderEstado=${estado}`)
+  }
+
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -61,7 +69,7 @@ function Inbox() {
                 
                 <div className="order-details">
                   <p className="detail-line">
-                    Pedido número: <strong>#{order.orderCode}</strong>
+                    Pedido número: <strong>{order.orderCode}</strong>
                   </p>
                   <p className="detail-line">
                     Cliente: <strong>{order.cliente}</strong>
@@ -72,8 +80,13 @@ function Inbox() {
                   <p className="detail-line">
                     Telefono: <em>{order.telefono}</em>
                   </p>
+
+                  
                 </div>
               </div>
+
+              <button onClick={()=>{getOrderNavigation(order.id, order.estado)}}> VER LA ORDEN</button>
+
             </div>
           ))}
         </div>

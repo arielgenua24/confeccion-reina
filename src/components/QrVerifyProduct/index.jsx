@@ -12,7 +12,8 @@ const QrVerifyProduct = ({handleVerify, setisSearchByQrEnabled}) => {
     console.log(parsedData.id);
     handleVerify(parsedData.id);
     return parsedData;
-   
+
+        
 
 };
 
