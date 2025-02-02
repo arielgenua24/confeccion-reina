@@ -1,22 +1,41 @@
 .inbox-container {
     padding: 2rem;
     min-height: 100vh;
-    background: #f5f5f7;
+    width: 100%;
+    gap: 24px;
+    padding: 24px;
   }
   
   .orders-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
-    padding: 1rem;
-  }
+    /* padding: 2rem; */
+    /* min-height: 100vh; */
+    /* width: 100%; */
+    gap: 24px;
+    /* padding: 24px; */
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    /* width: 100%; */
+    gap: 24px;
+    padding: 24px;
+    /* width: calc(33.333% - 24px); */
+    /* margin: 0; */
+    /* min-width: 300px; */
+    /* flex-grow: 1; */
+    display: flex
+;
+}
   
   .order-card {
-    background: white;
-    border-radius: 18px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    overflow: hidden;
-    transition: transform 0.2s ease;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    background-color: #fff;
+    margin: 0;
+    /* Añadimos min-width para evitar tarjetas muy estrechas */
+    max-width: 290px;
+    /* Quitamos el max-width fijo para permitir el diseño flexible */
+    flex-grow: 1;
+    margin-bottom: 30px;
   }
   
   .order-card:hover {
