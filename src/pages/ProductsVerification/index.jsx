@@ -5,10 +5,12 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import QrVerifyProduct from '../../components/QrVerifyProduct';
 import ProductVerificationStatus from '../../components/ProductVerificationStatus';
 import qrIcon from '../../assets/icons/icons8-qr-100.png';
+import { useNavigate } from 'react-router-dom';
 
 import './styles.css';
 
 const ProductVerification = () => {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -66,6 +68,7 @@ const ProductVerification = () => {
       await updateOrder(orderId, {
         "estado": "listo para despachar"
       });
+      navigate('/orders');
     } catch (error) {
       console.error("Error al actualizar la orden:", error);
       // Aquí podrías agregar alguna notificación de error al usuario
@@ -75,9 +78,11 @@ const ProductVerification = () => {
   return (
     <div className="products-verification">
         <LoadingComponent isLoading={loading} />
-        <h1>Productos Verificados: {verifiedProducts} de {products.length} </h1>
 
-        {orderEstado !== 'listo para despachar' && ( <div style={{display: 'flex', justifyContent: 'center', marginBottom: '2rem', flexDirection: 'column'}}> 
+         { orderEstado !==  'listo para despachar' && <h1>Productos Verificados: {verifiedProducts} de {products.length} </h1>}
+
+        {orderEstado !== 'listo para despachar' && ( 
+          <div style={{display: 'flex', justifyContent: 'center', marginBottom: '2rem', flexDirection: 'column'}}> 
           <button
                 style={{backgroundColor: 'F1F7FF', color: '#0990FF', border: '1px solid #0990FF', display: 'flex' ,justifyContent: 'space-around', alignItems: 'center'}}
                 className='btn-verify'
@@ -101,10 +106,34 @@ const ProductVerification = () => {
           <ProductVerificationStatus orderStatus={orderEstado} product={product} verifiedProducts={verifiedProducts} setVerifiedProducts={setVerifiedProducts}/>
 
           <h3>Codigo del producto: {product.productData.productCode}</h3>
-          <h3>Nombre: {product.productData.name}</h3>
-          {orderEstado == 'listo para despachar' ? 
-          <h3> Ya han sido han sido verificados todos los productos, en total eran {product.stock}  
-         -{product.productData.name} </h3> : (
+          {orderEstado == 'listo para despachar' ? (<div className="verification-complete">
+          <div className="product-details">
+            <p className="stock-info">
+              Total verificado: <span>{product.stock} unidades</span>
+            </p>
+            <div className="product-specs">
+              <p>
+                <strong>Producto:</strong> {product.productData.name}
+              </p>
+              <p>
+                <strong>Color:</strong> {product.productData.color}
+              </p>
+              <p>
+                <strong>Talle:</strong> {product.productData.size}
+              </p>
+              <p>
+                <strong>Precio:</strong> {product.productData.price}
+              </p>
+              <div className="total-price-container">
+                <p className="total-price">
+                  <strong>Total:</strong> 
+                  <span>${product.stock * product.productData.price}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+</div>)
+         : (
             <p>
             Verificados: <span>{product.verified}</span> de {product.stock}
           </p>

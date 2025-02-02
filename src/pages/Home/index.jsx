@@ -1,56 +1,71 @@
 import { useState, useEffect } from 'react';
-import {Link } from 'react-router-dom'
+import { Link } from 'react-router-dom';
 import { useOrder } from '../../hooks/useOrder';
-
+import { Inbox, ShoppingCart, List, Package } from 'lucide-react';
+import './styles.css';
 
 function Home() {
     const { order, setOrder, getCustomerData } = useOrder();
 
     const [customerData, setCustomerData] = useState({
-      customerName: order.customerName || '',
-      phone: order.phone || '',
-      address: order.address || '',
+        customerName: order.customerName || '',
+        phone: order.phone || '',
+        address: order.address || '',
     });
 
-   useEffect(()=> {
-    let data = getCustomerData()
-    console.log(data)
-    if(data.customerName !== '') {
-       setOrder(data)
-       setCustomerData(data)
-    }
-   
-   }, [])
+    useEffect(() => {
+        let data = getCustomerData();
+        if (data.customerName !== '') {
+            setOrder(data);
+            setCustomerData(data);
+        }
+    }, []);
 
-
-    const areProductsInOrder = order.products.length
-    console.log(areProductsInOrder)
-
+    const areProductsInOrder = order.products.length;
 
     return (
-      <div className="app-container">
-        <Link to="/inbox">
-          <button className="pages-btn">Dinero y notificaciones</button>
-        </Link>
+        <div className="home-container">
+            <h1 className="home-title" 
+                style={{fontSize: '30px', textAlign: 'center', marginBottom: '20px', color: '#c4c4c4'}}>
+                    Bienvenida a tu sistema de inventario Reina👑
+                </h1>
 
 
-        <div className="orders-section">
+            <Link to="/inbox" className="home-link">
+                <button className="home-btn inbox">
+                    <Inbox size={24} className="home-icon" />
+                    Dinero y notificaciones
+                    <span className="home-subtext">Revisar dinero recibido y avisos</span>
+                </button>
+            </Link>
 
-          <Link to="/new-order">
-          {!areProductsInOrder ? 
-            (<button className="pages-btn">Nuevo Pedido</button> ):
-            (<button className="pages-btn">Continuar el pedido de {customerData.customerName} </button> )
-        }
-            
-          </Link>
-          <Link to="/orders">
-            <button className="pages-btn">orders</button>
-          </Link>
+            <div className="home-orders-section">
+                <Link to="/new-order" className="home-link">
+                    <button className="home-btn order">
+                        <ShoppingCart size={24} className="home-icon" />
+                        {!areProductsInOrder ? 'Nuevo Pedido' : `Continuar el pedido de ${customerData.customerName}`}
+                        <span className="home-subtext">Crea o continúa un nuevo pedido</span>
+                    </button>
+                </Link>
+
+                <Link to="/orders" className="home-link">
+                    <button className="home-btn order">
+                        <List size={24} className="home-icon" />
+                        Pedidos
+                        <span className="home-subtext">Órdenes pendientes de los clientes</span>
+                    </button>
+                </Link>
+            </div>
+
+            <Link to="/inventory" className="home-link">
+                <button className="home-btn catalog">
+                    <Package size={24} className="home-icon" />
+                    Catálogo
+                    <span className="home-subtext">Agrega tus productos y controla tu stock</span>
+                </button>
+            </Link>
         </div>
-        <Link to="/inventory">
-          <button className="pages-btn">Catálogo</button>
-        </Link>
-      </div>
     );
-  }
-export default Home;  
+}
+
+export default Home;
