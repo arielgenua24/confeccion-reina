@@ -1,0 +1,243 @@
+.search-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 1rem;
+    overflow-y: auto;
+    /* background-color: #f1f1f1f1; */
+    border-radius: 20px;
+    /* margin-inline: 20px; */
+    margin-bottom: 35px;
+    margin-top: 22px;
+}
+  
+  .search-wrapper {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease-out;
+    padding: 8px;
+  }
+  
+  .search-wrapper.focused {
+    padding: 24px;
+    transform: scale(1.05);
+  }
+  
+  .input-container {
+    margin-bottom: 0;
+    transition: margin-bottom 0.3s ease;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+  
+  .input-container.focused {
+    margin-bottom: 1rem;
+  }
+
+  .search-icon {
+    margin-right: 20px;
+  }
+  
+  .search-input {
+    width: 100%;
+    height: 30px;
+    font-size: 1.125rem;
+    border: none;
+    border-radius: 8px;
+    outline: none;
+    transition: box-shadow 0.2s ease;
+  }
+  
+  .search-input:focus {
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  }
+  
+  .results-container {
+    transition: all 0.3s ease-out;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+  }
+  
+  .results-container.visible {
+    max-height: 24rem;
+    opacity: 1;
+  }
+  
+  .results-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .result-item {
+    padding: 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .result-item:hover {
+    background-color: #f8f9fa;
+  }
+  
+  .product-name {
+    font-weight: 500;
+  }
+  
+  .product-details {
+    color: #666;
+  }
+
+  .product-search-container {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    max-width: 600px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .search-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px;
+    border-bottom: 1px solid #e5e5e5;
+  }
+  
+  .search-wrapper {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    background: #f2f2f7;
+    border-radius: 10px;
+    padding: 8px 12px;
+    transition: all 0.3s ease;
+  }
+  
+  .search-wrapper.focused {
+    box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.3);
+  }
+  
+  .search-icon {
+    margin-right: 10px;
+    color: #8e8e93;
+  }
+  
+  .search-input {
+    flex-grow: 1;
+    background: transparent;
+    border: none;
+    font-size: 16px;
+    outline: none;
+  }
+  
+  .clear-search-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #8e8e93;
+    padding: 0;
+  }
+  
+  .filter-controls {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: #f2f2f7;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .filter-btn.active {
+    background: #007aff;
+    color: white;
+  }
+  
+  .results-container {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+  
+  .results-container.visible {
+    max-height: 500px;
+  }
+  
+  .results-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .result-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #e5e5e5;
+    transition: background 0.3s ease;
+  }
+  
+  .result-item:hover {
+    background: #f5f5f5;
+  }
+  
+  .result-item.low-stock {
+    background: rgba(255, 59, 48, 0.05);
+  }
+  
+  .product-info {
+    flex-grow: 1;
+  }
+  
+  .product-name {
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+  
+  .product-details {
+    display: flex;
+    gap: 10px;
+    font-size: 14px;
+    color: #8e8e93;
+  }
+  
+  .product-price {
+    font-weight: 500;
+    color: #007aff;
+  }
+  
+  .stock-indicator {
+    font-weight: 500;
+  }
+  
+  .stock-indicator.warning {
+    color: #ff3b30;
+  }
+  
+  .stock-indicator.good {
+    color: #34c759;
+  }
+  
+  .product-actions {
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+}
+  
+  .no-results {
+    text-align: center;
+    padding: 20px;
+    color: #8e8e93;
+  }

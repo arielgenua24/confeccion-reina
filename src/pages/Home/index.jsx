@@ -26,7 +26,15 @@ function Home() {
     return (
         <div className="home-container">
             <h1 className="home-title" 
-                style={{fontSize: '30px', textAlign: 'center', marginBottom: '20px', color: '#c4c4c4'}}>
+                style={
+                    {fontSize: '30px', 
+                    textAlign: 'center', 
+                    marginBottom: '20px', 
+                    color: '#c4c4c4', 
+                    position: 'absolute',
+                    padding: '12px',
+                    top: '13px'
+                    }}>
                     Bienvenida a tu sistema de inventario Reina👑
                 </h1>
 
