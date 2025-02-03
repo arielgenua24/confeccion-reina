@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import useFirestoreContext from "../../hooks/useFirestoreContext";
 import  { useOrder }  from "../../hooks/useOrder";
 import ProductSearch from "../../components/ProductSearch";
+import qrIcon from '../../assets/icons/icons8-qr-100.png';
+
 
 function SelectProducts() {
       const [products, setProducts] = useState([]);
@@ -56,11 +58,30 @@ function SelectProducts() {
 
     return (
         <div className="container">
-          <h1 className="TITLE">AGREGUE LOS PRODUCTOS AL CARRITO</h1>
+          <h1 className="TITLE" style={{fontSize: '30px', marginBottom:'40px'}}>AGREGUE LOS PRODUCTOS AL CARRITO</h1>
     
-          <button onClick={() => {
+          <button 
+            style={{
+              backgroundColor: '#F1F7FF',
+              border: '1px solid #0990FF',
+              borderRadius: '20px',
+              color: '#0990FF',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              padding: '10px 15px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px'
+            }}
+          onClick={() => {
             navigate('/qrsearch?redirect=select-product');
-          }}> BUSCAR POR QR</button>
+          }}> 
+            <img src={qrIcon} alt="Qr icon" style={{
+                                    width: '30px',
+                                    height: '30px',
+                                  }} />
+          
+          BUSCAR POR QR</button>
           <ProductSearch products={products} isCartEnabled={true} />
 
 

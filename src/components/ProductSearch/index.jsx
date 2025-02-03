@@ -88,10 +88,10 @@ function ProductSearch({ products, setQRcode, isCartEnabled }) {
               >
                 <div className="product-info">
                   <h3 className="product-name">{product.name}</h3>
-                  <div className="product-details">
-                    <span>{product.color}</span>
+                  <div className="search-product-details">
+                    <span>Color: {product.color}</span>
                     <span>Código: {product.productCode}</span>
-                    <span className="product-price">${product.price}</span>
+                    <span className="product-price">Precio: ${product.price}</span>
                     <span className={`stock-indicator ${product.stock <= 10 ? 'warning' : 'good'}`}>
                       Stock: {product.stock}
                     </span>
@@ -105,12 +105,28 @@ function ProductSearch({ products, setQRcode, isCartEnabled }) {
                     onQRGenerate={() => setQRcode(product)} 
                   /> 
                   </>)}
-                  {isCartEnabled && (<button
-                        className="add-to-cart-button"
+                  {isCartEnabled && 
+
+                    (<div>  
+                      <button
+                        className="search-add-to-cart-button"
                         onClick={() => navigate(`/select-product-amount/${product.id}`)}
                       >
                         AGREGAR AL CARRITO
-                      </button>)}
+                      </button> 
+                      
+                      <button
+                      style={{marginTop: '10px', scale:'0.75'}}
+                        onClick={() => navigate(`/select-product-amount/${product.id}`)}
+                      >
+                        MODIFICAR CANTIDAD
+                      </button>
+
+
+
+                      </div>)
+                      
+                      }
                  
                 </div>
               </li>
