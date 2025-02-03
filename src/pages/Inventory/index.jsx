@@ -12,7 +12,9 @@ import qrIcon from '../../assets/icons/icons8-qr-100.png';
 
 
 
+
 import './styles.css';
+import { set } from 'date-fns';
 
 const Inventory = () => {
   const [products, setProducts] = useState([]);
@@ -45,6 +47,7 @@ const Inventory = () => {
   }, []);
 
   const handleSubmit = async (e) => {
+    setIsLoading(true);
     e.preventDefault();
     await addProduct(newProduct.name, newProduct.price, newProduct.size, newProduct.color, newProduct.stock);
     setIsModalOpen(false);
@@ -52,6 +55,7 @@ const Inventory = () => {
     setProducts(updatedProducts);
     //reset newProduct state
     setNewProduct({ name: '', price: '', size: '', color: '', stock: '' });
+    setIsLoading(false);
   };
   const handleDelete = async (productId) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
