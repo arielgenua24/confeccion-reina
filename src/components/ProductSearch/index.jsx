@@ -64,7 +64,7 @@ function ProductSearch({ products, setQRcode }) {
             className={`filter-btn ${activeFilters.lowStock ? 'active' : ''}`}
             onClick={() => toggleFilter('lowStock')}
           >
-            <Filter size={16} /> Buscar bajo Stock
+            <Filter size={16} /> Bajo Stock
           </button>
         </div>
       </div>
@@ -81,7 +81,7 @@ function ProductSearch({ products, setQRcode }) {
                 key={product.id} 
                 className={`result-item ${product.stock <= 10 ? 'low-stock' : ''}`}
               >
-                <div className={`product-info ${product.stock <= 10 ? 'warning' : ''}`}>
+                <div className="product-info">
                   <h3 className="product-name">{product.name}</h3>
                   <div className="product-details">
                     <span>{product.color}</span>
