@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useFirestoreContext from "../../hooks/useFirestoreContext";
 import  { useOrder }  from "../../hooks/useOrder";
+import ProductSearch from "../../components/ProductSearch";
 
 function SelectProducts() {
       const [products, setProducts] = useState([]);
@@ -60,7 +61,9 @@ function SelectProducts() {
           <button onClick={() => {
             navigate('/qrsearch?redirect=select-product');
           }}> BUSCAR POR QR</button>
-          
+          <ProductSearch products={products} isCartEnabled={true} />
+
+
           <section>
             <h2 className="subtitle">TODO TU CATÁLOGO</h2>
             <div className="inventory">

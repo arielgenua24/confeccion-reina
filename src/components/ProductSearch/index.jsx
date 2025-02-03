@@ -1,13 +1,16 @@
 import React, { useState, useMemo } from "react";
 import searchProducts from "../../utils/searchFn";
+import { useNavigate } from "react-router-dom";
 import EditProductBtn from "../EditProduct";
 import QRButton from "../QrGenerateBtn";
 import { Search, X, Filter } from "lucide-react";
 import './styles.css';
 
-function ProductSearch({ products, setQRcode }) {
+function ProductSearch({ products, setQRcode, isCartEnabled }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isFocused, setIsFocused] = useState(false);
+  const navigate = useNavigate();
+
   const [activeFilters, setActiveFilters] = useState({
     inStock: false,
     lowStock: false
@@ -60,12 +63,14 @@ function ProductSearch({ products, setQRcode }) {
           )}
         </div>
         <div className="filter-controls">
-          <button 
+          {!isCartEnabled && 
+          (<button 
             className={`filter-btn ${activeFilters.lowStock ? 'active' : ''}`}
             onClick={() => toggleFilter('lowStock')}
           >
             <Filter size={16} /> Bajo Stock
-          </button>
+          </button>)}
+          
         </div>
       </div>
 
@@ -93,11 +98,20 @@ function ProductSearch({ products, setQRcode }) {
                   </div>
                 </div>
                 <div className="product-actions">
+                  {!isCartEnabled && (<> 
                   <EditProductBtn product_id={product.id} />  
                   <QRButton 
                     product={product} 
                     onQRGenerate={() => setQRcode(product)} 
                   /> 
+                  </>)}
+                  {isCartEnabled && (<button
+                        className="add-to-cart-button"
+                        onClick={() => navigate(`/select-product-amount/${product.id}`)}
+                      >
+                        AGREGAR AL CARRITO
+                      </button>)}
+                 
                 </div>
               </li>
             ))}
