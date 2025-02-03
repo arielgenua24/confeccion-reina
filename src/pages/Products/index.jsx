@@ -70,18 +70,6 @@ function Product() {
     }
   };
 
-  const handleDelete = async () => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
-      setIsLoading(true);
-      try {
-        await deleteProduct(id);
-        setIsLoading(false);
-        navigate('/inventory');
-      } catch (error) {
-        console.error("Error al eliminar el producto:", error);
-      }
-    }
-  };
 
   return (
     <div className="form-container">
@@ -117,7 +105,6 @@ function Product() {
           )}
         </div>
       </form>
-      <button className="delete-button" onClick={handleDelete}>Eliminar Producto</button>
     </div>
   );
 }

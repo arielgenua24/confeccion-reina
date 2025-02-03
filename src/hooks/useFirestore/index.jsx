@@ -265,66 +265,76 @@ const useFirestore = () => {
   };
 
   const createOrderWithProducts = async (fecha, cliente, telefono, direccion, products) => {  
-    console.log('llamado exitoso')
-    console.log(fecha, cliente, telefono, direccion, products)
+    console.log('llamado exitoso');
+    console.log(fecha, cliente, telefono, direccion, products);
+  
     try {
-      // Primero, validar el stock de todos los productos
-      for (const element of products) {
-        const product = element.item;
-        const productRef = doc(db, "products", product.id);
-    
-        const productSnapshot = await getDoc(productRef);
-        if (!productSnapshot.exists()) {
-          console.error(`Producto ${product.id} no existe`);
-          return false;
+        // Validar stock de todos los productos
+        for (const element of products) {
+            const product = element.item;
+            const productRef = doc(db, "products", product.id);
+            const productSnapshot = await getDoc(productRef);
+            
+            if (!productSnapshot.exists()) {
+                console.error(`Producto ${product.id} no existe`);
+                return false;
+            }
+            
+            const currentStock = Number(productSnapshot.data().stock);
+            if (currentStock < Number(element.quantity)) {
+                console.error(`Stock insuficiente para ${product.id}`);
+                return false;
+            }
         }
-    
-        const currentStock = Number(productSnapshot.data().stock);
-        if (currentStock < Number(element.quantity)) {
-          console.error(`Stock insuficiente para ${product.id}`);
-          return false;
-        }
-      }
 
-      const orderCode = await incrementOrdersCode();
-      // Si todos los productos tienen stock, crear el pedido
-      const pedidoRef = await addDoc(collection(db, "orders"), {
-        orderCode,
-        fecha,
-        cliente,
-        telefono,
-        direccion,
-        estado: "pendiente",
-      });
-    
-      // Procesar productos y actualizar stock
-      for (const element of products) {
-        const product = element.item;
-        const productRef = doc(db, "products", product.id);
-        const productSnapshot = await getDoc(productRef);
-        const currentStock = Number(productSnapshot.data().stock);
-    
-    
-        const quantityNumber = Number(element.quantity)
-        await addDoc(collection(db, `orders/${pedidoRef.id}/products`), {
-          productRef,
-          stock: quantityNumber,
-          verified: 0
+        const orderCode = await incrementOrdersCode();
+        // Crear el pedido en la colección "orders"
+        const pedidoRef = await addDoc(collection(db, "orders"), {
+            orderCode,
+            fecha,
+            cliente,
+            telefono,
+            direccion,
+            estado: "pendiente",
         });
-    
-        //bug-> me fija la cantidad, en vez de restar, la agrega como una string.
-        const newStockInt = currentStock - quantityNumber
-        await updateDoc(productRef, {
-          stock: newStockInt
-        });
-      }
-    
-      return pedidoRef.id;
+
+        // Procesar productos y actualizar stock
+        for (const element of products) {
+            const product = element.item;
+            const productRef = doc(db, "products", product.id);
+            const productSnapshot = await getDoc(productRef);
+            const currentStock = Number(productSnapshot.data().stock);
+            console.log(productSnapshot.data());
+            
+            const quantityNumber = Number(element.quantity);
+
+            // ⚡ Guardar snapshot del producto en la orden
+            await addDoc(collection(db, `orders/${pedidoRef.id}/products`), {
+                productRef, // Se mantiene la referencia por si se necesita
+                productSnapshot: { // Snapshot de los datos actuales del producto
+                    name: productSnapshot.data().name,
+                    price: productSnapshot.data().price,
+                    productCode: productSnapshot.data().productCode,
+                    size: productSnapshot.data().size,
+                },
+                stock: quantityNumber,
+                verified: 0
+            });
+
+            // Actualizar el stock del producto en el inventario
+            const newStockInt = currentStock - quantityNumber;
+            await updateDoc(productRef, {
+                stock: newStockInt
+            });
+        }
+
+        return pedidoRef.id;
     } catch (error) {
-      console.error("Error en el procesamiento del pedido:", error);
-      return false;
+        console.error("Error en el procesamiento del pedido:", error);
+        return false;
     }
-  };
+};
+
 
 
   const [user, setUser] = useState(false);

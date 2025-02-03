@@ -55,7 +55,6 @@ function Orders() {
     
               <button 
                 style={{backgroundColor: '#f44336', color: '#fff', padding: '0.5rem', borderRadius: '0.25rem'}}
-                className="delete-button"
                 onClick={() => {
                   handleDelete(order)
                 }}
