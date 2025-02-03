@@ -77,7 +77,7 @@ const Cart = () => {
 
 
     return (
-        <div>
+        <div style={{minHeight: '1100px'}}>
             <LoadingComponent isLoading={isLoading}/>
 
             <OrderSummary order={order} cart={cart}/>

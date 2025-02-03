@@ -73,78 +73,57 @@ const OrderCard = ({ product, cart }) => {
 
 
   return (
-    <div className="order-card">
-      <div className="card-header">
-        <h3 className="card-title">{product.name}</h3>
-        <span className="product-code">{product.productCode}</span>
+    <div className="cart-order-card">
+      <div className="cart-card-header">
+        <h3 className="cart-card-title">{product.name}</h3>
+        <span className="cart-product-code">{product.productCode}</span>
       </div>
       
-      <div className="card-content">
-        <div className="info-grid">
-          <div className="info-item">
-            <span className="info-label">Color</span>
-            <span className="info-value">{product.color}</span>
+      <div className="cart-card-content">
+        <div className="cart-info-grid">
+          <div className="cart-info-item">
+            <span className="cart-info-label">Color</span>
+            <span className="cart-info-value">{product.color}</span>
           </div>
-          <div className="info-item">
-            <span className="info-label">Cantidad</span>
-            <span className="info-value">{itemQuantity}</span>
+          <div className="cart-info-item">
+            <span className="cart-info-label">Cantidad</span>
+            <span className="cart-info-value">{itemQuantity}</span>
           </div>
-          <div className="info-item">
-            <span className="info-label">Tamaño</span>
-            <span className="info-value">{product.size}</span>
+          <div className="cart-info-item">
+            <span className="cart-info-label">Tamaño</span>
+            <span className="cart-info-value">{product.size}</span>
           </div>
-          <div className="info-item">
-            <span className="info-label">Stock</span>
-            <span className="info-value">{product.stock}</span>
+          <div className="cart-info-item">
+            <span className="cart-info-label">Stock</span>
+            <span className="cart-info-value">{product.stock}</span>
           </div>
-          <div className="info-item">
-            <span className="info-label">Precio</span>
-            <span className="info-value">${product.price}</span>
+          <div className="cart-info-item">
+            <span className="cart-info-label">Precio</span>
+            <span className="cart-info-value">${product.price}</span>
           </div>
-
-          <div className="info-item">
-            <span className="info-label">Total</span>
-            <span className="info-value">{(product.price*itemQuantity)}</span>
+          <div className="cart-info-item cart-total">
+            <span className="cart-info-label">Total</span>
+            <span className="cart-info-value">${(product.price * itemQuantity).toFixed(2)}</span>
           </div>
-
         </div>
       </div>
       
-      <button onClick={() => {
-          navigate(`/select-product-amount/${product.id}?in-cart=true`)
-      }}>Modificar</button>
-
-
-      <div className="card-footer">
-        <span className="update-date">
-          Actualizado: {formatDate(product.updatedAt)}
-        </span>
+      <div className="cart-card-actions">
+        <button className="cart-modify-button" onClick={() => navigate(`/select-product-amount/${product.id}?in-cart=true`)}>
+          Modificar
+        </button>
+        <button className="cart-delete-button" onClick={handleDelete}>
+          Eliminar del pedido
+        </button>
       </div>
-
-      <button
-      className="delete-from-cart-button"
-      onClick={handleDelete}
-      style={{
-        backgroundColor: "red",
-        color: "#fff",
-        borderRadius: "20px",
-        border: "none",
-        padding: "10px 20px",
-        cursor: "pointer",
-      }}
-    >
-      Eliminar del pedido
-    </button>
-
-    {/*<DeleteConfirmationModal show={showModal} onClose={() => setShowModal(false)} /> */}
-
+      
+      <div className="cart-card-footer">
+        <span className="cart-update-date">Actualizado: {formatDate(product.updatedAt)}</span>
+      </div>
     </div>
   );
 
 
-
-
-  
 };
 
 export default OrderCard;
