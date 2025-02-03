@@ -134,9 +134,26 @@ const ProductVerification = () => {
           </div>
 </div>)
          : (
-            <p>
+          <div> 
+               <p>
             Verificados: <span>{product.verified}</span> de {product.stock}
           </p>
+
+            <p>
+                <strong>Producto:</strong> {product.productSnapshot.name}
+              </p>
+              <p>
+                <strong>Color:</strong> {product.productSnapshot.color}
+              </p>
+              <p>
+                <strong>Talle:</strong> {product.productSnapshot.size}
+              </p>
+              <p>
+                <strong>Precio:</strong> {product.productSnapshot.price}
+              </p>
+          </div>
+           
+          
           )}
           {orderEstado !== 'listo para despachar' && (<div><button 
               className='btn-verify'

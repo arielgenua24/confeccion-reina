@@ -42,7 +42,9 @@
   .product-details {
     border-left: 4px solid #28a745;
     padding-left: 15px;
-  }
+    display: flex;
+    justify-content: space-around;
+}
   
   .stock-info {
     font-size: 1.1rem;

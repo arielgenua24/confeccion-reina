@@ -192,29 +192,27 @@ const useFirestore = () => {
 
     const getProductsByOrder = async (orderId) => {
       try {
-        // Obtener subcolección de productos
-        const productsSnapshot = await getDocs(
-          collection(db, "orders", orderId, "products")
-        );
-    
-        const products = await Promise.all(
-          productsSnapshot.docs.map(async (productDoc) => {
-            const productRef = productDoc.data().productRef;
-            const productSnap = await getDoc(productRef);
-            return {
-              id: productDoc.id,
-              ...productDoc.data(),
-              productData: productSnap.data(),
-            };
-          })
-        );
-    
-        return products;
+          // Obtener subcolección de productos
+          const productsSnapshot = await getDocs(collection(db, "orders", orderId, "products"));
+  
+          // Mapear los productos sin volver a consultar el inventario
+          const products = productsSnapshot.docs.map((productDoc) => {
+              const productData = productDoc.data();
+              
+              return {
+                  id: productDoc.id,
+                  ...productData,
+                  productData: productData.productSnapshot, // Usamos el snapshot en vez de consultar Firestore
+              };
+          });
+  
+          return products;
       } catch (error) {
-        console.error("Error fetching order products: ", error);
-        throw error;
+          console.error("Error fetching order products: ", error);
+          throw error;
       }
-    };
+  };
+  
 
 
 
@@ -316,6 +314,7 @@ const useFirestore = () => {
                     price: productSnapshot.data().price,
                     productCode: productSnapshot.data().productCode,
                     size: productSnapshot.data().size,
+                    color: productSnapshot.data().color,
                 },
                 stock: quantityNumber,
                 verified: 0
