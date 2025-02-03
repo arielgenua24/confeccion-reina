@@ -2,9 +2,11 @@
 import { useState } from 'react';
 import './styles.css';
 import { useOrder } from '../../hooks/useOrder';
+import { useNavigate } from 'react-router-dom';
 
-const OrderCard = ({ product }) => {
+const OrderCard = ({ product, cart }) => {
   const [showModal, setShowModal] = useState(false);
+  const navigate = useNavigate();
   const { deleteItem } = useOrder() 
 
   const formatDate = (dateString) => {
@@ -66,6 +68,9 @@ const OrderCard = ({ product }) => {
       color: '#333',
     },
   };
+  console.log(product)
+  let itemQuantity = cart[0].quantity
+
 
   return (
     <div className="order-card">
@@ -81,6 +86,10 @@ const OrderCard = ({ product }) => {
             <span className="info-value">{product.color}</span>
           </div>
           <div className="info-item">
+            <span className="info-label">Cantidad</span>
+            <span className="info-value">{itemQuantity}</span>
+          </div>
+          <div className="info-item">
             <span className="info-label">Tamaño</span>
             <span className="info-value">{product.size}</span>
           </div>
@@ -92,9 +101,20 @@ const OrderCard = ({ product }) => {
             <span className="info-label">Precio</span>
             <span className="info-value">${product.price}</span>
           </div>
+
+          <div className="info-item">
+            <span className="info-label">Total</span>
+            <span className="info-value">{(product.price*itemQuantity)}</span>
+          </div>
+
         </div>
       </div>
       
+      <button onClick={() => {
+          navigate(`/select-product-amount/${product.id}?in-cart=true`)
+      }}>Modificar</button>
+
+
       <div className="card-footer">
         <span className="update-date">
           Actualizado: {formatDate(product.updatedAt)}

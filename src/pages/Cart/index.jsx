@@ -86,7 +86,7 @@ const Cart = () => {
 
             <ul>
                 {products.map((item, index) => (
-                    <OrderCard key={index} product={item.item} />
+                    <OrderCard key={index} product={item.item} cart={cart} />
                 ))}
             </ul>
 

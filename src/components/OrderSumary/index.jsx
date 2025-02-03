@@ -27,17 +27,6 @@ const OrderSummary = ({ order, cart }) => {
           </div>
         </div>
 
-        <div className="products-summary">
-          <h2>Productos en Carrito</h2>
-          <div className="products-list">
-            {cart && cart.map((item, index) => (
-              <div key={index} className="product-item">
-                <span className="product-name">{item.item.name}</span>
-                <span className="product-quantity">Cantidad: {item.quantity}</span>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );

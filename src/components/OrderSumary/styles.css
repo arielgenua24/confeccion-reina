@@ -1,11 +1,12 @@
 /* orderSummary.css */
 .order-summary-container {
-    background-color: #FDE0AD;
-    border-radius: 16px;
+    background-color: #dde2e2;
+    border-radius: 10px;
     padding: 24px;
     margin: 20px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     animation: slideIn 0.3s ease-out;
+    height: 400px;
   }
   
   .order-summary-header {
