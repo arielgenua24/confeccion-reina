@@ -8,6 +8,8 @@ import EditProductBtn from '../../components/EditProduct';
 import QRButton from '../../components/QrGenerateBtn';
 import LoadingComponent from '../../components/Loading';
 import { auth } from '../../firebaseSetUp';
+import qrIcon from '../../assets/icons/icons8-qr-100.png';
+
 
 
 import './styles.css';
@@ -70,9 +72,27 @@ const Inventory = () => {
     <div className="container">
       <h1 className="TITLE">CATÁLOGO</h1>
 
-      <button onClick={() => {
+      <button 
+        style={{
+          backgroundColor: '#F1F7FF',
+          border: '1px solid #0990FF',
+          borderRadius: '20px',
+          color: '#0990FF',
+          fontSize: '16px',
+          fontWeight: 'bold',
+          padding: '10px 15px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '5px'
+        }}
+      onClick={() => {
         navigate('/qrsearch?redirect=product_data');
-      }}> BUSCAR POR QR</button>
+      }}> BUSCAR POR QR 
+        <img src={qrIcon} alt="Qr icon" style={{
+                        width: '30px',
+                        height: '30px',
+                      }} />
+      </button>
       
       <ProductSearch products={products} setQRcode={setQRcode}/>
 
