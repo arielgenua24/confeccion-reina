@@ -28,6 +28,11 @@ function Product() {
       setIsLoading(true);
      
       const fetchedProduct = await getProduct(id);
+      if (fetchedProduct === undefined) {
+        alert('El producto no existe');
+        navigate('/inventory');
+        return;
+      }
       setProduct(fetchedProduct);
 
       setName(fetchedProduct.name);

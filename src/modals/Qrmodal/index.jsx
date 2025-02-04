@@ -61,7 +61,6 @@ function QRmodal({ QRcode, setQRcode, orderCode }) {
         </div>
         
         <div className="QR-buttons">
-          <button onClick={printPage}>Imprimir</button>
           <button onClick={downloadPDF}>Descargar</button>
           <button className="QR-closeButton" onClick={() => setQRcode(null)}>
             Cerrar

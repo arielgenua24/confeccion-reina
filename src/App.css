@@ -13,6 +13,10 @@
   padding: 20px;
 }
 
+section {
+  padding-bottom: 80px;
+}
+
 .orders-section {
   background-color: #95BFFE;
   padding: 20px;

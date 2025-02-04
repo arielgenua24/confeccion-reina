@@ -6,6 +6,7 @@ function EditProductBtn({product_id}) {
 
     return (
         <button
+        style={{backgroundColor: "#fff", border: "3px solid #f3f3f3"}}
         className="navigateButton"
         onClick={() => navigate(`/product/${product_id}`)}
     >

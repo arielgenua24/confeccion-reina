@@ -33,6 +33,11 @@ function SelectProductAmount({ onClose }) {
   useEffect(() => {
     const loadProducts = async () => {
       const fetchedProduct = await getProduct(id);
+      console.log('fetchedProduct:', fetchedProduct);
+      if(fetchedProduct === undefined) {
+        alert('Producto no encontrado, te redirigiremos a que continues con la orden');
+        navigate('/select-products')
+      }
       setProduct(fetchedProduct);
       setName(fetchedProduct.name);
       setPrice(fetchedProduct.price);

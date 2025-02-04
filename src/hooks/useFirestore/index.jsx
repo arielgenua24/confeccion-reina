@@ -66,12 +66,11 @@ const useFirestore = () => {
     try {
       const productRef = doc(db, "products", productId);
       const productSnap = await getDoc(productRef);
-      console.log(productSnap);
-      if (productSnap.exists()) {
+      console.log(productSnap.data());
+      if (productSnap.data() !== undefined) {
         return {productRef, id: productSnap.id, ...productSnap.data() };
       } else {
-        throw new Error("El producto no existe");
-      }
+        return undefined;      }
     } catch (error) {
       console.error("Error al obtener el producto:", error);
       throw error;
