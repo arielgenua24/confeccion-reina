@@ -77,7 +77,7 @@ const Cart = () => {
 
 
     return (
-        <div style={{minHeight: '1100px'}}>
+        <div style={{minHeight: '1100px', paddingBottom: "100px"}}>
             <LoadingComponent isLoading={isLoading}/>
 
             <OrderSummary order={order} cart={cart}/>
@@ -85,9 +85,10 @@ const Cart = () => {
             <span style={{height: '300px', margin: '20px'}}>DETALLES DE LA ORDEN</span>
 
             <ul>
-                {products.map((item, index) => (
-                    <OrderCard key={index} product={item.item} cart={cart} />
-                ))}
+                {products.map((item, index) => {
+                   console.log(item)
+                    return <OrderCard key={index} product={item.item} quantity={item.quantity} />
+                })}
             </ul>
 
             <div style={{

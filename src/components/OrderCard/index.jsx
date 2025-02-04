@@ -4,7 +4,7 @@ import './styles.css';
 import { useOrder } from '../../hooks/useOrder';
 import { useNavigate } from 'react-router-dom';
 
-const OrderCard = ({ product, cart }) => {
+const OrderCard = ({ product, quantity }) => {
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
   const { deleteItem } = useOrder() 
@@ -69,7 +69,6 @@ const OrderCard = ({ product, cart }) => {
     },
   };
   console.log(product)
-  let itemQuantity = cart[0].quantity
 
 
   return (
@@ -87,15 +86,11 @@ const OrderCard = ({ product, cart }) => {
           </div>
           <div className="cart-info-item">
             <span className="cart-info-label">Cantidad</span>
-            <span className="cart-info-value">{itemQuantity}</span>
+            <span className="cart-info-value">{quantity}</span>
           </div>
           <div className="cart-info-item">
             <span className="cart-info-label">Tamaño</span>
             <span className="cart-info-value">{product.size}</span>
-          </div>
-          <div className="cart-info-item">
-            <span className="cart-info-label">Stock</span>
-            <span className="cart-info-value">{product.stock}</span>
           </div>
           <div className="cart-info-item">
             <span className="cart-info-label">Precio</span>
@@ -103,7 +98,7 @@ const OrderCard = ({ product, cart }) => {
           </div>
           <div className="cart-info-item cart-total">
             <span className="cart-info-label">Total</span>
-            <span className="cart-info-value">${(product.price * itemQuantity).toFixed(2)}</span>
+            <span className="cart-info-value">${(product.price * quantity).toFixed(2)}</span>
           </div>
         </div>
       </div>
