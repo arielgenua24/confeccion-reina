@@ -154,44 +154,77 @@ function SelectProductAmount({ onClose }) {
       Eliminar del pedido
     </button>
 
-      {error && (
-        <div style={{
-          backgroundColor: "red",
-          color: "#fff",
-          borderRadius: "20px",
-          border: "none",
-          padding: "10px 20px",
-          cursor: "pointer",
-          position: 'absolute',
-          top: '0px',
-          left: '0px',
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'Column',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-             <h1> ERROR, cantidad insuficiente </h1>
-             <div>
-              <span style={{ fontSize: '1.4em', textDecoration: 'underline' }}>Haz querido agregar una cantidad de {amount} {name}, pero tienes en stock {stock} </span>
-              <span>Revisa tu stock actual o dile a tu cliente que no tienes suficiente stock </span>
-             </div>
-          
-             <buton 
-              style={{width: '100px', 
-                padding: '20px' ,
-                backgroundColor: '#fff', 
-                color: '#000', 
-                fontWeight: '400',
-                borderRadius: '20px',
-                fontSize: '24px'
-              }}
-              onClick={() => setError(false)}
-              >Entendido
-              </buton>
-        </div>
-      )}
+    {error && (
+  <div style={{
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    backdropFilter: "blur(10px)",
+    color: "#1d1d1f",
+    borderRadius: "16px",
+    border: "1px solid rgba(0, 0, 0, 0.1)",
+    padding: "24px",
+    boxShadow: "0 4px 24px rgba(0, 0, 0, 0.1)",
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '90%',
+    height: '90%',
+    maxWidth: '50%',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px',
+    alignItems: 'center'
+  }}>
+    <h1 style={{
+      fontSize: 'clamp(20px, 4vw, 24px)',
+      fontWeight: '600',
+      margin: '0',
+      color: '#ff3b30'
+    }}>
+      Stock Insuficiente
+    </h1>
+    <div style={{
+      textAlign: 'center',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '12px'
+    }}>
+      <span style={{ 
+        fontSize: 'clamp(16px, 3vw, 18px)',
+        lineHeight: '1.5'
+      }}>
+        Has intentado agregar {amount} {name}, pero solo tienes {stock} en stock
+      </span>
+      <span style={{
+        fontSize: 'clamp(14px, 2.5vw, 16px)',
+        color: '#86868b'
+      }}>
+        Por favor revisa tu inventario o informa al cliente sobre la disponibilidad
+      </span>
+    </div>
+    
+    <button 
+      style={{
+        minWidth: '120px',
+        padding: '12px 24px',
+        backgroundColor: '#0071e3',
+        color: '#fff',
+        fontWeight: '500',
+        border: 'none',
+        borderRadius: '12px',
+        fontSize: 'clamp(16px, 3vw, 18px)',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        marginTop: '12px'
+      }}
+      onMouseOver={(e) => e.target.style.backgroundColor = '#0077ED'}
+      onMouseOut={(e) => e.target.style.backgroundColor = '#0071e3'}
+      onClick={() => setError(false)}
+    >
+      Entendido
+    </button>
+  </div>
+)}
 
 
     </div>

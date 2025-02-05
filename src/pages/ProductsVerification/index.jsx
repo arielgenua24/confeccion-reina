@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import useFirestoreContext from '../../hooks/useFirestoreContext';
+import { useOrder } from '../../hooks/useOrder';
 import LoadingComponent from '../../components/Loading';
 import { useParams, useSearchParams } from 'react-router-dom';
 import QrVerifyProduct from '../../components/QrVerifyProduct';
@@ -17,8 +18,10 @@ const ProductVerification = () => {
   const [isSearchByQrEnabled, setisSearchByQrEnabled] = useState(false);
   const { orderId } = useParams();
   const [verifiedProducts, setVerifiedProducts] = useState(0);
+  const [isLoading, setIsLoading] = useState(false)
 
   const {  updateOrder, getProductsByOrder } = useFirestoreContext();
+  const { setOrdersState } = useOrder()
 
   const orderEstado = searchParams.get("orderEstado");
   console.log(orderEstado)
@@ -64,16 +67,27 @@ const ProductVerification = () => {
   };
 
   const handleUpdateOrder = async () => {
+    setIsLoading(true);
     try {
       await updateOrder(orderId, {
         "estado": "listo para despachar"
       });
+
+      // Actualizar el estado en setOrdersState
+      setOrdersState((prevState) =>
+        prevState.map((order) =>
+          order.id === orderId ? { ...order, state: "listo para despachar" } : order
+        )
+      );
+
+      setIsLoading(false);
       navigate('/orders');
     } catch (error) {
       console.error("Error al actualizar la orden:", error);
       // Aquí podrías agregar alguna notificación de error al usuario
     }
   };
+
 
   return (
     <div className="products-verification">

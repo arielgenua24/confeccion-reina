@@ -138,8 +138,10 @@ const OrderProvider = ({ children }) => {
       console.log(getCustomerData())
     }, [order]);
 
+    const [ordersState, setOrdersState] = useState([])
+
   return (
-    <OrderContext.Provider value={{ order, setCart, resetOrderValues,setNullCart, setOrder, addItem, updateQuantity, deleteItem, findItem, finditems, cart, clearCustomerData, getCustomerData }}>
+    <OrderContext.Provider value={{ order, setCart, resetOrderValues,setNullCart, setOrder, addItem, updateQuantity, deleteItem, findItem, finditems, cart, clearCustomerData, getCustomerData, setOrdersState, ordersState }}>
       {children}
     </OrderContext.Provider>
   );

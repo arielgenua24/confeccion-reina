@@ -18,7 +18,6 @@ const Login = () => {
     e.preventDefault();
     try {
       const newUser = await login(email, password);
-      alert("Inicio de sesión exitoso");
       setUser(email);
       if (newUser) {
         navigate(-2);

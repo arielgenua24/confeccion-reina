@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import QRmodal from '../../modals/Qrmodal';
 import QRButton from '../../components/QrGenerateBtn';
 import qrIcon from '../../assets/icons/icons8-qr-100.png';
+import { useOrder } from '../../hooks/useOrder';
 import './styles.css'
 
 function Orders() {
@@ -17,11 +18,18 @@ function Orders() {
   const {filterOrdersByDate,  updateOrder,
     deleteOrder, } = useFirestoreContext()
 
+  const { setOrdersState } = useOrder();
+
   useEffect(() => {
     const fetchOrders = async () => {
       setIsLoading(true)
       const orders = await filterOrdersByDate()
       setOrders(orders)
+      setOrdersState((prevState) => [
+        ...prevState,
+        ...orders.map((order) => ({ id: order.id, state: order.state }))
+      ]);
+      
       setIsLoading(false)
     }
     fetchOrders()
