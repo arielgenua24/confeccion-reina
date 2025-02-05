@@ -1,10 +1,18 @@
 import { QRCodeCanvas } from 'qrcode.react';
+import { useState } from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import './styles.css';
 
 function QRmodal({ QRcode, setQRcode, orderCode }) {
   if (!QRcode) return null;
+
+  console.log(QRcode)
+
+  const [productData, setProductData] = useState(`Producto: ${QRcode.name}-${QRcode.color} Código: ${QRcode.productCode} Talle: ${QRcode.size}`)
+
+  
+
 
   const qrValue = orderCode
     ? JSON.stringify({ id: QRcode.id, code: QRcode.orderCode })
@@ -27,8 +35,8 @@ function QRmodal({ QRcode, setQRcode, orderCode }) {
       
       // Añadir texto
       const detailText = orderCode
-        ? `Pedido de: ${QRcode.cliente} Código: ${QRcode.orderCode}`
-        : `Producto: ${QRcode.name} Código: ${QRcode.productCode}`;
+        ? `FECHA: ${QRcode.fecha} Pedido de: ${QRcode.cliente} Direccion: ${QRcode.direccion} Telefono: ${QRcode.telefono} Código: ${QRcode.orderCode}`
+        : `Producto: ${QRcode.name}-${QRcode.color} Talle: ${QRcode.size} Precio: $${QRcode.price} Código: ${QRcode.productCode}`;
       
       pdf.setFontSize(10);
       pdf.text(15, yPos + 10, detailText);
@@ -52,8 +60,8 @@ function QRmodal({ QRcode, setQRcode, orderCode }) {
             <div key={index} className="QR-item">
               <h4 className="QR-title">
                 {orderCode
-                  ? `Pedido de: ${QRcode.cliente} Código: ${QRcode.orderCode}`
-                  : `Producto: ${QRcode.name} Código: ${QRcode.productCode}`}
+                  ? `FECHA: ${QRcode.fecha} Pedido de: ${QRcode.cliente} Direccion: ${QRcode.direccion} Telefono: ${QRcode.telefono} Código: ${QRcode.orderCode}`
+                  : `Producto: ${QRcode.name}-${QRcode.color} Talle: ${QRcode.size} Precio: $${QRcode.price} Código: ${QRcode.productCode}`}
               </h4>
               <QRCodeCanvas className="qr-canvas" value={qrValue} size={80} />
             </div>
