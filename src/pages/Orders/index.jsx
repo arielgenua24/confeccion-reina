@@ -14,7 +14,7 @@ function Orders() {
 
   const [isNewData, setIsNewData] = useState(false)
   const [orders, setOrders] = useState([])
-  const [QRcode, setQRcode] = useState(null);
+  const [QRcode, setQRcode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const {filterOrdersByDate,  updateOrder,
     deleteOrder, } = useFirestoreContext()

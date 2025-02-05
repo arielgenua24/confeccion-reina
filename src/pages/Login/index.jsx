@@ -20,7 +20,7 @@ const Login = () => {
       const newUser = await login(email, password);
       setUser(email);
       if (newUser) {
-        navigate(-2);
+        navigate(-1);
       }
     } catch (err) {
       setError(err.message);
@@ -45,7 +45,7 @@ const Login = () => {
             placeholder="Contraseña"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-          >  </input>
+          />
          <button
           type="button"
           className="login-password-toggle"

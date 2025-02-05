@@ -20,7 +20,7 @@ const Inventory = () => {
   const [products, setProducts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [QRcode, setQRcode] = useState(null);
+  const [QRcode, setQRcode] = useState("");
   const [newProduct, setNewProduct] = useState({
     name: '',
     price: '',

@@ -10,8 +10,8 @@ function SuccededOrder() {
     const navigate = useNavigate(); 
     const { id } = useParams();
     const { getOrderById } = useFirestoreContext();
-    const [orderData, setOrderData] = useState(null);
-    const [qrCode, setQrCode] = useState(null);
+    const [orderData, setOrderData] = useState("");
+    const [qrCode, setQrCode] = useState("");
 
     useEffect(() => {
         const fetchOrder = async () => {

@@ -8,9 +8,9 @@ import './styles.css'
 
 
 function OrderSearch({ orders, isActionEnabled }) {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(null);
   const [isFocused, setIsFocused] = useState(false);
-  const [QRcode, setQRcode] = useState(null);
+  const [QRcode, setQRcode] = useState("");
   const navigate = useNavigate();
 
   const [activeFilters, setActiveFilters] = useState({
@@ -21,7 +21,10 @@ function OrderSearch({ orders, isActionEnabled }) {
     let result = searchOrders(orders, searchTerm);
     
     if (activeFilters.readyToDispatch) {
-      result = result.filter(order => order.estado === "listo para despachar");
+      if(result != '') {
+        result = result.filter(order => order.estado === "listo para despachar");
+      }
+      
     }
     
     return result;

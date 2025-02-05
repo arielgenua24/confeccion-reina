@@ -1,5 +1,5 @@
 function searchOrders(orders, searchTerm = '') {
-    if (!searchTerm) return orders;
+    if (!searchTerm) return '';
   
     const term = searchTerm.toLowerCase();
     

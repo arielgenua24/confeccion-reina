@@ -11,8 +11,8 @@ function Product() {
   const navigate = useNavigate();
 
   const [product, setProduct] = useState({});
-  const [changes, setChanges] = useState(null);
-  const [newSavedProduct, setNewSavedProduct] = useState(null);
+  const [changes, setChanges] = useState("");
+  const [newSavedProduct, setNewSavedProduct] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const { getProduct, updateProduct, deleteProduct } = useFirestoreContext();

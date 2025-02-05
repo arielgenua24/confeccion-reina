@@ -3,7 +3,7 @@ import searchProducts from "../../utils/searchFn";
 import { useNavigate } from "react-router-dom";
 import EditProductBtn from "../EditProduct";
 import QRButton from "../QrGenerateBtn";
-import { Search, X, Filter } from "lucide-react";
+import { Search, X, Filter, FileX } from "lucide-react";
 import './styles.css';
 
 function ProductSearch({ products, setQRcode, isCartEnabled }) {
@@ -109,7 +109,7 @@ function ProductSearch({ products, setQRcode, isCartEnabled }) {
                   </>)}
                   {isCartEnabled && 
 
-                    (<div>  
+                    (<div style={{display: 'flex', flexDirection: 'row'}}>  
                       <button
                         className="search-add-to-cart-button"
                         onClick={() => navigate(`/select-product-amount/${product.id}`)}
