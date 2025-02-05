@@ -4,6 +4,7 @@ import { Search, X, Filter } from "lucide-react";
 import searchOrders from "../../utils/searchOrder";
 import QRButton from "../QrGenerateBtn";
 import QRmodal from "../../modals/Qrmodal";
+import './styles.css'
 
 
 function OrderSearch({ orders, isActionEnabled }) {
