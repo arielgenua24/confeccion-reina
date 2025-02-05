@@ -90,11 +90,13 @@ function ProductSearch({ products, setQRcode, isCartEnabled }) {
                   <h3 className="product-name">{product.name}</h3>
                   <div className="search-product-details">
                     <span>Color: {product.color}</span>
+                    <span>Talle: {product.size}</span>                    
                     <span>Código: {product.productCode}</span>
                     <span className="product-price">Precio: ${product.price}</span>
                     <span className={`stock-indicator ${product.stock <= 10 ? 'warning' : 'good'}`}>
                       Stock: {product.stock}
                     </span>
+
                   </div>
                 </div>
                 <div className="product-actions">

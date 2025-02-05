@@ -11,7 +11,12 @@ function ProductFormModal({handleSubmit, newProduct, setNewProduct, setIsModalOp
           {['name', 'price', 'size', 'color', 'stock'].map(field => (
             <div key={field} className="formGroup">
               <label className="label">
-                {field === 'name' ? 'Nombre del producto' : field}
+                {field === 'name' ? 'Nombre del producto' : 
+                field === 'price' ? 'Precio' : 
+                field === 'size' ? 'Talle' : 
+                field === 'color' ? 'Color' : 
+                field === 'stock' ? 'Cantidad en inventario' : 
+                field}
               </label>
               <input
                 type={field === 'price' || field === 'stock' ? 'number' : 'text'}
@@ -27,16 +32,20 @@ function ProductFormModal({handleSubmit, newProduct, setNewProduct, setIsModalOp
           ))}
 
           <div className="buttonGroup">
-            <button type="submit" className="button">
-              Guardar
-            </button>
-            <button
+             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
+              style={{ backgroundColor: 'red', color: '#fff' }}
               className="button"
             >
               Salir
             </button>
+
+
+            <button type="submit" className="button">
+              Guardar
+            </button>
+           
           </div>
         </form>
       </div>
