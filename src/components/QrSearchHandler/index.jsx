@@ -16,10 +16,13 @@ const QrSearchHandler = () => {
     if (!parsedData?.id) {
       throw new Error('QR inválido: no se encontró ID');
     }
+    console.log(parsedData)
 
     // Objeto de mapeo de rutas
     if (redirectType === 'select-product') {
       navigate(`/select-product-amount/${parsedData.id}`);
+    } else if (redirectType === 'order-data'){
+      navigate(`/ProductsVerification/${parsedData.id}/?orderEstado=${parsedData.estado}`);
     } else {
       navigate(`/product/${parsedData.id}`);
     }

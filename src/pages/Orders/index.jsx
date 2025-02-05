@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
 import QRmodal from '../../modals/Qrmodal';
 import QRButton from '../../components/QrGenerateBtn';
+import qrIcon from '../../assets/icons/icons8-qr-100.png';
 import './styles.css'
 
 function Orders() {
@@ -44,6 +45,30 @@ function Orders() {
     <div className="orders-container">
        <LoadingComponent isLoading={isLoading} />
       <h1>Órdenes</h1>
+
+      <button 
+              style={{
+                backgroundColor: '#F1F7FF',
+                border: '1px solid #0990FF',
+                borderRadius: '20px',
+                color: '#0990FF',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                padding: '10px 15px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+            onClick={() => {
+              navigate('/qrsearch?redirect=order-data');
+            }}> BUSCAR POR QR 
+              <img src={qrIcon} alt="Qr icon" style={{
+                              width: '30px',
+                              height: '30px',
+                            }} />
+            </button>
+         
+
       <div className="orders-list">
       {orders.map((order) => (
         <div key={order.id} className="order-card">

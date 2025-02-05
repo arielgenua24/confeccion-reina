@@ -3,6 +3,7 @@ import { useState } from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import './styles.css';
+import { QrCode } from 'lucide-react';
 
 function QRmodal({ QRcode, setQRcode, orderCode }) {
   if (!QRcode) return null;
@@ -15,8 +16,10 @@ function QRmodal({ QRcode, setQRcode, orderCode }) {
 
 
   const qrValue = orderCode
-    ? JSON.stringify({ id: QRcode.id, code: QRcode.orderCode })
+    ? JSON.stringify({ id: QRcode.id, code: QRcode.orderCode, estado: QRcode.estado })
     : JSON.stringify({ id: QRcode.id, code: QRcode.productCode });
+
+    console.log(qrValue)
 
   const printPage = () => {
     window.print();
@@ -28,28 +31,47 @@ function QRmodal({ QRcode, setQRcode, orderCode }) {
     let yPos = 10;
     
     canvas.forEach((c, index) => {
-      // Configurar estilo de borde
-      pdf.setDrawColor(200); // Color gris claro para el borde
-      pdf.setLineWidth(0.5);
-      pdf.rect(10, yPos, 190, 80); // Dibujar rectángulo que contendrá el elemento
+      // Configurar estilo de borde con un diseño más profesional
+      pdf.setDrawColor(100); // Color gris más oscuro para el borde
+      pdf.setLineWidth(0.7);
+      pdf.rect(10, yPos, 190, 90, 'S'); // Rectángulo ligeramente más alto
       
-      // Añadir texto
-      const detailText = orderCode
-        ? `FECHA: ${QRcode.fecha} Pedido de: ${QRcode.cliente} Direccion: ${QRcode.direccion} Telefono: ${QRcode.telefono} Código: ${QRcode.orderCode}`
-        : `Producto: ${QRcode.name}-${QRcode.color} Talle: ${QRcode.size} Precio: $${QRcode.price} Código: ${QRcode.productCode}`;
+      // Preparar texto con formato mejorado
+      const detailLines = orderCode
+        ? [
+            `FECHA: ${QRcode.fecha}`,
+            `Pedido de: ${QRcode.cliente}`,
+            `Dirección: ${QRcode.direccion}`,
+            `Teléfono: ${QRcode.telefono}`,
+            `Código de Pedido: ${QRcode.orderCode}`
+          ]
+        : [
+            `Producto: ${QRcode.name} - ${QRcode.color}`,
+            `Talle: ${QRcode.size}`,
+            `Precio: $${QRcode.price}`,
+            `Código de Producto: ${QRcode.productCode}`
+          ];
       
+      // Configuraciones de estilo para texto
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(15, yPos + 10, detailLines[0]); // Primera línea en negrita
+      
+      pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(10);
-      pdf.text(15, yPos + 10, detailText);
+      detailLines.slice(1).forEach((line, lineIndex) => {
+        pdf.text(15, yPos + 17 + (lineIndex * 6), line);
+      });
       
-      // Añadir QR code debajo del texto
+      // Añadir QR code con mejor posicionamiento
       const imgData = c.toDataURL('image/png');
-      pdf.addImage(imgData, 'PNG', 80, yPos + 15, 50, 50);
+      pdf.addImage(imgData, 'PNG', 150, yPos + 20, 40, 40);
       
       // Aumentar posición vertical para el siguiente elemento
-      yPos += 80;
+      yPos += 100; // Incremento mayor para más espacio entre elementos
     });
     
-    pdf.save('QR-codes.pdf');
+    pdf.save('Etiquetas-QR.pdf');
   };
 
   return (
