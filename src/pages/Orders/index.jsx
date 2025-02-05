@@ -6,6 +6,7 @@ import QRmodal from '../../modals/Qrmodal';
 import QRButton from '../../components/QrGenerateBtn';
 import qrIcon from '../../assets/icons/icons8-qr-100.png';
 import { useOrder } from '../../hooks/useOrder';
+import OrderSearch from '../../components/OrderSearch';
 import './styles.css'
 
 function Orders() {
@@ -53,6 +54,8 @@ function Orders() {
     <div className="orders-container">
        <LoadingComponent isLoading={isLoading} />
       <h1>Órdenes</h1>
+
+      <OrderSearch orders={orders} isActionEnabled={true}/>
 
       <button 
               style={{
