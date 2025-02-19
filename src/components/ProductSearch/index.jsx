@@ -76,19 +76,24 @@ function ProductSearch({ products, setQRcode, isCartEnabled }) {
                 key={product.id} 
                 className={`result-item ${product.stock <= 10 ? 'low-stock' : ''}`}
               >
-                <div className="product-info">
-                  <h3 className="product-name">{product.name}</h3>
-                  <div className="search-product-details">
-                    <span>Color: {product.color}</span>
-                    <span>Talle: {product.size}</span>                    
-                    <span>Código: {product.productCode}</span>
-                    <span className="product-price">Precio: ${product.price}</span>
-                    <span className={`stock-indicator ${product.stock <= 10 ? 'warning' : 'good'}`}>
-                      Stock: {product.stock}
-                    </span>
+              <div className="product-info-actions-container">
 
-                  </div>
+              <div className="product-info">
+                  <h3 className="product-name">{product.name}</h3>
                 </div>
+
+                <div className="search-product-details">
+                  <span>Color: {product.color}</span>
+                  <span>Talle: {product.size}</span>
+                  <span>Código: {product.productCode}</span>
+                  <span className="product-price">Precio: ${product.price}</span>
+                  <span className={`stock-indicator ${product.stock <= 10 ? 'warning' : 'good'}`}>
+                    Stock: {product.stock}
+                  </span>
+                </div>
+
+
+
                 <div className="product-actions">
                   {!isCartEnabled && (<> 
                   <EditProductBtn product_id={product.id} />  
@@ -121,6 +126,10 @@ function ProductSearch({ products, setQRcode, isCartEnabled }) {
                       }
                  
                 </div>
+
+               
+              </div>
+
               </li>
             ))}
           </ul>
