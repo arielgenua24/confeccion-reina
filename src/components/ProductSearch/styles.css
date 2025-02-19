@@ -54,11 +54,7 @@
   }
   
 
-  
-  .results-container.visible {
-    max-height: 24rem;
-    opacity: 1;
-  }
+
   
   .results-list {
     list-style: none;
@@ -66,15 +62,7 @@
     margin: 0;
   }
   
-  .result-item {
-    padding: 8px;
-    border-radius: 4px;
-    transition: background-color 0.2s ease;
-  }
   
-  .result-item:hover {
-    background-color: #f8f9fa;
-  }
   
   .product-name {
     font-weight: 500;
@@ -93,7 +81,7 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
   
-  .search-header {
+  .product-search-header {
     display: flex;
     align-items: center;
     gap: 10px;

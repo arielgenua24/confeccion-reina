@@ -40,7 +40,7 @@ function ProductSearch({ products, setQRcode, isCartEnabled }) {
 
   return (
     <div className="product-search-container">
-      <div className="search-header">
+      <div className="product-search-header">
         <div className={`search-wrapper ${isFocused ? 'focused' : ''}`}>
           <Search className="search-icon" size={20} />
           <input
@@ -61,16 +61,6 @@ function ProductSearch({ products, setQRcode, isCartEnabled }) {
               <X size={20} />
             </button>
           )}
-        </div>
-        <div className="filter-controls">
-          {!isCartEnabled && 
-          (<button 
-            className={`filter-btn ${activeFilters.lowStock ? 'active' : ''}`}
-            onClick={() => toggleFilter('lowStock')}
-          >
-            <Filter size={16} /> Bajo Stock
-          </button>)}
-          
         </div>
       </div>
 
