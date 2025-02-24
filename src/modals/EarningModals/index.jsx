@@ -43,22 +43,25 @@ const EarningsModals = ({ orders }) => {
     return Object.entries(result).map(([monthYear, total]) => ({ monthYear, total }));
   };
 
+    const last5Days = dailyEarnings.slice(-5);
+    const last3Months = monthlyEarnings.slice(-3);
+
   // Configuración de datos para el gráfico de ganancias diarias
   const dailyChartData = {
-    labels: dailyEarnings.map(item => item.date),
+    labels: last5Days.map(item => item.date),
     datasets: [{
       label: 'Ganancias diarias',
-      data: dailyEarnings.map(item => item.total),
-      backgroundColor: 'rgba(75, 192, 192, 0.6)',
+      data: last5Days.map(item => item.total),
+      backgroundColor: 'rgb(55, 68, 245)',
     }]
   };
 
   // Configuración de datos para el gráfico de ganancias mensuales
   const monthlyChartData = {
-    labels: monthlyEarnings.map(item => item.monthYear),
+    labels: last3Months.map(item => item.monthYear),
     datasets: [{
       label: 'Ganancias mensuales',
-      data: monthlyEarnings.map(item => item.total),
+      data: last3Months.map(item => item.total),
       backgroundColor: 'rgba(153, 102, 255, 0.6)',
     }]
   };
@@ -72,37 +75,84 @@ const EarningsModals = ({ orders }) => {
         Ver Ganancias Mensuales
       </Button>
 
-      {/* Modal de Ganancias Diarias */}
-      <Modal show={showDaily} onHide={() => setShowDaily(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Ganancias Diarias</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {dailyEarnings.map((item, index) => (
-            <p key={index}>
-              <strong>{item.date}</strong>: Total: {item.total}
-            </p>
-          ))}
-          <Bar data={dailyChartData} />
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDaily(false)}>
+        <Modal  className="custom-modal" show={showDaily} onHide={() => setShowDaily(false)}>
+          <Modal.Header closeButton style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem'}}>
+          <Modal.Title style={{
+                padding: '15px',
+                color: '#2c3e50',
+                fontSize: '2rem',
+                fontWeight: 'bold',
+                textAlign: 'center',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+                borderBottom: '2px solid rgb(66, 18, 238)',
+                marginBottom: '10px'
+                }}>Ganancias Diarias</Modal.Title>
+                <span style={{
+                display: 'block',
+                padding: '10px',
+                fontSize: '1.2rem',
+                color: 'rgb(18, 29, 238)',
+                textAlign: 'center',
+                fontWeight: '600',
+                backgroundColor: '#F9F9F9',
+                borderRadius: '8px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}>¡Muy bien! Estas son tus ganancias diarias.</span>
+          </Modal.Header>
+          <Modal.Body>
+            <div style={{ overflowY: 'auto', maxHeight: '300px' }}>
+            {dailyEarnings.map((item, index) => (
+              <p style={{fontSize: '1.6rem'}} key={index}>
+                <strong>{item.date}</strong>: Total: ${item.total}
+              </p>
+            ))}
+            </div>
+            <p style={{backgroundColor: '#f5f5f5', padding: '20px', margin: '20px 0px 20px 0px', width: '100%', display: 'flex', justifyContent: 'center', border: '2px solid #f1f1f1'}}><strong> GRAFICO DE LOS ULTIMOS 4 DIAS </strong></p>
+            <Bar data={dailyChartData} />
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowDaily(false)}>
             Cerrar
-          </Button>
-        </Modal.Footer>
-      </Modal>
+            </Button>
+          </Modal.Footer>
+        </Modal>
 
-      {/* Modal de Ganancias Mensuales */}
+        {/* Modal de Ganancias Mensuales */}
       <Modal show={showMonthly} onHide={() => setShowMonthly(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Ganancias Mensuales</Modal.Title>
-        </Modal.Header>
+      <Modal.Header closeButton style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem'}}>
+          <Modal.Title style={{
+                padding: '15px',
+                color: '#2c3e50',
+                fontSize: '2rem',
+                fontWeight: 'bold',
+                textAlign: 'center',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+                borderBottom: '2px solid rgb(66, 18, 238)',
+                marginBottom: '10px'
+                }}>Ganancias Mensuales</Modal.Title>
+                <span style={{
+                display: 'block',
+                padding: '10px',
+                fontSize: '1.2rem',
+                color: 'rgb(18, 29, 238)',
+                textAlign: 'center',
+                fontWeight: '600',
+                backgroundColor: '#F9F9F9',
+                borderRadius: '8px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}>¡Muy bien! Estas son tus ganancias mensuales.</span>
+          </Modal.Header>
         <Modal.Body>
+        <div style={{ overflowY: 'auto', maxHeight: '300px' }}>
           {monthlyEarnings.map((item, index) => (
-            <p key={index}>
+            <p style={{fontSize: '1.6rem'}} key={index}>
               <strong>{item.monthYear}</strong>: Total: {item.total}
             </p>
           ))}
+         </div>
+        <p style={{backgroundColor: '#f5f5f5', padding: '20px', margin: '20px 0px 20px 0px', width: '100%', display: 'flex', justifyContent: 'center', border: '2px solid #f1f1f1'}}><strong> GRAFICO DE LOS ULTIMOS 3 MESES </strong></p>
           <Bar data={monthlyChartData} />
         </Modal.Body>
         <Modal.Footer>
