@@ -1,6 +1,8 @@
 import { HashRouter, useRoutes } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import './App.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 
 import BackNav from './components/navbar';
 import QrSearchHandler from './components/QrSearchHandler';

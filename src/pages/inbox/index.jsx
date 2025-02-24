@@ -1,9 +1,9 @@
 import useFirestoreContext from '../../hooks/useFirestoreContext'
 import LoadingComponent from '../../components/Loading'
+import EarningsModals from '../../modals/EarningModals'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './styles.css'
-import { use } from 'react'
 
 function Inbox() {
   const [orders, setOrders] = useState([])
@@ -39,6 +39,7 @@ function Inbox() {
           })
         )
         setOrders(ordersWithDetails)
+        console.log(ordersWithDetails)
       } catch (error) {
         console.error("Error fetching orders:", error)
       }
@@ -52,7 +53,7 @@ function Inbox() {
   return (
     <div className="inbox-container">
       <LoadingComponent isLoading={isLoading} />
-      
+      <EarningsModals orders={orders}/>
       {!isLoading && (
         <div className="orders-grid">
           {orders.map((order) => (
