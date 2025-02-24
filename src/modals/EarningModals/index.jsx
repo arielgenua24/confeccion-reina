@@ -148,7 +148,7 @@ const EarningsModals = ({ orders }) => {
         <div style={{ overflowY: 'auto', maxHeight: '300px' }}>
           {monthlyEarnings.map((item, index) => (
             <p style={{fontSize: '1.6rem'}} key={index}>
-              <strong>{item.monthYear}</strong>: Total: {item.total}
+              <strong>{item.monthYear}</strong>: Total: ${item.total}
             </p>
           ))}
          </div>
