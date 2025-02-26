@@ -24,6 +24,30 @@ const useFirestore = () => {
   const currentDate = new Date();
   const formattedDate = format(currentDate, 'yyyy-MM-dd HH:mm:ss', { locale: es });
 
+  const getAdmin = async() => {
+    try{
+      const coleccionRef = collection(db, "users");
+      const querySnapshot = await getDocs(coleccionRef);
+      if (!querySnapshot.empty) {
+        // 3. Obtiene el primer (y único) documento de la colección
+        const document = querySnapshot.docs[0];
+  
+        // 4. Obtiene los datos del documento
+        const data = document.data();
+  
+        return data.admin; // Devuelve los datos para usarlos en tu aplicación
+      } else {
+        console.log("No se encontró ningún documento en la colección.");
+        return undefined; // O algún otro valor por defecto si la colección está vacía
+      }
+    } catch (error) {
+      console.error("Error al obtener el documento:", error);
+      throw error
+    }
+   
+
+  }
+
   //OKAY, producto agregado
   const addProduct = async (name, price, size, color, stock) => {
     try {
@@ -352,7 +376,7 @@ const useFirestore = () => {
     updateOrder,
     deleteOrder,
     getProductsByOrder,
-    user, setUser,
+    user, setUser, getAdmin,
     products
   };
 };
