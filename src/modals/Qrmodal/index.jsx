@@ -27,58 +27,79 @@ function QRmodal({ QRcode, setQRcode, orderCode }) {
 
   const downloadPDF = () => {
     const pdf = new jsPDF();
-    const canvas = document.querySelectorAll('.qr-canvas');
-    let yPos = 10;
-    
-    canvas.forEach((c, index) => {
-      // Configurar estilo de borde con un diseño más profesional
-      pdf.setDrawColor(100); // Color gris más oscuro para el borde
-      pdf.setLineWidth(0.7);
-      pdf.rect(10, yPos, 190, 90, 'S'); // Rectángulo ligeramente más alto
-      
-      // Preparar texto con formato mejorado
-      const detailLines = orderCode
-        ? [
-            `FECHA: ${QRcode.fecha}`,
-            `Pedido de: ${QRcode.cliente}`,
-            `Dirección: ${QRcode.direccion}`,
-            `Teléfono: ${QRcode.telefono}`,
-            `Código de Pedido: ${QRcode.orderCode}`
-          ]
-        : [
-            `Producto: ${QRcode.name} - ${QRcode.color}`,
-            `Talle: ${QRcode.size}`,
-            `Precio: $${QRcode.price}`,
-            `Código de Producto: ${QRcode.productCode}`
-          ];
-      
-      // Configuraciones de estilo para texto
+    const canvases = document.querySelectorAll('.qr-canvas');
+  
+    if (orderCode) {
+      // Si existe orderCode, se imprime un solo QR con detalles
+      let yPos = 10;
+      const detailLines = [
+        `FECHA: ${QRcode.fecha}`,
+        `Pedido de: ${QRcode.cliente}`,
+        `Dirección: ${QRcode.direccion}`,
+        `Teléfono: ${QRcode.telefono}`,
+        `Código de Pedido: ${QRcode.orderCode}`
+      ];
+  
       pdf.setFontSize(11);
       pdf.setFont('helvetica', 'bold');
-      pdf.text(15, yPos + 10, detailLines[0]); // Primera línea en negrita
-      
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(10);
+      pdf.text(15, yPos + 10, detailLines[0]);
       detailLines.slice(1).forEach((line, lineIndex) => {
         pdf.text(15, yPos + 17 + (lineIndex * 6), line);
       });
-      
-      // Añadir QR code con mejor posicionamiento
-      const imgData = c.toDataURL('image/png');
+  
+      const imgData = canvases[0].toDataURL('image/png');
       pdf.addImage(imgData, 'PNG', 150, yPos + 20, 40, 40);
-      
-      // Aumentar posición vertical para el siguiente elemento
-      yPos += 100; // Incremento mayor para más espacio entre elementos
-    });
-    
+    } else {
+      // Sin orderCode: queremos 12 QR organizados en 4 filas x 3 columnas
+      const columns = 3;       // 3 columnas
+      const cellWidth = 60;    // Ancho de cada celda
+      const cellHeight = 60;   // Alto de cada celda
+      const marginX = 10;      // Margen horizontal
+      const marginY = 10;      // Margen vertical
+  
+      canvases.forEach((c, index) => {
+        const col = index % columns;             // Columna: 0, 1, 2
+        const row = Math.floor(index / columns);   // Fila: 0 a 3 (4 filas en total)
+        const xPos = marginX + col * cellWidth;
+        const yPos = marginY + row * cellHeight;
+  
+        pdf.setDrawColor(100);
+        pdf.setLineWidth(0.7);
+        pdf.rect(xPos, yPos, cellWidth, cellHeight, 'S');
+  
+        const qrSize = 40;
+        const xQr = xPos + (cellWidth - qrSize) / 2;
+        const yQr = yPos + (cellHeight - qrSize) / 2;
+  
+        const imgData = c.toDataURL('image/png');
+        pdf.addImage(imgData, 'PNG', xQr, yQr, qrSize, qrSize);
+      });
+    }
+  
     pdf.save('Etiquetas-QR.pdf');
   };
+  
 
   return (
     <div className="QR-modalOverlay">
       <div className="QR-modalContent">
         <div className="QR-container">
-          {[...Array(3)].map((_, index) => (
+          {orderCode ? ([...Array(1)].map((_, index) => (
+            <div key={index} className="QR-item">
+              <h4 className="QR-title">
+                 {`FECHA: ${QRcode.fecha} Pedido de: ${QRcode.cliente} Direccion: ${QRcode.direccion} Telefono: ${QRcode.telefono} Código: ${QRcode.orderCode}`}
+              </h4>
+              <QRCodeCanvas className="qr-canvas" value={qrValue} size={80} />
+            </div>
+          ))): ([...Array(12)].map((_, index) => (
+            <div key={index} className="QR-item">
+              <h4 className="QR-title">
+                {`Producto: ${QRcode.name}`}
+              </h4>
+              <QRCodeCanvas className="qr-canvas" value={qrValue} size={80} />
+            </div>
+          ))) }
+           {/*[...Array(3)].map((_, index) => (
             <div key={index} className="QR-item">
               <h4 className="QR-title">
                 {orderCode
@@ -87,7 +108,7 @@ function QRmodal({ QRcode, setQRcode, orderCode }) {
               </h4>
               <QRCodeCanvas className="qr-canvas" value={qrValue} size={80} />
             </div>
-          ))}
+          )) */ }
         </div>
         
         <div className="QR-buttons">
