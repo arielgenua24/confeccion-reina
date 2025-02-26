@@ -2,10 +2,17 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useOrder } from '../../hooks/useOrder';
 import { Inbox, ShoppingCart, List, Package } from 'lucide-react';
+import useFirestoreContext from '../../hooks/useFirestoreContext';
+import LoadingComponent from '../../components/Loading';
 import './styles.css';
 
 function Home() {
     const { order, setOrder, getCustomerData } = useOrder();
+    const { user, getAdmin } = useFirestoreContext();
+    const [loadingAdmin, setLoadingAdmin] = useState(false) // Estado para controlar la carga de admin
+    const [admin, setAdmin] = useState(null); // Inicializamos admin como null o un valor que indique 'cargando'
+
+
 
     const [customerData, setCustomerData] = useState({
         customerName: order.customerName || '',
@@ -19,12 +26,23 @@ function Home() {
             setOrder(data);
             setCustomerData(data);
         }
+
+        const checkAdmin = async () => { // Función asíncrona para manejar la promesa
+            setLoadingAdmin(true); // Iniciamos la carga de admin
+            const adminData = await getAdmin(); // Esperamos a que la promesa se resuelva
+            setAdmin(adminData); // Establecemos el estado admin con el valor resuelto
+            setLoadingAdmin(false); // Finaliza la carga de admin
+        };
+
+        checkAdmin();
+
     }, []);
 
     const areProductsInOrder = order.products.length;
 
     return (
         <div className="home-container">
+            <LoadingComponent isLoading={loadingAdmin} />
             <h1 className="home-title" 
                 style={
                     {fontSize: '30px', 
@@ -39,13 +57,14 @@ function Home() {
                 </h1>
 
 
-            <Link to="/inbox" className="home-link">
+        {admin && admin === user && ( <Link to="/inbox" className="home-link">
                 <button className="home-btn inbox">
                     <Inbox size={24} className="home-icon" />
                     Dinero y notificaciones
                     <span className="home-subtext">Revisar dinero recibido y avisos</span>
                 </button>
-            </Link>
+            </Link>)}
+           
 
             <div className="home-orders-section">
                 <Link to="/new-order" className="home-link">

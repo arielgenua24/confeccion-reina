@@ -1,7 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import useFirestoreContext from "../../hooks/useFirestoreContext";
-import Loading from "../../components/Loading";
 
 // eslint-disable-next-line react/prop-types
 function AuthRoute({ children }) {
@@ -33,7 +32,6 @@ function AuthRoute({ children }) {
         return null; // No renderiza rutas protegidas si no está autenticado
     }
 
-   
 
     if (user !== admin && location.pathname === "/inbox") { // Verificamos que admin no sea null antes de comparar
         console.log("Usuario:", user);
