@@ -43,8 +43,10 @@ const EarningsModals = ({ orders }) => {
     return Object.entries(result).map(([monthYear, total]) => ({ monthYear, total }));
   };
 
-    const last5Days = dailyEarnings.slice(-5);
-    const last3Months = monthlyEarnings.slice(-3);
+  const last5Days = dailyEarnings.slice(0, 5);
+  const last3Months = monthlyEarnings.slice(0, 3);
+  console.log(last5Days);
+    console.log(dailyEarnings);
 
   // Configuración de datos para el gráfico de ganancias diarias
   const dailyChartData = {

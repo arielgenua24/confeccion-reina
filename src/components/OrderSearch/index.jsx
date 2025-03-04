@@ -8,7 +8,7 @@ import './styles.css'
 
 
 function OrderSearch({ orders, isActionEnabled }) {
-  const [searchTerm, setSearchTerm] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [QRcode, setQRcode] = useState("");
   const navigate = useNavigate();

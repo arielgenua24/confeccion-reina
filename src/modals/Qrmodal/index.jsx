@@ -1,18 +1,17 @@
 import { QRCodeCanvas } from 'qrcode.react';
 import { useState } from 'react';
+import useFirestoreContext from '../../hooks/useFirestoreContext';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import './styles.css';
-import { QrCode } from 'lucide-react';
+import { set } from 'date-fns';
 
 function QRmodal({ QRcode, setQRcode, orderCode }) {
-  if (!QRcode) return null;
+  const { getProduct } = useFirestoreContext();
+  const [productData, setProductData] = useState('');
+
+  if (!QRcode) return 'error no hay ningun codigo QR';
 
   console.log(QRcode)
-
-  const [productData, setProductData] = useState(`Producto: ${QRcode.name}-${QRcode.color} Código: ${QRcode.productCode} Talle: ${QRcode.size}`)
-
-  
 
 
   const qrValue = orderCode
@@ -21,23 +20,24 @@ function QRmodal({ QRcode, setQRcode, orderCode }) {
 
     console.log(qrValue)
 
-  const printPage = () => {
-    window.print();
-  };
 
-  const downloadPDF = () => {
+  const downloadPDF = async () => {
     const pdf = new jsPDF();
     const canvases = document.querySelectorAll('.qr-canvas');
   
     if (orderCode) {
-      // Si existe orderCode, se imprime un solo QR con detalles
+
+      const product = await getProduct(QRcode.id);
+
+      // TO DO: Para continuar, hay que iterar por todos los productos comprados. eso hace que haya que buscar le id del pedido y todos los productos.
       let yPos = 10;
       const detailLines = [
         `FECHA: ${QRcode.fecha}`,
         `Pedido de: ${QRcode.cliente}`,
         `Dirección: ${QRcode.direccion}`,
         `Teléfono: ${QRcode.telefono}`,
-        `Código de Pedido: ${QRcode.orderCode}`
+        `Código de Pedido: ${QRcode.orderCode}`,
+
       ];
   
       pdf.setFontSize(11);
