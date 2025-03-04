@@ -6,7 +6,7 @@ import './styles.css';
 import { set } from 'date-fns';
 
 function QRmodal({ QRcode, setQRcode, orderCode }) {
-  const { getProduct } = useFirestoreContext();
+  const { getOrderById, getProductsByOrder } = useFirestoreContext();
   const [productData, setProductData] = useState('');
 
   if (!QRcode) return 'error no hay ningun codigo QR';
@@ -26,10 +26,9 @@ function QRmodal({ QRcode, setQRcode, orderCode }) {
     const canvases = document.querySelectorAll('.qr-canvas');
   
     if (orderCode) {
-
-      const product = await getProduct(QRcode.id);
-
-      // TO DO: Para continuar, hay que iterar por todos los productos comprados. eso hace que haya que buscar le id del pedido y todos los productos.
+      const productsByOrder = await getProductsByOrder(QRcode.id);
+      
+      // ... código existente para detalles del pedido y QR ...
       let yPos = 10;
       const detailLines = [
         `FECHA: ${QRcode.fecha}`,
@@ -49,6 +48,66 @@ function QRmodal({ QRcode, setQRcode, orderCode }) {
   
       const imgData = canvases[0].toDataURL('image/png');
       pdf.addImage(imgData, 'PNG', 150, yPos + 20, 40, 40);
+
+      // Posición inicial después del QR y detalles
+      yPos = 70 + 40; // 70 (final del QR) + 40px de margen
+    
+      // Estilo para sección de productos
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(0, 51, 102); // Azul corporativo
+      pdf.text(15, yPos, 'PRODUCTOS COMPRADOS');
+      yPos += 15;
+    
+      // Contenedor principal de productos
+      pdf.setDrawColor(224, 224, 224); // Gris claro
+      pdf.setLineWidth(0.5);
+      
+      productsByOrder.forEach((product) => {
+        // Agregar página nueva si es necesario
+        if(yPos > 250) {
+          pdf.addPage();
+          yPos = 20;
+        }
+    
+        // Tarjeta de producto
+        pdf.rect(15, yPos, 180, 30); // Borde del contenedor
+        
+        // Encabezado del producto
+        pdf.setFontSize(12);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(20, yPos + 8, product.productSnapshot.name);
+        
+        // Detalles en 2 columnas
+        const col1 = 20;
+        const col2 = 110;
+        
+        // Columna izquierda
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(col1, yPos + 16, `Color: ${product.productSnapshot.color}`);
+        pdf.text(col1, yPos + 22, `Talla: ${product.productSnapshot.size}`);
+        
+        // Columna derecha
+        pdf.text(col2, yPos + 16, `Precio unitario: $${formatPrice(product.productSnapshot.price)}`);
+        pdf.text(col2, yPos + 22, `Cantidad: ${product.stock}`);
+        
+        // Línea separadora
+        pdf.setDrawColor(200, 200, 200);
+        pdf.line(15, yPos + 28, 195, yPos + 28);
+        
+        // Código de producto
+        pdf.setFontSize(9);
+        pdf.setTextColor(128, 128, 128);
+        pdf.text(18, yPos + 26, `SKU: ${product.productSnapshot.productCode}`);
+        
+        yPos += 35; // Espacio entre productos
+      });
+    
+      // Función para formatear precios
+      function formatPrice(price) {
+        return Number(price).toLocaleString('es-AR');
+      }
     } else {
       // Sin orderCode: queremos 12 QR organizados en 4 filas x 3 columnas
       const columns = 3;       // 3 columnas

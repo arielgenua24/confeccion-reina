@@ -103,7 +103,10 @@ const EarningsModals = ({ orders }) => {
                 }}>¡Muy bien! Estas son tus ganancias diarias.</span>
           </Modal.Header>
           <Modal.Body>
-            <div style={{ overflowY: 'auto', maxHeight: '300px' }}>
+            <div style={{ overflowY: 'auto', maxHeight: '300px',
+                  'backgroundColor': '#c2c2ee30',
+                  'padding': '20px',
+                  'borderRadius': '20px', }}>
             {dailyEarnings.map((item, index) => (
               <p style={{fontSize: '1.6rem'}} key={index}>
                 <strong>{item.date}</strong>: Total: ${item.total}
