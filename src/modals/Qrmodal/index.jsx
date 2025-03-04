@@ -60,7 +60,7 @@ function QRmodal({ QRcode, setQRcode, orderCode }) {
       yPos += 15;
     
       // Contenedor principal de productos
-      pdf.setDrawColor(224, 224, 224); // Gris claro
+      pdf.setTextColor(0, 51, 102); // Azul corporativo
       pdf.setLineWidth(0.5);
       
       productsByOrder.forEach((product) => {
@@ -76,6 +76,8 @@ function QRmodal({ QRcode, setQRcode, orderCode }) {
         // Encabezado del producto
         pdf.setFontSize(12);
         pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(0, 51, 102); // Azul corporativo
+        pdf.setLineWidth(0.5);
         pdf.text(20, yPos + 8, product.productSnapshot.name);
         
         // Detalles en 2 columnas
@@ -104,6 +106,36 @@ function QRmodal({ QRcode, setQRcode, orderCode }) {
         yPos += 35; // Espacio entre productos
       });
     
+      // Calcular total
+      const total = productsByOrder.reduce((sum, product) => {
+        return sum + (Number(product.productSnapshot.price) * product.stock);
+      }, 0);
+
+      // Espacio después de productos
+      yPos += 20;
+
+      // Sección Total
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(26, 35, 126); // Azul oscuro elegante
+      pdf.text(15, yPos, `TOTAL: $${formatPrice(total)}`);
+
+      // Línea decorativa
+      pdf.setDrawColor(189, 189, 189); // Gris suave
+      pdf.line(15, yPos + 8, 195, yPos + 8);
+
+      // Mensaje de agradecimiento
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'italic');
+      pdf.setTextColor(216, 27, 96); // Rosa chic
+      pdf.text(
+        "Gracias por comprar en Reina Chura Confecciones", 
+        pdf.internal.pageSize.width / 2, 
+        yPos + 25,
+        { align: 'center' }
+      );
+
+
       // Función para formatear precios
       function formatPrice(price) {
         return Number(price).toLocaleString('es-AR');
