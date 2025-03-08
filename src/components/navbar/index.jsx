@@ -65,7 +65,7 @@ function BackNav() {
                         height={30}
                       />
                       <span>
-                        PEDIDO
+                        CONTROL
                       </span>
                       {cartCount > 0 && (
                         <div className="cart-count">
