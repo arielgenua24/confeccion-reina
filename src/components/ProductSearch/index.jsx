@@ -114,7 +114,7 @@ function ProductSearch({ products, setQRcode, isCartEnabled }) {
                       
                       <button
                       style={{marginTop: '10px', scale:'0.75'}}
-                        onClick={() => navigate(`/select-product-amount/${product.id}`)}
+                        onClick={() => navigate(`/select-product-amount/${product.id}?in-cart=true`)}
                       >
                         MODIFICAR CANTIDAD
                       </button>

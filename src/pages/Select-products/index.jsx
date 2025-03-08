@@ -81,7 +81,7 @@ function SelectProducts() {
                                     height: '30px',
                                   }} />
           
-          BUSCAR POR QR</button>
+          AGREGAR UN NUEVO PRODUCTO POR QR</button>
           <ProductSearch products={products} isCartEnabled={true} />
 
 
