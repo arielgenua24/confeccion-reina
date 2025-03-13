@@ -14,3 +14,28 @@
 .title {
     font-size: 20px;
 }
+
+.add-to-cart-button {
+    background-color: #0FCA37;
+    color: #fff;
+    border: none;
+    padding: 12px 24px;
+    width: 100%;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.productCard {
+    border: 1px solid #e2e2e2;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    width: 256px;
+    margin: 10px;
+  }
+
+.inventory {
+    display: flex;
+    flex-wrap: wrap;
+}
