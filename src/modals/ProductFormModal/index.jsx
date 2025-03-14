@@ -79,6 +79,12 @@ function ProductFormModal({handleSubmit, newProduct, setNewProduct, setIsModalOp
             />
             {suggestions.length > 0 && (
               <div className="suggestion-input--container">
+                <div style={{width: '100%', height: '80px', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                <span style={{padding: '10px', backgroundColor: '#f3f3f3', width: '100%'}}>SUGERENCIAS DE AUTOCOMPLETADO</span>
+
+
+                </div>
+
 
                 <ul className="suggestion-input--list">
                       {suggestions.map((suggestion, index) => (

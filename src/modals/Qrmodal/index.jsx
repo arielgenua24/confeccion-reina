@@ -175,6 +175,13 @@ function QRmodal({ QRcode, setQRcode, orderCode }) {
     <div className="QR-modalOverlay">
       <div className="QR-modalContent">
         <div className="QR-container">
+        <div className="QR-buttons">
+          <button onClick={downloadPDF}>Descargar</button>
+          <button className="QR-closeButton" onClick={() => setQRcode(null)}>
+            Cerrar
+          </button>
+        </div>
+
           {orderCode ? ([...Array(1)].map((_, index) => (
             <div key={index} className="QR-item">
               <h4 className="QR-title">
@@ -202,12 +209,6 @@ function QRmodal({ QRcode, setQRcode, orderCode }) {
           )) */ }
         </div>
         
-        <div className="QR-buttons">
-          <button onClick={downloadPDF}>Descargar</button>
-          <button className="QR-closeButton" onClick={() => setQRcode(null)}>
-            Cerrar
-          </button>
-        </div>
       </div>
     </div>
   );
