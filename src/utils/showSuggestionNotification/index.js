@@ -15,9 +15,14 @@ const showSuggestionNotification = () => {
       notification.classList.add('active');
     }, 100);
     
-    // Ocultar después de 2 segundos
+    // Ocultar después de 2 segundos y eliminar inmediatamente después
     setTimeout(() => {
       notification.classList.remove('active');
+      
+      // Eliminar el elemento del DOM inmediatamente después de ocultar
+      if (notification && notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
     }, 2100);
   };
 
