@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import useFirestoreContext from '../../hooks/useFirestoreContext';
 import { useOrder } from '../../hooks/useOrder';
 import LoadingComponent from '../../components/Loading';
@@ -9,6 +9,7 @@ import qrIcon from '../../assets/icons/icons8-qr-100.png';
 import { useNavigate } from 'react-router-dom';
 
 import './styles.css';
+import { set } from 'date-fns';
 
 const ProductVerification = () => {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ const ProductVerification = () => {
   const { orderId } = useParams();
   const [verifiedProducts, setVerifiedProducts] = useState(0);
   const [isLoading, setIsLoading] = useState(false)
+  const [totalAccount, setTotalAccount] = useState(0)
 
   const {  updateOrder, getProductsByOrder } = useFirestoreContext();
   const { setOrdersState } = useOrder()
@@ -88,6 +90,12 @@ const ProductVerification = () => {
     }
   };
 
+  const totalFinal = useMemo(() => {
+    return products.reduce((acumulador, producto) => {
+      // Se calcula el total por producto: stock * precio
+      return acumulador + (producto.stock * producto.productData.price);
+    }, 0);
+  }, [products]);
 
   return (
     <div className="products-verification">
@@ -113,12 +121,16 @@ const ProductVerification = () => {
               
         </div>)}
 
-       
+        <div className="final-total-wrapper">
+          <div className="final-total">
+            <span className="total-label">Total Final</span>
+            <span className="total-amount">${totalFinal.toLocaleString()} ✅</span>
+          </div>
+        </div>
 
       {products.map((product) => (
         <div key={product.id} className="verification-product-item">
           <ProductVerificationStatus orderStatus={orderEstado} product={product} verifiedProducts={verifiedProducts} setVerifiedProducts={setVerifiedProducts}/>
-
           <h3>Codigo del producto: {product.productData.productCode}</h3>
           {orderEstado == 'listo para despachar' ? (<div className="verification-complete">
           <div className="product-details">
@@ -178,7 +190,7 @@ const ProductVerification = () => {
             </button>
             <button 
             className='btn-verify'
-            style={{background: 'red', color: 'white'}}
+            style={{background: 'red', color: 'white', marginBottom: '120px'}}
               onClick={() => handleReset(product.id)}
             >
               Empezar de nuevo la verification
@@ -215,6 +227,7 @@ const ProductVerification = () => {
         Marcar como Listo para Despachar
       </button>)}
 
+      
     </div>
   );
 };
