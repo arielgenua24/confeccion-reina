@@ -1,41 +1,49 @@
-import React, { useState, useMemo } from "react";
-import searchProducts from "../../utils/searchFn";
+import { useState, useEffect } from "react";
+import PropTypes from 'prop-types';
 import { useNavigate } from "react-router-dom";
 import EditProductBtn from "../EditProduct";
 import QRButton from "../QrGenerateBtn";
-import { Search, X, Filter, FileX } from "lucide-react";
+import { Search, X, FileX, Loader2 } from "lucide-react";
+import useFirestoreContext from "../../hooks/useFirestoreContext";
 import './styles.css';
 
-function ProductSearch({ products, setQRcode, isCartEnabled }) {
+function ProductSearch({ setQRcode, isCartEnabled }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isFocused, setIsFocused] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
+  const { searchProductsByNameOrCode } = useFirestoreContext();
 
-  const [activeFilters, setActiveFilters] = useState({
-    inStock: false,
-    lowStock: false
-  });
-
-  const filteredProducts = useMemo(() => {
-    let result = searchProducts(products, searchTerm);
-    
-    if (activeFilters.lowStock) {
-      result = result.filter(product => product.stock < 10);
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
     }
-    
-    return result;
-  }, [products, searchTerm, activeFilters]);
+
+    setIsSearching(true);
+
+    const debounceTimer = setTimeout(async () => {
+      try {
+        const results = await searchProductsByNameOrCode(searchTerm);
+        setSearchResults(results);
+      } catch (error) {
+        console.error("Error en la búsqueda de productos:", error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(debounceTimer);
+
+  }, [searchTerm, searchProductsByNameOrCode]);
 
   const clearSearch = () => {
     setSearchTerm("");
     setIsFocused(false);
-  };
-
-  const toggleFilter = (filterKey) => {
-    setActiveFilters(prev => ({
-      ...prev,
-      [filterKey]: !prev[filterKey]
-    }));
+    setSearchResults([]);
   };
 
   return (
@@ -46,11 +54,11 @@ function ProductSearch({ products, setQRcode, isCartEnabled }) {
           <input
             className="search-input"
             type="text"
-            placeholder="Buscar productos..."
+            placeholder="Buscar por nombre o código..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onFocus={() => setIsFocused(true)}
-            onBlur={() => !searchTerm && setIsFocused(false)}
+            onBlur={() => setTimeout(() => { if (!searchTerm) setIsFocused(false); }, 150)}
           />
           {searchTerm && (
             <button 
@@ -64,71 +72,66 @@ function ProductSearch({ products, setQRcode, isCartEnabled }) {
         </div>
       </div>
 
-      <div className={`results-container ${isFocused ? 'visible' : ''}`}>
-        {filteredProducts.length === 0 ? (
+      <div className={`results-container ${(isFocused && searchTerm) ? 'visible' : ''}`}>
+        {isSearching ? (
+          <div className="searching-indicator">
+            <Loader2 className="animate-spin" size={24} /> Buscando...
+          </div>
+        ) : searchResults.length === 0 && searchTerm ? (
           <div className="no-results">
-            No se encontraron productos
+            <FileX size={20} /> {`No se encontraron productos para "${searchTerm}"`}
           </div>
         ) : (
           <ul className="results-list">
-            {filteredProducts.map((product) => (
-              <li 
-                key={product.id} 
+            {searchResults.map((product) => (
+              <li
+                key={product.id}
+                onMouseDown={(e) => e.preventDefault()}
                 className={`result-item ${product.stock <= 10 ? 'low-stock' : ''}`}
               >
-              <div className="product-info-actions-container">
+                <div className="product-info-actions-container">
 
-              <div className="product-info">
-                  <h3 className="product-name">{product.name}</h3>
+                  <div className="product-info">
+                    <h3 className="product-name">{product.name}</h3>
+                  </div>
+
+                  <div className="search-product-details">
+                    <span>Color: {product.color}</span>
+                    <span>Talle: {product.size}</span>
+                    <span>Código: {product.productCode}</span>
+                    <span className="product-price">Precio: ${product.price}</span>
+                    <span className={`stock-indicator ${product.stock <= 10 ? 'warning' : 'good'}`}>
+                      Stock: {product.stock}
+                    </span>
+                  </div>
+
+                  <div className="product-actions">
+                    {!isCartEnabled && (<> 
+                      <EditProductBtn product_id={product.id} />  
+                      <QRButton 
+                        product={product} 
+                        onQRGenerate={() => setQRcode(product)} 
+                      /> 
+                    </>)}
+                    {isCartEnabled && (
+                      <div style={{display: 'flex', flexDirection: 'row'}}>  
+                        <button
+                          className="search-add-to-cart-button"
+                          onClick={() => navigate(`/select-product-amount/${product.id}`)}
+                        >
+                          AGREGAR AL CARRITO
+                        </button> 
+                        <button
+                          style={{marginTop: '10px', scale:'0.75'}}
+                          onClick={() => navigate(`/select-product-amount/${product.id}?in-cart=true`)}
+                        >
+                          MODIFICAR CANTIDAD
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
                 </div>
-
-                <div className="search-product-details">
-                  <span>Color: {product.color}</span>
-                  <span>Talle: {product.size}</span>
-                  <span>Código: {product.productCode}</span>
-                  <span className="product-price">Precio: ${product.price}</span>
-                  <span className={`stock-indicator ${product.stock <= 10 ? 'warning' : 'good'}`}>
-                    Stock: {product.stock}
-                  </span>
-                </div>
-
-
-
-                <div className="product-actions">
-                  {!isCartEnabled && (<> 
-                  <EditProductBtn product_id={product.id} />  
-                  <QRButton 
-                    product={product} 
-                    onQRGenerate={() => setQRcode(product)} 
-                  /> 
-                  </>)}
-                  {isCartEnabled && 
-
-                    (<div style={{display: 'flex', flexDirection: 'row'}}>  
-                      <button
-                        className="search-add-to-cart-button"
-                        onClick={() => navigate(`/select-product-amount/${product.id}`)}
-                      >
-                        AGREGAR AL CARRITO
-                      </button> 
-                      
-                      <button
-                      style={{marginTop: '10px', scale:'0.75'}}
-                        onClick={() => navigate(`/select-product-amount/${product.id}?in-cart=true`)}
-                      >
-                        MODIFICAR CANTIDAD
-                      </button>
-
-
-
-                      </div>)
-                      
-                      }
-                 
-                </div>
-
-               
-              </div>
 
               </li>
             ))}
@@ -138,5 +141,14 @@ function ProductSearch({ products, setQRcode, isCartEnabled }) {
     </div>
   );
 }
+
+ProductSearch.propTypes = {
+  setQRcode: PropTypes.func.isRequired,
+  isCartEnabled: PropTypes.bool
+};
+
+ProductSearch.defaultProps = {
+  isCartEnabled: false
+};
 
 export default ProductSearch;

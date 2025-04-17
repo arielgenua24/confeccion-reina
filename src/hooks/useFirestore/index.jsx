@@ -14,13 +14,16 @@ import {
   increment,
   updateDoc,
   setDoc,
-  deleteDoc
+  deleteDoc,
+  query,
+  orderBy,
+  limit,
+  startAfter,
+  where
 } from "firebase/firestore";
 
 
 const useFirestore = () => {
-  const [products, setProducts] = useState([]);
-
   const currentDate = new Date();
   const formattedDate = format(currentDate, 'yyyy-MM-dd HH:mm:ss', { locale: es });
 
@@ -71,13 +74,25 @@ const useFirestore = () => {
     }
   };
 
-  // Obtener todos los products
-  const getProducts = async () => {
+  // Obtener products con paginación
+  const getProducts = async (limitParam = 10, startAfterDoc = null) => { 
     try {
-      const productsSnapshot = await getDocs(collection(db, "products"));
-      const products = productsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setProducts(products);
-      return products;
+      const productsRef = collection(db, "products");
+      let q; 
+
+      if (startAfterDoc) {
+        // Si hay un documento de inicio, paginar desde ahí
+        q = query(productsRef, orderBy("productCode"), startAfter(startAfterDoc), limit(limitParam));
+      } else {
+        // Si es la primera página, empezar desde el principio
+        q = query(productsRef, orderBy("productCode"), limit(limitParam));
+      }
+
+      const productsSnapshot = await getDocs(q); 
+      const productsData = productsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const lastVisibleDoc = productsSnapshot.docs[productsSnapshot.docs.length - 1]; 
+
+      return { products: productsData, lastVisibleDoc }; 
     } catch (error) {
       console.error("Error al obtener products:", error);
       throw error;
@@ -359,6 +374,102 @@ const useFirestore = () => {
 
 
 
+  // Nueva función para buscar productos por nombre o código
+  const searchProductsByNameOrCode = async (searchTerm, limitParam = 10) => {
+    console.log(`[searchProductsByNameOrCode] Received search term: "${searchTerm}"`); // <-- Log inicial
+    if (!searchTerm || !searchTerm.trim()) {
+      console.log("[searchProductsByNameOrCode] Search term is empty, returning empty array.");
+      return [];
+    }
+
+    const productsRef = collection(db, "products");
+    const searchTermClean = searchTerm.trim(); // Usar término sin espacios extra
+    const searchTermLower = searchTermClean.toLowerCase();
+    const searchTermUpper = searchTermClean.toUpperCase();
+
+    const endTermLower = searchTermLower.slice(0, -1) + String.fromCharCode(searchTermLower.charCodeAt(searchTermLower.length - 1) + 1);
+    const endTermUpper = searchTermUpper.slice(0, -1) + String.fromCharCode(searchTermUpper.charCodeAt(searchTermUpper.length - 1) + 1);
+
+    // --- Log de los términos y rangos ---
+    console.log(`[searchProductsByNameOrCode] Cleaned Term: "${searchTermClean}"`);
+    console.log(`[searchProductsByNameOrCode] Lower Range: >= "${searchTermLower}" AND < "${endTermLower}"`);
+    console.log(`[searchProductsByNameOrCode] Upper Range: >= "${searchTermUpper}" AND < "${endTermUpper}"`);
+
+
+    // --- Consultas ---
+    const nameQueryLower = query(
+      productsRef,
+      where("name", ">=", searchTermLower),
+      where("name", "<", endTermLower),
+      limit(limitParam)
+    );
+    const nameQueryUpper = query(
+      productsRef,
+      where("name", ">=", searchTermUpper),
+      where("name", "<", endTermUpper),
+      limit(limitParam)
+    );
+    const codeQueryLower = query(
+      productsRef,
+      where("productCode", ">=", searchTermLower), // Asumimos case-insensitive para código también
+      where("productCode", "<", endTermLower),
+      limit(limitParam)
+    );
+    const codeQueryUpper = query(
+      productsRef,
+      where("productCode", ">=", searchTermUpper),
+      where("productCode", "<", endTermUpper),
+      limit(limitParam)
+    );
+
+
+    try {
+      console.log("[searchProductsByNameOrCode] Executing Firestore queries...");
+      const [nameSnapLower, nameSnapUpper, codeSnapLower, codeSnapUpper] = await Promise.all([
+        getDocs(nameQueryLower),
+        getDocs(nameQueryUpper),
+        getDocs(codeQueryLower),
+        getDocs(codeQueryUpper),
+      ]);
+      console.log("[searchProductsByNameOrCode] Queries finished.");
+
+      // --- Log de resultados por consulta ---
+      console.log(`[searchProductsByNameOrCode] Name Lower Hits: ${nameSnapLower.docs.length}`, nameSnapLower.docs.map(d => ({id: d.id, ...d.data()})));
+      console.log(`[searchProductsByNameOrCode] Name Upper Hits: ${nameSnapUpper.docs.length}`, nameSnapUpper.docs.map(d => ({id: d.id, ...d.data()})));
+      console.log(`[searchProductsByNameOrCode] Code Lower Hits: ${codeSnapLower.docs.length}`, codeSnapLower.docs.map(d => ({id: d.id, ...d.data()})));
+      console.log(`[searchProductsByNameOrCode] Code Upper Hits: ${codeSnapUpper.docs.length}`, codeSnapUpper.docs.map(d => ({id: d.id, ...d.data()})));
+
+
+      // Combinar y eliminar duplicados
+      const combinedResults = new Map();
+      const processSnapshot = (snapshot) => {
+        snapshot.docs.forEach(doc => {
+          if (!combinedResults.has(doc.id)) {
+            combinedResults.set(doc.id, { id: doc.id, ...doc.data() });
+          }
+        });
+      };
+
+      processSnapshot(nameSnapLower);
+      processSnapshot(nameSnapUpper);
+      processSnapshot(codeSnapLower);
+      processSnapshot(codeSnapUpper);
+
+      const finalResults = Array.from(combinedResults.values());
+      console.log(`[searchProductsByNameOrCode] Final combined results count: ${finalResults.length}`);
+      // console.log("[searchProductsByNameOrCode] Final combined results:", finalResults); // Log detallado opcional si el anterior no es suficiente
+
+      return finalResults;
+
+    } catch (error) {
+      // --- Log de errores detallado ---
+      console.error("[searchProductsByNameOrCode] Error searching products:", error);
+      console.error("[searchProductsByNameOrCode] Error Code:", error.code); // Código de error de Firestore
+      console.error("[searchProductsByNameOrCode] Error Message:", error.message); // Mensaje de error
+      return [];
+    }
+  };
+
   const [user, setUser] = useState(false);
 
   return {
@@ -377,7 +488,7 @@ const useFirestore = () => {
     deleteOrder,
     getProductsByOrder,
     user, setUser, getAdmin,
-    products
+    searchProductsByNameOrCode
   };
 };
 

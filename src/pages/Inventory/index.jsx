@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from "react-router-dom";
 import useFirestoreContext from '../../hooks/useFirestoreContext';
 import ProductFormModal from '../../modals/ProductFormModal';
@@ -14,7 +14,6 @@ import qrIcon from '../../assets/icons/icons8-qr-100.png';
 
 
 import './styles.css';
-import { set } from 'date-fns';
 
 const Inventory = () => {
   const [products, setProducts] = useState([]);
@@ -28,7 +27,10 @@ const Inventory = () => {
     color: '',
     stock: ''
   });
-  
+  const [lastVisibleDoc, setLastVisibleDoc] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
+  const PRODUCTS_PER_PAGE = 10;
+
   const navigate = useNavigate();
   const { getProducts, addProduct, deleteProduct, user } = useFirestoreContext();
   console.log(user)
@@ -36,35 +38,66 @@ const Inventory = () => {
   console.log(auth.currentUser?.email);
 
 
+  const loadInitialProducts = useCallback(async () => {
+    if (isLoading) {
+       return; 
+    }
+    setIsLoading(true);
+    try {
+      const { products: initialProducts, lastVisibleDoc: newLastVisibleDoc } = await getProducts(PRODUCTS_PER_PAGE);
+      setProducts(initialProducts);
+      setLastVisibleDoc(newLastVisibleDoc);
+      setHasMore(initialProducts.length === PRODUCTS_PER_PAGE);
+    } catch (error) {
+      console.error("Error cargando productos iniciales:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [getProducts, PRODUCTS_PER_PAGE]); 
+
+  const loadMoreProducts = useCallback(async () => {
+    if (isLoading || !hasMore || !lastVisibleDoc) return;
+    setIsLoading(true);
+    try {
+      const { products: newProducts, lastVisibleDoc: newLastVisibleDoc } = await getProducts(PRODUCTS_PER_PAGE, lastVisibleDoc);
+      setProducts(prevProducts => [...prevProducts, ...newProducts]);
+      setLastVisibleDoc(newLastVisibleDoc);
+      setHasMore(newProducts.length === PRODUCTS_PER_PAGE);
+    } catch (error) {
+      console.error("Error cargando más productos:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [getProducts, isLoading, hasMore, lastVisibleDoc]);
+
   useEffect(() => {
-    const loadProducts = async () => {
-      setIsLoading(true)
-      const fetchedProducts = await getProducts();
-      setProducts(fetchedProducts);
-      setIsLoading(false)
-    };
-    loadProducts();
-  }, []);
+    loadInitialProducts();
+  }, [loadInitialProducts]); 
 
   const handleSubmit = async (e) => {
     setIsLoading(true);
     e.preventDefault();
-    await addProduct(newProduct.name, newProduct.price, newProduct.size, newProduct.color, newProduct.stock);
-    setIsModalOpen(false);
-    const updatedProducts = await getProducts();
-    setProducts(updatedProducts);
-    //reset newProduct state
-    setNewProduct({ name: '', price: '', size: '', color: '', stock: '' });
-    setIsLoading(false);
+    try {
+      await addProduct(newProduct.name, newProduct.price, newProduct.size, newProduct.color, newProduct.stock);
+      setIsModalOpen(false);
+      setNewProduct({ name: '', price: '', size: '', color: '', stock: '' });
+      await loadInitialProducts();
+    } catch (error) {
+      console.error("Error al agregar producto:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
   const handleDelete = async (productId) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
       try {
         setIsLoading(true);
         await deleteProduct(productId);
-        setIsLoading(false);
+        setProducts(prevProducts => prevProducts.filter(p => p.id !== productId));
       } catch (error) {
         console.error("Error al eliminar el producto:", error);
+      } finally {
         setIsLoading(false);
       }
     }
@@ -103,28 +136,18 @@ const Inventory = () => {
       <section>
         <h2 className="subtitle">TODO TU CATÁLOGO</h2>
         <div className="inventory">
-          {products.length === 0 ? (
+          {isLoading && products.length === 0 && <LoadingComponent isLoading={true} />}
+          {!isLoading && products.length === 0 && (
             <p>No tienes productos, agrega un producto a tu catálogo.</p>
-          ) : (
-            products.map(product => (
-              <div key={product.id} className="productCard">
+          )}
+          {products.map(product => (
+            <div key={product.id} className="productCard">
 
               <div className='deleteButtonContainer'>
                 <button
                     className="deleteButton"
                     style={{backgroundColor: 'red', color: 'white'}}
-                    onClick={async () => {
-                      if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
-                        try {
-                          await handleDelete(product.id);
-                          // Opcional: mostrar algún mensaje de éxito
-                          window.location.reload(); // O usar alguna función para actualizar la lista
-                        } catch (error) {
-                          console.error("Error al eliminar el producto:", error);
-                          // Opcional: mostrar mensaje de error
-                        }
-                      }
-                    }}
+                    onClick={() => handleDelete(product.id)}
                   >
                     ELIMINAR
                 </button>
@@ -147,11 +170,19 @@ const Inventory = () => {
                 <EditProductBtn product_id={product.id}/>
 
               </div>
-
-
-            ))
-          )}
+          ))}
         </div>
+
+        {isLoading && products.length > 0 && <LoadingComponent isLoading={true} />}
+        {!isLoading && hasMore && (
+          <button onClick={loadMoreProducts} className="loadMoreButton">
+            Cargar más productos
+          </button>
+        )}
+        {!isLoading && !hasMore && products.length > 0 && (
+            <p style={{ textAlign: 'center', margin: '20px' }}>No hay más productos para mostrar.</p>
+         )}
+
       </section>
 
       <button 
@@ -171,8 +202,6 @@ const Inventory = () => {
           setQRcode={setQRcode}
         />
       )}
-     <LoadingComponent isLoading={isLoading}/>
-
     </div>
   );
 };

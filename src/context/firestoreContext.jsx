@@ -5,58 +5,18 @@ import useFirestore from '../hooks/useFirestore';
 // Crear el contexto del carrito
 const FirestoreContext = React.createContext();
 
-
 // eslint-disable-next-line react/prop-types
 function FirestoreProvider({children}) {
-    const { 
-        getOrders,
-        createOrderWithProducts,
-        addProduct,
-        getProducts,
-        getProduct,
-        incrementProductCode,
-        incrementOrdersCode,
-        updateProduct,
-        deleteProduct,
-        getOrderById,
-        filterOrdersByDate,
-        updateOrder,
-        deleteOrder,
-        getProductsByOrder,
-        user, setUser, getAdmin,
-        products
-        } = useFirestore();
+    // Llama al hook y obtén el objeto completo con todas las funciones y estados
+    const firestoreData = useFirestore();
 
-
-    try {
+    // Pasa el objeto completo directamente al value del Provider
     return (
-        < FirestoreContext.Provider 
-            value={{
-                getOrders,
-                createOrderWithProducts,
-                addProduct,
-                getProducts,
-                getProduct,
-                incrementProductCode,
-                incrementOrdersCode,
-                updateProduct,
-                getOrderById,
-                deleteProduct,
-                filterOrdersByDate,
-                updateOrder,
-                deleteOrder,
-                getProductsByOrder,
-                user, setUser, getAdmin,
-                products,
-                }}>
-                {children}
-         </FirestoreContext.Provider>
-    )
-    }catch(e){
-        console.error(e)
-        return <div>Error en el carrito</div>;
-       
-    }
-    
+        <FirestoreContext.Provider value={firestoreData}>
+          {children}
+        </FirestoreContext.Provider>
+    );
+    // Ya no es necesario el try/catch aquí, el manejo de errores debe estar dentro de las funciones del hook o en los componentes que las usan.
 }
+
 export { FirestoreContext, FirestoreProvider }
