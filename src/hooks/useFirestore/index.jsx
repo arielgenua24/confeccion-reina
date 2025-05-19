@@ -406,7 +406,7 @@ const useFirestore = () => {
     const nameQueryUpper = query(
       productsRef,
       where("name", ">=", searchTermUpper),
-      where("name", "<", endTermUpper),
+      where("name", "<", endTermUpper), // Corregido de endTermLower a endTermUpper
       limit(limitParam)
     );
     const codeQueryLower = query(
@@ -470,13 +470,32 @@ const useFirestore = () => {
     }
   };
 
+  // Nueva función para obtener todos los productos sin paginación
+  const getAllProducts = async () => {
+    try {
+      const productsRef = collection(db, "products");
+      // Ordenamos por productCode para mantener consistencia, aunque no es estrictamente necesario
+      // si no se va a paginar. Puede ser útil para debug o si se decide añadir un límite en el futuro.
+      const q = query(productsRef, orderBy("productCode")); 
+      
+      const productsSnapshot = await getDocs(q);
+      const productsData = productsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      
+      return productsData; // Devuelve un array de productos
+    } catch (error) {
+      console.error("Error al obtener todos los productos:", error);
+      throw error;
+    }
+  };
+
   const [user, setUser] = useState(false);
 
   return {
     getOrders,
     createOrderWithProducts,
     addProduct,
-    getProducts,
+    getProducts, // La función original con paginación
+    getAllProducts, // La nueva función sin paginación
     getProduct,
     deleteProduct,
     incrementProductCode,

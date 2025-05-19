@@ -11,20 +11,18 @@ function ProductFormModal({handleSubmit, newProduct, setNewProduct, setIsModalOp
   const [isLoading, setIsLoading] = useState(false)
   const [products, setProducts] = useState([]);
 
-  const {getProducts} = useFirestoreContext();
-
+  const {getAllProducts} = useFirestoreContext();
 
   useEffect(() => {
     const loadProducts = async () => {
       setIsLoading(true)
-      const fetchedProducts = await getProducts();
-      setProducts(fetchedProducts);
-      console.log(fetchedProducts);
+      const fetchedProductsArray = await getAllProducts();
+      setProducts(fetchedProductsArray);
+      console.log('All products fetched for suggestions:', fetchedProductsArray);
       setIsLoading(false)
     };
     loadProducts();
-  }, []);
-
+  }, [getAllProducts]);
 
   const handleNameChange = async (e) => {
     const value = e.target.value;
