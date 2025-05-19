@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import useFirestoreContext from "../../hooks/useFirestoreContext";
 import  { useOrder }  from "../../hooks/useOrder";
@@ -6,25 +6,74 @@ import ProductSearch from "../../components/ProductSearch";
 import qrIcon from '../../assets/icons/icons8-qr-100.png';
 import './styles.css'
 
-
 function SelectProducts() {
       const [products, setProducts] = useState([]);
       const [isLoading, setIsLoading] = useState(false);
+      const [lastVisibleDoc, setLastVisibleDoc] = useState(null);
+      const [hasMore, setHasMore] = useState(true);
+      const PRODUCTS_PER_PAGE = 10; // O el valor que prefieras
 
       const navigate = useNavigate();
 
       const { getProducts, } = useFirestoreContext();
       const { findItem, } = useOrder();
 
+       const loadInitialProducts = useCallback(async () => {
+        console.log('[loadInitialProducts] Iniciando carga inicial.');
+        setIsLoading(true);
+        try {
+          console.log('[loadInitialProducts] Obteniendo productos...');
+          const fetchedProductsData = await getProducts(PRODUCTS_PER_PAGE);
+          console.log('[loadInitialProducts] fetchedProductsData:', fetchedProductsData);
+          if (fetchedProductsData && Array.isArray(fetchedProductsData.products)) {
+            setProducts(fetchedProductsData.products);
+            setLastVisibleDoc(fetchedProductsData.lastVisibleDoc);
+            setHasMore(fetchedProductsData.products.length === PRODUCTS_PER_PAGE);
+            console.log('[loadInitialProducts] Productos actualizados. New products.length:', fetchedProductsData.products.length, 'New hasMore:', fetchedProductsData.products.length === PRODUCTS_PER_PAGE);
+          } else {
+            console.error('[loadInitialProducts] Error: fetchedProductsData.products no es un array o fetchedProductsData es nulo/undefined', fetchedProductsData);
+            setProducts([]);
+            setHasMore(false);
+          }
+        } catch (error) {
+          console.error("[loadInitialProducts] Error cargando productos iniciales:", error);
+          setProducts([]);
+          setHasMore(false);
+        } finally {
+          setIsLoading(false);
+          console.log('[loadInitialProducts] Finalizado. isLoading debería ser false.');
+        }
+      }, [getProducts, PRODUCTS_PER_PAGE]);
+
+      const loadMoreProducts = useCallback(async () => {
+        console.log('[loadMoreProducts] Iniciando. isLoading:', isLoading, 'hasMore:', hasMore, 'lastVisibleDoc:', !!lastVisibleDoc);
+        if (isLoading || !hasMore || !lastVisibleDoc) return;
+        setIsLoading(true); 
+        try {
+          const fetchedProductsData = await getProducts(PRODUCTS_PER_PAGE, lastVisibleDoc);
+          console.log('[loadMoreProducts] fetchedProductsData:', fetchedProductsData);
+          if (fetchedProductsData && Array.isArray(fetchedProductsData.products)) {
+            setProducts(prevProducts => [...prevProducts, ...fetchedProductsData.products]);
+            setLastVisibleDoc(fetchedProductsData.lastVisibleDoc);
+            setHasMore(fetchedProductsData.products.length === PRODUCTS_PER_PAGE);
+            console.log('[loadMoreProducts] Productos actualizados. New products.length:', fetchedProductsData.products.length, 'New hasMore:', fetchedProductsData.products.length === PRODUCTS_PER_PAGE);
+          } else {
+            console.error('[loadMoreProducts] Error: fetchedProductsData.products no es un array o fetchedProductsData es nulo/undefined para loadMore', fetchedProductsData);
+            setHasMore(false); // Detener carga si hay error
+          }
+        } catch (error) {
+          console.error("[loadMoreProducts] Error cargando más productos:", error);
+          setHasMore(false); // Detener carga si hay error
+        } finally {
+          setIsLoading(false); 
+          console.log('[loadMoreProducts] Finalizado. isLoading debería ser false.');
+        } 
+      }, [getProducts, isLoading, hasMore, lastVisibleDoc, PRODUCTS_PER_PAGE]);
+
        useEffect(() => {
-          const loadProducts = async () => {
-            setIsLoading(true);
-            const fetchedProducts = await getProducts();
-            setProducts(fetchedProducts);
-            setIsLoading(false);
-          };
-          loadProducts();
-        }, []);
+          console.log('[useEffect] Montaje del componente: Llamando a loadInitialProducts.');
+          loadInitialProducts();
+        }, [loadInitialProducts]); // <--- DEPENDENCIA RESTAURADA PARA ESLINT
 
 
         const modalOverlayStyles = {
@@ -89,13 +138,13 @@ function SelectProducts() {
           <section>
             <h2 className="subtitle">TODO TU CATÁLOGO</h2>
             <div className="inventory">
-              {products.length === 0 ? (
-                <p>No tienes productos, agrega un producto a tu catálogo.</p>
-              ) : (
+              {isLoading && products.length === 0 ? (
+                <p>Cargando productos...</p>
+              ) : Array.isArray(products) && products.length > 0 ? (
                 products.map(product => (
                   <div key={product.id} className="productCard">
-                    {console.log(product) }
-                    {console.log(product.id)}
+                    {/* {console.log(product) } 
+                    {console.log(product.id)} */}
     
                     <h3 className="productTitle">{product.name}</h3>
                     <p className="productDetail">{product.productCode}</p>
@@ -124,10 +173,23 @@ function SelectProducts() {
     
     
                 ))
+              ) : (
+                <p>No tienes productos, agrega un producto a tu catálogo.</p>
               )}
             </div>
+
+            {!isLoading && hasMore && products.length > 0 && (
+              <button onClick={loadMoreProducts} className="loadMoreButton" style={{ margin: '20px auto', display: 'block' }}>
+                Cargar más productos
+              </button>
+            )}
+            {!isLoading && !hasMore && products.length > 0 && (
+                <p style={{ textAlign: 'center', margin: '20px' }}>No hay más productos para mostrar.</p>
+            )}
           </section>
     
+          {/* El modal de "Aguarde un momento" se mostrará basado en el isLoading global,
+             lo cual está bien para la carga inicial y la carga de más productos. */}
           {isLoading && (
           <div style={modalOverlayStyles}>
             <div style={modalContentStyles}>
