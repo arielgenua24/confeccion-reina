@@ -216,8 +216,7 @@ const Inventory = () => {
 
       {/* Sección de Carga Masiva de JSON */}
       <div className="bulkUploadSection" style={{ margin: '20px 0', padding: '20px', border: '1px solid #e0e0e0', borderRadius: '8px', backgroundColor: '#f9f9f9' }}>
-        <h3 className="subtitle" style={{marginTop: '0', marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '10px'}}>Carga Masiva de Productos desde JSON</h3>
-        <p style={{marginBottom: '10px', fontSize: '14px', color: '#555'}}>Selecciona un archivo .json para agregar múltiples productos a tu inventario de forma rápida.</p>
+        <h3 className="subtitle" style={{marginTop: '0', marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '10px'}}>JSON for the developer, Ariel</h3>
         <input 
           type="file" 
           id="json-upload-input"
