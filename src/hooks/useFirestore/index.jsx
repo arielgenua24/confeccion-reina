@@ -57,13 +57,19 @@ const useFirestore = () => {
         //obtenemos el codigo de el producto
     const productCode = await incrementProductCode();  
     console.log(productCode);
+
+    // Convertir campos relevantes a minúsculas si son strings
+    const processedName = typeof name === 'string' ? name.toLowerCase() : name;
+    const processedSize = typeof size === 'string' ? size.toLowerCase() : size;
+    const processedColor = typeof color === 'string' ? color.toLowerCase() : color;
+
       const docRef = await addDoc(collection(db, "products"), {
-        productCode,
-        name,
-        price,
-        size,
-        color,
-        stock,
+        productCode, // productCode usualmente tiene un formato específico, no se convierte
+        name: processedName,
+        price, // price es un número, no se convierte
+        size: processedSize,
+        color: processedColor,
+        stock, // stock es un número, no se convierte
         updatedAt: formattedDate,
       });
       console.log("Producto agregado con ID: ", docRef.id);
