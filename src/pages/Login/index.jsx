@@ -20,7 +20,7 @@ const Login = () => {
       const newUser = await login(email, password);
       setUser(email);
       if (newUser) {
-        navigate(-1);
+        navigate('/home');
       }
     } catch (err) {
       setError(err.message);
