@@ -11,54 +11,77 @@ const OrderProvider = ({ children }) => {
     return savedCart ? JSON.parse(savedCart) : [];
   });
 
-  function findItem(item) {
+  function findItem(cartItemOrProduct) {
     const foundIndex = cart.findIndex((cartItem) => {
-      /*console.group('findItem')
-        console.log(cartItem)
-        console.log(item.id)
-      console.groupEnd()*/
-      return cartItem?.item?.id === item?.id
+      // Handle both old format (direct product) and new format (cart item with product)
+      const searchId = cartItemOrProduct?.product?.id || cartItemOrProduct?.id;
+      const cartId = cartItem?.product?.id || cartItem?.item?.id;
       
+      return cartId === searchId;
     });
     if (foundIndex !== -1) {
-      console.log(item)
-      item = cart[foundIndex]
-      return { item, index: foundIndex };
+      console.log('Found item:', cart[foundIndex])
+      return { item: cart[foundIndex], index: foundIndex };
     }
     return null;
   }
 
 
-    function addItem(item, quantity) {
-      if (!findItem(item)) {
+    function addItem(cartItem, quantity) {
+      // Handle both old format and new format
+      let newCartItem;
+      if (cartItem?.product) {
+        // New format: cart item with product and variants
+        newCartItem = cartItem;
+      } else {
+        // Old format: direct product - convert to new format
+        newCartItem = {
+          product: cartItem,
+          quantity: quantity,
+          selectedVariants: { size: null, color: null }
+        };
+      }
+      
+      if (!findItem(newCartItem)) {
         console.log('añadiendo items al carrito en el localStorage')
-        console.log(item)
-        setCart((prevState) => [...prevState, {item, quantity }]); //asi se vera el array
-        localStorage.setItem('cart-r-v1.1', JSON.stringify([...cart, {item, quantity}]))
+        console.log(newCartItem)
+        setCart((prevState) => [...prevState, newCartItem]);
+        localStorage.setItem('cart-r-v1.1', JSON.stringify([...cart, newCartItem]))
       } else {
         console.log('el producto ya se encuentra agregado')
       }
     }
 
-    function updateQuantity(item, quantity) {
+    function updateQuantity(cartItem, quantity) {
       console.log('ejecutando la funcion updateQuantity')
-      console.log(item)
-      //console.log(item, newQuantity) //hasta aca yo se que me llego el item, y la cantidad
-  
-      const foundItem = findItem(item);
+      console.log(cartItem)
+      
+      const foundItem = findItem(cartItem);
       console.log('oldCart')
       console.log(foundItem)
       if (foundItem) {
         const newCart = [...cart];
-        const updatedItem = {
-          item,  // Incrementa la cantidad
-          quantity,
-        };
-        newCart[foundItem.index] = updatedItem; //esto funciona, pero primero se inicializan y luego se hace el console.log
+        let updatedItem;
+        
+        if (cartItem?.product) {
+          // New format: update with variants
+          updatedItem = {
+            product: cartItem.product,
+            quantity: quantity,
+            selectedVariants: cartItem.selectedVariants
+          };
+        } else {
+          // Old format: maintain backward compatibility
+          updatedItem = {
+            item: cartItem,
+            quantity: quantity,
+          };
+        }
+        
+        newCart[foundItem.index] = updatedItem;
         setCart(newCart); 
         console.log(newCart)
         console.log(cart)
-  
   
         localStorage.setItem('cart-r-v1.1', JSON.stringify(newCart))
         console.log(JSON.parse(localStorage.getItem('cart-r-v1.1')))
@@ -72,10 +95,10 @@ const OrderProvider = ({ children }) => {
       return parsedItems
     }
 
-    function deleteItem(item) {
-      const foundItem = findItem(item);
+    function deleteItem(cartItemOrProduct) {
+      const foundItem = findItem(cartItemOrProduct);
       if(foundItem) {
-        console.log('delete item', item)
+        console.log('delete item', cartItemOrProduct)
         const newCart = [...cart];
         newCart.splice(foundItem.index, 1)
         localStorage.setItem('cart-r-v1.1', JSON.stringify(newCart))

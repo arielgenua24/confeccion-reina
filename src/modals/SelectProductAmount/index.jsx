@@ -16,9 +16,12 @@ function SelectProductAmount({ onClose }) {
   const [name, setName] = useState('');
   const [price, setPrice] = useState(0);
   const [stock, setStock] = useState(0);
-  const [size, setSize] = useState('');
-  const [color, setColor] = useState('');
+  const [details, setDetails] = useState('');
   const [code, setCode] = useState('');
+  
+  // Optional variant selection
+  const [selectedSize, setSelectedSize] = useState('');
+  const [selectedColor, setSelectedColor] = useState('');
 
   const [error, setError ] = useState(false)
 
@@ -42,8 +45,7 @@ function SelectProductAmount({ onClose }) {
       setName(fetchedProduct.name);
       setPrice(fetchedProduct.price);
       setStock(fetchedProduct.stock);
-      setSize(fetchedProduct.size);
-      setColor(fetchedProduct.color);
+      setDetails(fetchedProduct.details || '');
       setCode(fetchedProduct.productCode);
     };
     loadProducts();
@@ -78,7 +80,16 @@ function SelectProductAmount({ onClose }) {
     if(isInCart) {
       console.log('Updating product in cart:', product, 'with amount:', amountNumber);
       console.log('llamado a updateQuantity');
-      updateQuantity(product, amountNumber);
+      // Create updated cart item with selected variants
+      const updatedCartItem = {
+        product: product,
+        quantity: amountNumber,
+        selectedVariants: {
+          size: selectedSize || null,
+          color: selectedColor || null
+        }
+      };
+      updateQuantity(updatedCartItem, amountNumber);
       navigate('/select-products');
       return;
     }
@@ -87,7 +98,16 @@ function SelectProductAmount({ onClose }) {
   
 
     console.log('Adding product to cart:', product, 'with amount:', amount);
-    addItem(product, amountNumber);
+    // Create cart item with selected variants
+    const cartItem = {
+      product: product,
+      quantity: amountNumber,
+      selectedVariants: {
+        size: selectedSize || null,
+        color: selectedColor || null
+      }
+    };
+    addItem(cartItem, amountNumber);
     // NO OLVIDES QUE TENES QUE RESTAR EN LA BASE DE DATOS LOS PRODUCTOS AGREGADOS AL CARRITO
     navigate('/select-products');
   };
@@ -107,9 +127,53 @@ function SelectProductAmount({ onClose }) {
 
       <div className="productAmountContainer-details-grid">
         <span className="productAmountContainer-detail-item">Precio: ${price}</span>
-        <span className="productAmountContainer-detail-item">Color: {color}</span>
-        <span className="productAmountContainer-detail-item">Talle: {size}</span>
+        <span className="productAmountContainer-detail-item">{details || 'Sin detalles'}</span>
         <span className="productAmountContainer-detail-item">En inventario: {stock} unidades</span>
+      </div>
+
+      {/* Optional variant selection */}
+      <div className="variant-selection-container" style={{ margin: '20px 0', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+        <h3 style={{ margin: '0 0 15px 0', fontSize: '18px', color: '#333' }}>Opciones (Opcional)</h3>
+        
+        <div className="variant-inputs" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+          <div className="variant-input-group">
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#555' }}>Talle:</label>
+            <input
+              type="text"
+              value={selectedSize}
+              onChange={(e) => setSelectedSize(e.target.value)}
+              placeholder="Ej: S, M, L, XL"
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                fontSize: '16px'
+              }}
+            />
+          </div>
+          
+          <div className="variant-input-group">
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#555' }}>Color:</label>
+            <input
+              type="text"
+              value={selectedColor}
+              onChange={(e) => setSelectedColor(e.target.value)}
+              placeholder="Ej: Rojo, Azul, Verde"
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                fontSize: '16px'
+              }}
+            />
+          </div>
+        </div>
+        
+        <p style={{ margin: '10px 0 0 0', fontSize: '14px', color: '#666', fontStyle: 'italic' }}>
+          Estos campos son opcionales. Deja vacío si no aplica.
+        </p>
       </div>
 
       <div className="amount-container">

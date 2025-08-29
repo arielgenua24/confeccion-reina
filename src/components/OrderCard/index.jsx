@@ -4,7 +4,7 @@ import './styles.css';
 import { useOrder } from '../../hooks/useOrder';
 import { useNavigate } from 'react-router-dom';
 
-const OrderCard = ({ product, quantity }) => {
+const OrderCard = ({ product, quantity, selectedVariants }) => {
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
   const { deleteItem } = useOrder() 
@@ -81,17 +81,25 @@ const OrderCard = ({ product, quantity }) => {
       <div className="cart-card-content">
         <div className="cart-info-grid">
           <div className="cart-info-item">
-            <span className="cart-info-label">Color</span>
-            <span className="cart-info-value">{product.color}</span>
+            <span className="cart-info-label">Detalles</span>
+            <span className="cart-info-value">{product.details || 'Sin detalles'}</span>
           </div>
           <div className="cart-info-item">
             <span className="cart-info-label">Cantidad</span>
             <span className="cart-info-value">{quantity}</span>
           </div>
-          <div className="cart-info-item">
-            <span className="cart-info-label">Tamaño</span>
-            <span className="cart-info-value">{product.size}</span>
-          </div>
+          {selectedVariants?.color && (
+            <div className="cart-info-item">
+              <span className="cart-info-label">Color</span>
+              <span className="cart-info-value">{selectedVariants.color}</span>
+            </div>
+          )}
+          {selectedVariants?.size && (
+            <div className="cart-info-item">
+              <span className="cart-info-label">Talle</span>
+              <span className="cart-info-value">{selectedVariants.size}</span>
+            </div>
+          )}
           <div className="cart-info-item">
             <span className="cart-info-label">Precio</span>
             <span className="cart-info-value">${product.price}</span>

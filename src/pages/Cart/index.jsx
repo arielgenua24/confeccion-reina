@@ -87,7 +87,10 @@ const Cart = () => {
             <ul>
                 {products.map((item, index) => {
                    console.log(item)
-                    return <OrderCard key={index} product={item.item} quantity={item.quantity} />
+                   // Handle both old format (item.item) and new format (item.product)
+                   const product = item.product || item.item;
+                   const variants = item.selectedVariants || { size: item.item?.size || null, color: item.item?.color || null };
+                   return <OrderCard key={index} product={product} quantity={item.quantity} selectedVariants={variants} />
                 })}
             </ul>
 

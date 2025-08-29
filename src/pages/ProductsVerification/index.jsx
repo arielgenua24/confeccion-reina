@@ -142,11 +142,18 @@ const ProductVerification = () => {
                 <strong>Producto:</strong> {product.productData.name}
               </p>
               <p>
-                <strong>Color:</strong> {product.productData.color}
+                <strong>Detalles:</strong> {product.productData.details || 'Sin detalles'}
               </p>
-              <p>
-                <strong>Talle:</strong> {product.productData.size}
-              </p>
+              {product.selectedVariants?.color && (
+                <p>
+                  <strong>Color:</strong> {product.selectedVariants.color}
+                </p>
+              )}
+              {product.selectedVariants?.size && (
+                <p>
+                  <strong>Talle:</strong> {product.selectedVariants.size}
+                </p>
+              )}
               <p>
                 <strong>Precio:</strong> {product.productData.price}
               </p>
@@ -169,11 +176,18 @@ const ProductVerification = () => {
                 <strong>Producto:</strong> {product.productSnapshot.name}
               </p>
               <p>
-                <strong>Color:</strong> {product.productSnapshot.color}
+                <strong>Detalles:</strong> {product.productSnapshot.details || 'Sin detalles'}
               </p>
-              <p>
-                <strong>Talle:</strong> {product.productSnapshot.size}
-              </p>
+              {product.selectedVariants?.color && (
+                <p>
+                  <strong>Color:</strong> {product.selectedVariants.color}
+                </p>
+              )}
+              {product.selectedVariants?.size && (
+                <p>
+                  <strong>Talle:</strong> {product.selectedVariants.size}
+                </p>
+              )}
               <p>
                 <strong>Precio:</strong> {product.productSnapshot.price}
               </p>

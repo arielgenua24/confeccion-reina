@@ -87,8 +87,14 @@ function QRmodal({ QRcode, setQRcode, orderCode }) {
         // Columna izquierda
         pdf.setFontSize(10);
         pdf.setFont('helvetica', 'normal');
-        pdf.text(col1, yPos + 16, `Color: ${product.productSnapshot.color}`);
-        pdf.text(col1, yPos + 22, `Talla: ${product.productSnapshot.size}`);
+        pdf.text(col1, yPos + 16, `Detalles: ${product.productSnapshot.details || 'Sin detalles'}`);
+        // Show selected variants if they exist
+        if (product.selectedVariants?.color) {
+          pdf.text(col1, yPos + 22, `Color: ${product.selectedVariants.color}`);
+        }
+        if (product.selectedVariants?.size) {
+          pdf.text(col1, yPos + (product.selectedVariants?.color ? 28 : 22), `Talla: ${product.selectedVariants.size}`);
+        }
         
         // Columna derecha
         pdf.text(col2, yPos + 16, `Precio unitario: $${formatPrice(product.productSnapshot.price)}`);
@@ -194,6 +200,9 @@ function QRmodal({ QRcode, setQRcode, orderCode }) {
               <h4 className="QR-title">
                 {`Producto: ${QRcode.name}`}
               </h4>
+              <p style={{fontSize: '12px', color: '#666', margin: '5px 0'}}>
+                {QRcode.details || 'Sin detalles'}
+              </p>
               <QRCodeCanvas className="qr-canvas" value={qrValue} size={80} />
             </div>
           ))) }

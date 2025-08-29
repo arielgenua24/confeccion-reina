@@ -52,7 +52,7 @@ const useFirestore = () => {
   }
 
   //OKAY, producto agregado
-  const addProduct = async (name, price, size, color, stock) => {
+  const addProduct = async (name, price, details, stock) => {
     try {
         //obtenemos el codigo de el producto
     const productCode = await incrementProductCode();  
@@ -60,15 +60,13 @@ const useFirestore = () => {
 
     // Convertir campos relevantes a minúsculas si son strings
     const processedName = typeof name === 'string' ? name.toLowerCase() : name;
-    const processedSize = typeof size === 'string' ? size.toLowerCase() : size;
-    const processedColor = typeof color === 'string' ? color.toLowerCase() : color;
+    const processedDetails = typeof details === 'string' ? details : details;
 
       const docRef = await addDoc(collection(db, "products"), {
         productCode, // productCode usualmente tiene un formato específico, no se convierte
         name: processedName,
         price, // price es un número, no se convierte
-        size: processedSize,
-        color: processedColor,
+        details: processedDetails,
         stock, // stock es un número, no se convierte
         updatedAt: formattedDate,
       });
@@ -313,7 +311,8 @@ const useFirestore = () => {
     try {
         // Validar stock de todos los productos
         for (const element of products) {
-            const product = element.item;
+            // Handle both old format (element.item) and new format (element.product)
+            const product = element.product || element.item;
             const productRef = doc(db, "products", product.id);
             const productSnapshot = await getDoc(productRef);
             
@@ -342,7 +341,8 @@ const useFirestore = () => {
 
         // Procesar productos y actualizar stock
         for (const element of products) {
-            const product = element.item;
+            // Handle both old format (element.item) and new format (element.product)
+            const product = element.product || element.item;
             const productRef = doc(db, "products", product.id);
             const productSnapshot = await getDoc(productRef);
             const currentStock = Number(productSnapshot.data().stock);
@@ -350,19 +350,34 @@ const useFirestore = () => {
             
             const quantityNumber = Number(element.quantity);
 
-            // ⚡ Guardar snapshot del producto en la orden
-            await addDoc(collection(db, `orders/${pedidoRef.id}/products`), {
+            // ⚡ Guardar snapshot del producto en la orden con variantes seleccionadas
+            const orderProduct = {
                 productRef, // Se mantiene la referencia por si se necesita
                 productSnapshot: { // Snapshot de los datos actuales del producto
                     name: productSnapshot.data().name,
                     price: productSnapshot.data().price,
                     productCode: productSnapshot.data().productCode,
-                    size: productSnapshot.data().size,
-                    color: productSnapshot.data().color,
+                    details: productSnapshot.data().details || '',
                 },
                 stock: quantityNumber,
                 verified: 0
-            });
+            };
+            
+            // Add selected variants if they exist (new format)
+            if (element.selectedVariants) {
+                orderProduct.selectedVariants = {
+                    size: element.selectedVariants.size || null,
+                    color: element.selectedVariants.color || null
+                };
+            } else {
+                // Backward compatibility: if it's old format, try to get size/color from product data
+                orderProduct.selectedVariants = {
+                    size: productSnapshot.data().size || null,
+                    color: productSnapshot.data().color || null
+                };
+            }
+            
+            await addDoc(collection(db, `orders/${pedidoRef.id}/products`), orderProduct);
 
             // Actualizar el stock del producto en el inventario
             const newStockInt = currentStock - quantityNumber;

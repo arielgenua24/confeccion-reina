@@ -20,8 +20,7 @@ const Inventory = () => {
   const [newProduct, setNewProduct] = useState({
     name: '',
     price: '',
-    size: '',
-    color: '',
+    details: '',
     stock: ''
   });
   const [lastVisibleDoc, setLastVisibleDoc] = useState(null);
@@ -80,9 +79,9 @@ const Inventory = () => {
     setIsLoading(true);
     e.preventDefault();
     try {
-      await addProduct(newProduct.name, newProduct.price, newProduct.size, newProduct.color, newProduct.stock);
+      await addProduct(newProduct.name, newProduct.price, newProduct.details, newProduct.stock);
       setIsModalOpen(false);
-      setNewProduct({ name: '', price: '', size: '', color: '', stock: '' });
+      setNewProduct({ name: '', price: '', details: '', stock: '' });
       await loadInitialProducts();
     } catch (error) {
       console.error("Error al agregar producto:", error);
@@ -139,11 +138,11 @@ const Inventory = () => {
         for (let i = 0; i < productsToUpload.length; i++) {
           const product = productsToUpload[i];
           try {
-            if (!product.name || product.price === undefined || product.size === undefined || product.color === undefined || product.stock === undefined) {
+            if (!product.name || product.price === undefined || product.stock === undefined) {
                 throw new Error(`Producto en índice ${i} (${product.name || 'Nombre desconocido'}) tiene datos faltantes o inválidos. Campos requeridos: name, price, size, color, stock.`);
             }
             // Asegurar tipos de datos antes de enviar a addProduct
-            await addProduct(String(product.name), Number(product.price), product.size, String(product.color), Number(product.stock));
+            await addProduct(String(product.name), Number(product.price), product.details || '', Number(product.stock));
             currentSuccess++;
           } catch (error) {
             currentErrors++;
@@ -288,8 +287,7 @@ const Inventory = () => {
                 <p className="productDetail">{product.productCode}</p>
                 <p className="productDetail">Precio: ${product.price}</p>
                 <p className="productDetail">Stock: {product.stock}</p>
-                <p className="productDetail">Talle: {product.size}</p>
-                <p className="productDetail">Color: {product.color}</p>
+                <p className="productDetail">{product.details || 'Sin detalles'}</p>
 
 
                 <QRButton 

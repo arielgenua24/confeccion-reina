@@ -20,8 +20,7 @@ function Product() {
   const [name, setName] = useState(product.name);
   const [price, setPrice] = useState(product.price);
   const [stock, setStock] = useState(product.stock);
-  const [size, setSize] = useState(product.size);
-  const [color, setColor] = useState(product.color);
+  const [details, setDetails] = useState(product.details);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -38,8 +37,7 @@ function Product() {
       setName(fetchedProduct.name);
       setPrice(fetchedProduct.price);
       setStock(fetchedProduct.stock);
-      setSize(fetchedProduct.size);
-      setColor(fetchedProduct.color);
+      setDetails(fetchedProduct.details || '');
       setIsLoading(false);
     };
     loadProducts();
@@ -61,8 +59,7 @@ function Product() {
       name,
       price,
       stock,
-      size,
-      color,
+      details,
       updatedAt: formattedDate,
     };
     try {
@@ -91,16 +88,18 @@ function Product() {
             <input type="number" className="product-input" placeholder={`Precio: ${product.price}`} value={price} onChange={handleInputChange(setPrice)} />
           </div>
           <div className="input-group">
+            <span>Detalles del producto</span>
+            <textarea 
+              className="product-input" 
+              placeholder={`Detalles: ${product.details || 'Sin detalles'}`} 
+              value={details || ''} 
+              onChange={handleInputChange(setDetails)}
+              rows={3}
+            />
+          </div>
+          <div className="input-group">
             <span>Cantidad total en stock</span>
             <input type="number" className="product-input" placeholder={`Stock: ${product.stock}`} value={stock} onChange={handleInputChange(setStock)} />
-          </div>
-          <div className="input-group">
-            <span>Talle</span>
-            <input type="text" className="product-input" placeholder={`Talle: ${product.size}`} value={size} onChange={handleInputChange(setSize)} />
-          </div>
-          <div className="input-group">
-            <span>Color</span>
-            <input type="text" className="product-input" placeholder={`Color: ${product.color}`} value={color} onChange={handleInputChange(setColor)} />
           </div>
 
           {changes ? (

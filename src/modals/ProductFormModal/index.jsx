@@ -50,8 +50,7 @@ function ProductFormModal({handleSubmit, newProduct, setNewProduct, setIsModalOp
       ...newProduct,
       name: suggestion.name,
       price: suggestion.price,
-      color: suggestion.color,
-      category: suggestion.category,
+      details: suggestion.details || '',
     });
      // setImages({image1: suggestion.image1, image2: suggestion.image2, image3: suggestion.image3});
     setSuggestions([]);
@@ -92,7 +91,7 @@ function ProductFormModal({handleSubmit, newProduct, setNewProduct, setIsModalOp
                           className="suggestion-input--item"
                         >
                           <span className="suggestion-input--name">{suggestion.name}</span>
-                          <span className="suggestion-input--color">{suggestion.color}</span>
+                          <span className="suggestion-input--details">{suggestion.details}</span>
                           <span className="suggestion-input--price">${suggestion.price}</span>
                         </li>
                       ))}
@@ -104,25 +103,37 @@ function ProductFormModal({handleSubmit, newProduct, setNewProduct, setIsModalOp
 
 
 
-          {['price', 'size', 'color', 'stock'].map(field => (
+          {['price', 'details', 'stock'].map(field => (
             <div key={field} className="formGroup">
               <label className="label">
                 {field === 'price' ? 'Precio' : 
-                field === 'size' ? 'Talle' : 
-                field === 'color' ? 'Color' : 
+                field === 'details' ? 'Detalles del producto' : 
                 field === 'stock' ? 'Cantidad en inventario' : 
                 field}
               </label>
-              <input
-                type={field === 'price' || field === 'stock' ? 'number' : 'text'}
-                value={newProduct[field]}
-                onChange={(e) => setNewProduct({
-                  ...newProduct,
-                  [field]: e.target.value
-                })}
-                className="input"
-                required
-              />
+              {field === 'details' ? (
+                <textarea
+                  value={newProduct[field] || ''}
+                  onChange={(e) => setNewProduct({
+                    ...newProduct,
+                    [field]: e.target.value
+                  })}
+                  className="input"
+                  placeholder="Descripción del producto, materiales, etc."
+                  rows={3}
+                />
+              ) : (
+                <input
+                  type={field === 'price' || field === 'stock' ? 'number' : 'text'}
+                  value={newProduct[field] || ''}
+                  onChange={(e) => setNewProduct({
+                    ...newProduct,
+                    [field]: e.target.value
+                  })}
+                  className="input"
+                  required
+                />
+              )}
             </div>
           ))}
 
