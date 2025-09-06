@@ -16,7 +16,6 @@ function SelectProducts() {
       const navigate = useNavigate();
 
       const { getProducts, } = useFirestoreContext();
-      const { findItem, } = useOrder();
 
        const loadInitialProducts = useCallback(async () => {
         console.log('[loadInitialProducts] Iniciando carga inicial.');
@@ -153,20 +152,12 @@ function SelectProducts() {
                     <p className="productDetail">{product.details || 'Sin detalles'}</p>
 
 
-                    {
-                    findItem(product) ? 
-                    ( <button
-                        className="edit-in-cart-button"
-                        onClick={() => navigate(`/select-product-amount/${product.id}?in-cart=true`)}
-                      >
-                        MODIFICAR CANTIDAD
-                      </button>
-                      ):(<button
-                        className="add-to-cart-button"
-                        onClick={() => navigate(`/select-product-amount/${product.id}`)}
-                      >
-                        AGREGAR AL CARRITO
-                      </button>) }
+                    <button
+                      className="add-to-cart-button"
+                      onClick={() => navigate(`/select-product-amount/${product.id}`)}
+                    >
+                      AGREGAR AL CARRITO
+                    </button>
     
                   </div>
     

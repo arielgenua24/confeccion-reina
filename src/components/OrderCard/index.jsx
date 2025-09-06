@@ -34,7 +34,12 @@ const OrderCard = ({ product, quantity, selectedVariants }) => {
 
   const handleDelete = () => {
     if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
-      deleteItem(product); // Llama a la función para eliminar el producto
+      // Crear el item completo con producto y variantes para eliminar específicamente esta combinación
+      const itemToDelete = {
+        product: product,
+        selectedVariants: selectedVariants
+      };
+      deleteItem(itemToDelete);
       setShowModal(true); // Muestra el modal
   
       // Cierra el modal después de 2 segundos
@@ -112,7 +117,14 @@ const OrderCard = ({ product, quantity, selectedVariants }) => {
       </div>
       
       <div className="cart-card-actions">
-        <button className="cart-modify-button" onClick={() => navigate(`/select-product-amount/${product.id}?in-cart=true`)}>
+        <button className="cart-modify-button" onClick={() => {
+          const params = new URLSearchParams({
+            'in-cart': 'true'
+          });
+          if (selectedVariants?.size) params.append('size', selectedVariants.size);
+          if (selectedVariants?.color) params.append('color', selectedVariants.color);
+          navigate(`/select-product-amount/${product.id}?${params.toString()}`);
+        }}>
           Modificar
         </button>
         <button className="cart-delete-button" onClick={handleDelete}>

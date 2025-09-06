@@ -17,7 +17,34 @@ const OrderProvider = ({ children }) => {
       const searchId = cartItemOrProduct?.product?.id || cartItemOrProduct?.id;
       const cartId = cartItem?.product?.id || cartItem?.item?.id;
       
-      return cartId === searchId;
+      // Si los IDs no coinciden, definitivamente no es el mismo item
+      if (cartId !== searchId) return false;
+      
+      // Si los IDs coinciden, verificar variantes
+      const searchVariants = cartItemOrProduct?.selectedVariants;
+      const cartVariants = cartItem?.selectedVariants;
+      
+      // Si no hay variantes en ninguno, son iguales (backward compatibility)
+      if (!searchVariants && !cartVariants) return true;
+      
+      // Casos especiales: uno tiene variantes y el otro no
+      if (!searchVariants && cartVariants) {
+        // Buscar sin variantes vs item con variantes = diferentes items
+        return (cartVariants.size === null || cartVariants.size === '') && 
+               (cartVariants.color === null || cartVariants.color === '');
+      }
+      
+      if (searchVariants && !cartVariants) {
+        // Buscar con variantes vs item sin variantes = diferentes items  
+        return (searchVariants.size === null || searchVariants.size === '') && 
+               (searchVariants.color === null || searchVariants.color === '');
+      }
+      
+      // Comparar variantes específicas (ambos tienen variantes)
+      return (
+        searchVariants?.size === cartVariants?.size && 
+        searchVariants?.color === cartVariants?.color
+      );
     });
     if (foundIndex !== -1) {
       console.log('Found item:', cart[foundIndex])
@@ -52,41 +79,70 @@ const OrderProvider = ({ children }) => {
       }
     }
 
-    function updateQuantity(cartItem, quantity) {
+    function updateQuantity(cartItem, quantity, originalVariants = null) {
       console.log('ejecutando la funcion updateQuantity')
-      console.log(cartItem)
+      console.log('cartItem:', cartItem)
+      console.log('originalVariants:', originalVariants)
       
-      const foundItem = findItem(cartItem);
-      console.log('oldCart')
-      console.log(foundItem)
+      // Si no se proporcionan variantes originales, asumir que son las mismas que las actuales
+      const variantesToFind = originalVariants || cartItem.selectedVariants || { size: null, color: null };
+      
+      const originalItemToFind = {
+        product: cartItem.product || cartItem,
+        selectedVariants: variantesToFind
+      };
+      
+      const foundItem = findItem(originalItemToFind);
+      console.log('oldCart encontrado:', foundItem)
+      
       if (foundItem) {
-        const newCart = [...cart];
-        let updatedItem;
+        // Verificar si las variantes cambiaron
+        const newVariants = cartItem.selectedVariants || { size: null, color: null };
+        const variantsChanged = (
+          variantesToFind.size !== newVariants.size || 
+          variantesToFind.color !== newVariants.color
+        );
         
-        if (cartItem?.product) {
-          // New format: update with variants
-          updatedItem = {
+        console.log('¿Variantes cambiaron?', variantsChanged);
+        console.log('Originales:', variantesToFind);
+        console.log('Nuevas:', newVariants);
+        
+        if (!variantsChanged) {
+          // Actualización simple - mismas variantes
+          const newCart = [...cart];
+          const updatedItem = {
             product: cartItem.product,
             quantity: quantity,
-            selectedVariants: cartItem.selectedVariants
+            selectedVariants: newVariants
           };
+          
+          newCart[foundItem.index] = updatedItem;
+          setCart(newCart);
+          localStorage.setItem('cart-r-v1.1', JSON.stringify(newCart));
+          console.log('✅ Actualizado sin cambio de variantes');
         } else {
-          // Old format: maintain backward compatibility
-          updatedItem = {
-            item: cartItem,
+          // Caso 2: Las variantes cambiaron - eliminar el viejo y agregar el nuevo
+          console.log('🔄 Variantes cambiaron - eliminando item original y agregando nuevo');
+          
+          // Eliminar el item original
+          const newCart = [...cart];
+          newCart.splice(foundItem.index, 1);
+          
+          // Agregar el nuevo item con las variantes actualizadas
+          const newCartItem = {
+            product: cartItem.product,
             quantity: quantity,
+            selectedVariants: newVariants
           };
+          
+          newCart.push(newCartItem);
+          
+          setCart(newCart);
+          localStorage.setItem('cart-r-v1.1', JSON.stringify(newCart));
+          console.log('✅ Item reemplazado con nuevas variantes');
         }
-        
-        newCart[foundItem.index] = updatedItem;
-        setCart(newCart); 
-        console.log(newCart)
-        console.log(cart)
-  
-        localStorage.setItem('cart-r-v1.1', JSON.stringify(newCart))
-        console.log(JSON.parse(localStorage.getItem('cart-r-v1.1')))
-        console.log('primero me imprimo yo, newCart sin actualizar')
-        console.log(newCart)
+      } else {
+        console.log('❌ No se encontró el item original para actualizar');
       }
     }
 

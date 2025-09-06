@@ -19,9 +19,9 @@ function SelectProductAmount({ onClose }) {
   const [details, setDetails] = useState('');
   const [code, setCode] = useState('');
   
-  // Optional variant selection
-  const [selectedSize, setSelectedSize] = useState('');
-  const [selectedColor, setSelectedColor] = useState('');
+  // Optional variant selection - initialize from query params if editing
+  const [selectedSize, setSelectedSize] = useState(searchParams.get('size') || '');
+  const [selectedColor, setSelectedColor] = useState(searchParams.get('color') || '');
 
   const [error, setError ] = useState(false)
 
@@ -80,6 +80,13 @@ function SelectProductAmount({ onClose }) {
     if(isInCart) {
       console.log('Updating product in cart:', product, 'with amount:', amountNumber);
       console.log('llamado a updateQuantity');
+      
+      // Las variantes originales vienen de los query params
+      const originalVariants = {
+        size: searchParams.get('size') || null,
+        color: searchParams.get('color') || null
+      };
+      
       // Create updated cart item with selected variants
       const updatedCartItem = {
         product: product,
@@ -89,7 +96,12 @@ function SelectProductAmount({ onClose }) {
           color: selectedColor || null
         }
       };
-      updateQuantity(updatedCartItem, amountNumber);
+      
+      console.log('🔍 Variantes originales (query params):', originalVariants);
+      console.log('🔍 Nuevas variantes (formulario):', updatedCartItem.selectedVariants);
+      
+      // Pasar las variantes originales explícitamente a updateQuantity
+      updateQuantity(updatedCartItem, amountNumber, originalVariants);
       navigate('/select-products');
       return;
     }
