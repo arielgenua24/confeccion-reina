@@ -4,6 +4,8 @@ import { useOrder } from '../../hooks/useOrder';
 import { Inbox, ShoppingCart, List, Package } from 'lucide-react';
 import useFirestoreContext from '../../hooks/useFirestoreContext';
 import LoadingComponent from '../../components/Loading';
+import PaymentNavbar from '../../components/PaymentNavbar';
+import ParticlesBackground from '../../components/ParticlesBackground';
 import './styles.css';
 
 function Home() {
@@ -41,20 +43,14 @@ function Home() {
     const areProductsInOrder = order.products.length;
 
     return (
-        <div className="home-container">
+        <div className="home-page">
+            <ParticlesBackground />
             <LoadingComponent isLoading={loadingAdmin} />
-            <h1 className="home-title" 
-                style={
-                    {fontSize: '30px', 
-                    textAlign: 'center', 
-                    marginBottom: '20px', 
-                    color: '#c4c4c4', 
-                    position: 'absolute',
-                    padding: '12px',
-                    top: '13px'
-                    }}>
+            <PaymentNavbar />
+            <div className="home-container">
+                <h2 className="home-welcome-text">
                     Bienvenida a tu sistema de inventario Reina👑
-                </h1>
+                </h2>
 
 
         {admin && admin === user && ( <Link to="/inbox" className="home-link">
@@ -84,13 +80,14 @@ function Home() {
                 </Link>
             </div>
 
-            <Link to="/inventory" className="home-link">
-                <button className="home-btn catalog">
-                    <Package size={24} className="home-icon" />
-                    Catálogo
-                    <span className="home-subtext">Agrega tus productos y controla tu stock</span>
-                </button>
-            </Link>
+                <Link to="/inventory" className="home-link">
+                    <button className="home-btn catalog">
+                        <Package size={24} className="home-icon" />
+                        Catálogo
+                        <span className="home-subtext">Agrega tus productos y controla tu stock</span>
+                    </button>
+                </Link>
+            </div>
         </div>
     );
 }
