@@ -105,7 +105,7 @@ const ProductVerification = () => {
 
         {orderEstado !== 'listo para despachar' && ( 
           <div style={{display: 'flex', justifyContent: 'center', marginBottom: '2rem', flexDirection: 'column'}}> 
-          <button
+          {/*<button
                 style={{backgroundColor: 'F1F7FF', color: '#0990FF', border: '1px solid #0990FF', display: 'flex' ,justifyContent: 'space-around', alignItems: 'center'}}
                 className='btn-verify'
                 onClick={() => setisSearchByQrEnabled(true)}
@@ -117,7 +117,8 @@ const ProductVerification = () => {
               }} />
 
                 Verificar escaner de barras
-              </button>
+              </button> */}
+          
               
         </div>)}
 
@@ -197,6 +198,7 @@ const ProductVerification = () => {
           )}
           {orderEstado !== 'listo para despachar' && (<div><button 
               className='btn-verify'
+              style={{backgroundColor: 'F1F7FF', color: '#0990FF', border: '1px solid #0990FF', marginRight: '20px'}}
               onClick={() => handleVerify(product.id)}
               disabled={product.verified >= product.stock}
             >
