@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import useFirestoreContext from '../../hooks/useFirestoreContext';
 import { useOrder } from '../../hooks/useOrder';
+import { sanitizeVariantInput } from '../../utils/inputSanitizer';
 import './styles.css';
 
 function SelectProductAmount({ onClose }) {
@@ -83,8 +84,8 @@ function SelectProductAmount({ onClose }) {
       
       // Las variantes originales vienen de los query params
       const originalVariants = {
-        size: searchParams.get('size') || null,
-        color: searchParams.get('color') || null
+        size: sanitizeVariantInput(searchParams.get('size')),
+        color: sanitizeVariantInput(searchParams.get('color'))
       };
       
       // Create updated cart item with selected variants
@@ -92,8 +93,8 @@ function SelectProductAmount({ onClose }) {
         product: product,
         quantity: amountNumber,
         selectedVariants: {
-          size: selectedSize || null,
-          color: selectedColor || null
+          size: sanitizeVariantInput(selectedSize),
+          color: sanitizeVariantInput(selectedColor)
         }
       };
       
@@ -115,8 +116,8 @@ function SelectProductAmount({ onClose }) {
       product: product,
       quantity: amountNumber,
       selectedVariants: {
-        size: selectedSize || null,
-        color: selectedColor || null
+        size: sanitizeVariantInput(selectedSize),
+        color: sanitizeVariantInput(selectedColor)
       }
     };
     addItem(cartItem, amountNumber);

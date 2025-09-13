@@ -1,4 +1,5 @@
 import  { createContext, useEffect, useState} from 'react';
+import { sanitizeVariantInput } from '../utils/inputSanitizer';
 
 const OrderContext = createContext();
 
@@ -8,7 +9,21 @@ const OrderProvider = ({ children }) => {
   const [nullCart, setNullCart] = useState(false);
   const [cart, setCart] = useState(() => {
     const savedCart = localStorage.getItem('cart-r-v1.1');
-    return savedCart ? JSON.parse(savedCart) : [];
+    if (savedCart) {
+      const parsedCart = JSON.parse(savedCart);
+      // Sanitize existing cart data to fix legacy inconsistencies
+      const sanitizedCart = parsedCart.map(item => ({
+        ...item,
+        selectedVariants: {
+          size: sanitizeVariantInput(item.selectedVariants?.size),
+          color: sanitizeVariantInput(item.selectedVariants?.color)
+        }
+      }));
+      // Save sanitized cart back to localStorage
+      localStorage.setItem('cart-r-v1.1', JSON.stringify(sanitizedCart));
+      return sanitizedCart;
+    }
+    return [];
   });
 
   function findItem(cartItemOrProduct) {
@@ -69,13 +84,26 @@ const OrderProvider = ({ children }) => {
         };
       }
       
-      if (!findItem(newCartItem)) {
+      // Check if item already exists in cart
+      const existingItem = findItem(newCartItem);
+      
+      if (existingItem) {
+        // Item exists - accumulate quantities
+        console.log('Item already exists, accumulating quantities');
+        const updatedQuantity = existingItem.item.quantity + newCartItem.quantity;
+        const newCart = [...cart];
+        newCart[existingItem.index] = {
+          ...existingItem.item,
+          quantity: updatedQuantity
+        };
+        setCart(newCart);
+        localStorage.setItem('cart-r-v1.1', JSON.stringify(newCart));
+      } else {
+        // Item doesn't exist - add as new item
         console.log('añadiendo items al carrito en el localStorage')
         console.log(newCartItem)
         setCart((prevState) => [...prevState, newCartItem]);
         localStorage.setItem('cart-r-v1.1', JSON.stringify([...cart, newCartItem]))
-      } else {
-        console.log('el producto ya se encuentra agregado')
       }
     }
 
