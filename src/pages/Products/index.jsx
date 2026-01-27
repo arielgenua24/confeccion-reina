@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import useFirestoreContext from '../../hooks/useFirestoreContext';
 import LoadingComponent from "../../components/Loading";
+import ImageUpload from "../../components/ImageUpload";
 import { format, set } from 'date-fns';
 import { es } from 'date-fns/locale';
 import './styles.css';
@@ -21,6 +22,7 @@ function Product() {
   const [price, setPrice] = useState(product.price);
   const [stock, setStock] = useState(product.stock);
   const [details, setDetails] = useState(product.details);
+  const [imageUrl, setImageUrl] = useState(product.imageUrl);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -38,6 +40,7 @@ function Product() {
       setPrice(fetchedProduct.price);
       setStock(fetchedProduct.stock);
       setDetails(fetchedProduct.details || '');
+      setImageUrl(fetchedProduct.imageUrl || null);
       setIsLoading(false);
     };
     loadProducts();
@@ -62,6 +65,11 @@ function Product() {
       details,
       updatedAt: formattedDate,
     };
+
+    // Add imageUrl if it exists
+    if (imageUrl) {
+      updatedProduct.imageUrl = imageUrl;
+    }
     try {
       await updateProduct(updatedProduct.id, updatedProduct);
       setIsLoading(false);
@@ -89,14 +97,24 @@ function Product() {
           </div>
           <div className="input-group">
             <span>Detalles del producto</span>
-            <textarea 
-              className="product-input" 
-              placeholder={`Detalles: ${product.details || 'Sin detalles'}`} 
-              value={details || ''} 
+            <textarea
+              className="product-input"
+              placeholder={`Detalles: ${product.details || 'Sin detalles'}`}
+              value={details || ''}
               onChange={handleInputChange(setDetails)}
               rows={3}
             />
           </div>
+
+          {/* Image Upload Component */}
+          <ImageUpload
+            onImageUploaded={(url) => {
+              setImageUrl(url);
+              setChanges(true);
+            }}
+            existingImageUrl={imageUrl}
+          />
+
           <div className="input-group">
             <span>Cantidad total en stock</span>
             <input type="number" className="product-input" placeholder={`Stock: ${product.stock}`} value={stock} onChange={handleInputChange(setStock)} />

@@ -52,24 +52,31 @@ const useFirestore = () => {
   }
 
   //OKAY, producto agregado
-  const addProduct = async (name, price, details, stock) => {
+  const addProduct = async (name, price, details, stock, imageUrl = null) => {
     try {
         //obtenemos el codigo de el producto
-    const productCode = await incrementProductCode();  
+    const productCode = await incrementProductCode();
     console.log(productCode);
 
     // Convertir campos relevantes a minúsculas si son strings
     const processedName = typeof name === 'string' ? name.toLowerCase() : name;
     const processedDetails = typeof details === 'string' ? details : details;
 
-      const docRef = await addDoc(collection(db, "products"), {
+      const productData = {
         productCode, // productCode usualmente tiene un formato específico, no se convierte
         name: processedName,
         price, // price es un número, no se convierte
         details: processedDetails,
         stock, // stock es un número, no se convierte
         updatedAt: formattedDate,
-      });
+      };
+
+      // Add imageUrl only if it exists
+      if (imageUrl) {
+        productData.imageUrl = imageUrl;
+      }
+
+      const docRef = await addDoc(collection(db, "products"), productData);
       console.log("Producto agregado con ID: ", docRef.id);
       const productId = docRef.id;
       return productId;

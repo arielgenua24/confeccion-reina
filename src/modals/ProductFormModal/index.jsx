@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import useFirestoreContext from '../../hooks/useFirestoreContext'
 import LoadingComponent from '../../components/Loading'
+import ImageUpload from '../../components/ImageUpload'
 import showSuggestionNotification from '../../utils/showSuggestionNotification'
 import searchProducts from '../../utils/searchFn'
 import './styles.css'
@@ -10,6 +11,7 @@ function ProductFormModal({handleSubmit, newProduct, setNewProduct, setIsModalOp
   const [suggestions, setSuggestions] = useState([]);
   const [isLoading, setIsLoading] = useState(false)
   const [products, setProducts] = useState([]);
+  const [imageUrl, setImageUrl] = useState(null);
 
   const {getAllProducts} = useFirestoreContext();
 
@@ -52,10 +54,22 @@ function ProductFormModal({handleSubmit, newProduct, setNewProduct, setIsModalOp
       price: suggestion.price,
       details: suggestion.details || '',
     });
-     // setImages({image1: suggestion.image1, image2: suggestion.image2, image3: suggestion.image3});
+    // If suggestion has an image, set it
+    if (suggestion.imageUrl) {
+      setImageUrl(suggestion.imageUrl);
+    }
     setSuggestions([]);
     // Mostrar la notificación
     showSuggestionNotification();
+  };
+
+  // Handle image upload
+  const handleImageUploaded = (url) => {
+    setImageUrl(url);
+    setNewProduct({
+      ...newProduct,
+      imageUrl: url
+    });
   };
 
     return(
@@ -101,7 +115,11 @@ function ProductFormModal({handleSubmit, newProduct, setNewProduct, setIsModalOp
             )}
           </div>
 
-
+          {/* Image Upload Component - WhatsApp style */}
+          <ImageUpload
+            onImageUploaded={handleImageUploaded}
+            existingImageUrl={imageUrl}
+          />
 
           {['price', 'details', 'stock'].map(field => (
             <div key={field} className="formGroup">

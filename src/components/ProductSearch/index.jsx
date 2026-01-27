@@ -91,11 +91,23 @@ function ProductSearch({ setQRcode, isCartEnabled }) {
               >
                 <div className="product-info-actions-container">
 
-                  <div className="product-info">
-                    <h3 className="product-name">{product.name}</h3>
-                  </div>
+                  {/* Product Image Thumbnail */}
+                  {product.imageUrl && (
+                    <div className="search-product-image-container">
+                      <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        className="search-product-image"
+                      />
+                    </div>
+                  )}
 
-                  <div className="search-product-details">
+                  <div className="product-info-content">
+                    <div className="product-info">
+                      <h3 className="product-name">{product.name}</h3>
+                    </div>
+
+                    <div className="search-product-details">
                     <span>Color: {product.color}</span>
                     <span>Talle: {product.size}</span>
                     <span>Código: {product.productCode}</span>
@@ -105,30 +117,31 @@ function ProductSearch({ setQRcode, isCartEnabled }) {
                     </span>
                   </div>
 
-                  <div className="product-actions">
-                    {!isCartEnabled && (<> 
-                      <EditProductBtn product_id={product.id} />  
-                      <QRButton 
-                        product={product} 
-                        onQRGenerate={() => setQRcode(product)} 
-                      /> 
-                    </>)}
-                    {isCartEnabled && (
-                      <div style={{display: 'flex', flexDirection: 'row'}}>  
-                        <button
-                          className="search-add-to-cart-button"
-                          onClick={() => navigate(`/select-product-amount/${product.id}`)}
-                        >
-                          AGREGAR AL CARRITO
-                        </button> 
-                        {/*<button
-                          style={{marginTop: '10px', scale:'0.75'}}
-                          onClick={() => navigate(`/select-product-amount/${product.id}?in-cart=true`)}
-                        >
-                          MODIFICAR CANTIDAD
-                        </button> */}
-                      </div>
-                    )}
+                    <div className="product-actions">
+                      {!isCartEnabled && (<>
+                        <EditProductBtn product_id={product.id} />
+                        <QRButton
+                          product={product}
+                          onQRGenerate={() => setQRcode(product)}
+                        />
+                      </>)}
+                      {isCartEnabled && (
+                        <div style={{display: 'flex', flexDirection: 'row'}}>
+                          <button
+                            className="search-add-to-cart-button"
+                            onClick={() => navigate(`/select-product-amount/${product.id}`)}
+                          >
+                            AGREGAR AL CARRITO
+                          </button>
+                          {/*<button
+                            style={{marginTop: '10px', scale:'0.75'}}
+                            onClick={() => navigate(`/select-product-amount/${product.id}?in-cart=true`)}
+                          >
+                            MODIFICAR CANTIDAD
+                          </button> */}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                 </div>

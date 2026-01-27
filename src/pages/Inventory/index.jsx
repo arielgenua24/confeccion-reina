@@ -21,7 +21,8 @@ const Inventory = () => {
     name: '',
     price: '',
     details: '',
-    stock: ''
+    stock: '',
+    imageUrl: null
   });
   const [lastVisibleDoc, setLastVisibleDoc] = useState(null);
   const [hasMore, setHasMore] = useState(true);
@@ -79,9 +80,15 @@ const Inventory = () => {
     setIsLoading(true);
     e.preventDefault();
     try {
-      await addProduct(newProduct.name, newProduct.price, newProduct.details, newProduct.stock);
+      await addProduct(
+        newProduct.name,
+        newProduct.price,
+        newProduct.details,
+        newProduct.stock,
+        newProduct.imageUrl || null
+      );
       setIsModalOpen(false);
-      setNewProduct({ name: '', price: '', details: '', stock: '' });
+      setNewProduct({ name: '', price: '', details: '', stock: '', imageUrl: null });
       await loadInitialProducts();
     } catch (error) {
       console.error("Error al agregar producto:", error);
@@ -142,7 +149,13 @@ const Inventory = () => {
                 throw new Error(`Producto en índice ${i} (${product.name || 'Nombre desconocido'}) tiene datos faltantes o inválidos. Campos requeridos: name, price, size, color, stock.`);
             }
             // Asegurar tipos de datos antes de enviar a addProduct
-            await addProduct(String(product.name), Number(product.price), product.details || '', Number(product.stock));
+            await addProduct(
+              String(product.name),
+              Number(product.price),
+              product.details || '',
+              Number(product.stock),
+              product.imageUrl || null
+            );
             currentSuccess++;
           } catch (error) {
             currentErrors++;
@@ -282,6 +295,17 @@ const Inventory = () => {
                     ELIMINAR
                 </button>
               </div>
+
+                {/* Product Image */}
+                {product.imageUrl && (
+                  <div className="productImageContainer">
+                    <img
+                      src={product.imageUrl}
+                      alt={product.name}
+                      className="productImage"
+                    />
+                  </div>
+                )}
 
                 <h3 className="productTitle">{product.name}</h3>
                 <p className="productDetail">{product.productCode}</p>
