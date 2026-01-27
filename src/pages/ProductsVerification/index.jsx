@@ -22,7 +22,7 @@ const ProductVerification = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [totalAccount, setTotalAccount] = useState(0)
 
-  const {  updateOrder, getProductsByOrder } = useFirestoreContext();
+  const { updateOrder, getProductsByOrder } = useFirestoreContext();
   const { setOrdersState } = useOrder()
 
   const orderEstado = searchParams.get("orderEstado");
@@ -30,7 +30,7 @@ const ProductVerification = () => {
 
   useEffect(() => {
     const fetchProducts = async () => {
-        setLoading(true);
+      setLoading(true);
       const productsData = await getProductsByOrder(orderId);
       setProducts(productsData);
       console.log(productsData)
@@ -41,7 +41,7 @@ const ProductVerification = () => {
 
   const handleVerify = (productId) => {
     console.log(productId)
-    setProducts(prevProducts => 
+    setProducts(prevProducts =>
       prevProducts.map(product => {
         if (product.productRef.id === productId && product.verified < product.stock) {
           return { ...product, verified: product.verified + 1 };
@@ -57,15 +57,15 @@ const ProductVerification = () => {
 
   const handleReset = (productId) => {
     if (window.confirm('¿Estás seguro de que empezar de cero la verificacion?')) {
-    setProducts(prevProducts =>
-      prevProducts.map(product => {
-        if (product.id === productId) {
-          return { ...product, verified: 0 };
-        }
-        return product;
-      })
-    );
-  }
+      setProducts(prevProducts =>
+        prevProducts.map(product => {
+          if (product.id === productId) {
+            return { ...product, verified: 0 };
+          }
+          return product;
+        })
+      );
+    }
   };
 
   const handleUpdateOrder = async () => {
@@ -99,12 +99,12 @@ const ProductVerification = () => {
 
   return (
     <div className="products-verification">
-        <LoadingComponent isLoading={loading} />
+      <LoadingComponent isLoading={loading} />
 
-         { orderEstado !==  'listo para despachar' && <h1>Productos Verificados: {verifiedProducts} de {products.length} </h1>}
+      {orderEstado !== 'listo para despachar' && <h1>Productos Verificados: {verifiedProducts} de {products.length} </h1>}
 
-        {orderEstado !== 'listo para despachar' && ( 
-          <div style={{display: 'flex', justifyContent: 'center', marginBottom: '2rem', flexDirection: 'column'}}> 
+      {orderEstado !== 'listo para despachar' && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem', flexDirection: 'column' }}>
           {/*<button
                 style={{backgroundColor: 'F1F7FF', color: '#0990FF', border: '1px solid #0990FF', display: 'flex' ,justifyContent: 'space-around', alignItems: 'center'}}
                 className='btn-verify'
@@ -118,132 +118,134 @@ const ProductVerification = () => {
 
                 Verificar escaner de barras
               </button> */}
-          
-              
+
+
         </div>)}
 
-        <div className="final-total-wrapper">
-          <div className="final-total">
-            <span className="total-label">Total Final</span>
-            <span className="total-amount">${totalFinal.toLocaleString()} ✅</span>
-          </div>
+      <div className="final-total-wrapper">
+        <div className="final-total">
+          <span className="total-label">Total Final</span>
+          <span className="total-amount">${totalFinal.toLocaleString()} ✅</span>
         </div>
+      </div>
 
       {products.map((product) => (
         <div key={product.id} className="verification-product-item">
-          <ProductVerificationStatus orderStatus={orderEstado} product={product} verifiedProducts={verifiedProducts} setVerifiedProducts={setVerifiedProducts}/>
+          <ProductVerificationStatus orderStatus={orderEstado} product={product} verifiedProducts={verifiedProducts} setVerifiedProducts={setVerifiedProducts} />
           <h3>Codigo del producto: {product.productData.productCode}</h3>
           {orderEstado == 'listo para despachar' ? (<div className="verification-complete">
-          <div className="product-details">
-            <p className="stock-info">
-              Total verificado: <span>{product.stock} unidades</span>
-            </p>
-            <div className="product-specs">
-              <p>
-                <strong>Producto:</strong> {product.productData.name}
+            <div className="product-details">
+              <p className="stock-info">
+                Total verificado: <span>{product.stock} unidades</span>
               </p>
-              <p>
-                <strong>Detalles:</strong> {product.productData.details || 'Sin detalles'}
-              </p>
-              {product.selectedVariants?.color && (
+              <div className="product-specs">
                 <p>
-                  <strong>Color:</strong> {product.selectedVariants.color}
+                  <strong>Producto:</strong> {product.productData.name}
                 </p>
-              )}
-              {product.selectedVariants?.size && (
                 <p>
-                  <strong>Talle:</strong> {product.selectedVariants.size}
+                  <strong>Detalles:</strong> {product.productData.details || 'Sin detalles'}
                 </p>
-              )}
-              <p>
-                <strong>Precio:</strong> {product.productData.price}
-              </p>
-              <div className="total-price-container">
-                <p className="total-price">
-                  <strong>Total:</strong> 
-                  <span>${product.stock * product.productData.price}</span>
+                {product.selectedVariants?.color && (
+                  <p>
+                    <strong>Color:</strong> {product.selectedVariants.color}
+                  </p>
+                )}
+                {product.selectedVariants?.size && (
+                  <p>
+                    <strong>Talle:</strong> {product.selectedVariants.size}
+                  </p>
+                )}
+                <p>
+                  <strong>Precio:</strong> {product.productData.price}
                 </p>
+                <div className="total-price-container">
+                  <p className="total-price">
+                    <strong>Total:</strong>
+                    <span>${product.stock * product.productData.price}</span>
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-</div>)
-         : (
-          <div> 
-               <p>
-            Verificados: <span>{product.verified}</span> de {product.stock}
-          </p>
+          </div>)
+            : (
+              <div>
+                <p>
+                  Verificados: <span>{product.verified}</span> de {product.stock}
+                </p>
 
-            <p>
-                <strong>Producto:</strong> {product.productSnapshot.name}
-              </p>
-              <p>
-                <strong>Detalles:</strong> {product.productSnapshot.details || 'Sin detalles'}
-              </p>
-              {product.selectedVariants?.color && (
                 <p>
-                  <strong>Color:</strong> {product.selectedVariants.color}
+                  <strong>Producto:</strong> {product.productSnapshot.name}
                 </p>
-              )}
-              {product.selectedVariants?.size && (
                 <p>
-                  <strong>Talle:</strong> {product.selectedVariants.size}
+                  <strong>Detalles:</strong> {product.productSnapshot.details || 'Sin detalles'}
                 </p>
-              )}
-              <p>
-                <strong>Precio:</strong> {product.productSnapshot.price}
-              </p>
-          </div>
-           
-          
+                {product.selectedVariants?.color && (
+                  <p>
+                    <strong>Color:</strong> {product.selectedVariants.color}
+                  </p>
+                )}
+                {product.selectedVariants?.size && (
+                  <p>
+                    <strong>Talle:</strong> {product.selectedVariants.size}
+                  </p>
+                )}
+                <p>
+                  <strong>Precio:</strong> {product.productSnapshot.price}
+                </p>
+              </div>
+
+
+            )}
+          {orderEstado !== 'listo para despachar' && (
+            <div className="verification-actions">
+              <button
+                className='btn-verify manual'
+                onClick={() => handleVerify(product.id)}
+                disabled={product.verified >= product.stock}
+              >
+                Verificar uno manualmente
+              </button>
+              <button
+                className='btn-verify reset'
+                onClick={() => handleReset(product.id)}
+              >
+                Empezar de cero la verificación
+              </button>
+            </div>
           )}
-          {orderEstado !== 'listo para despachar' && (<div><button 
-              className='btn-verify'
-              style={{backgroundColor: 'F1F7FF', color: '#0990FF', border: '1px solid #0990FF', marginRight: '20px'}}
-              onClick={() => handleVerify(product.id)}
-              disabled={product.verified >= product.stock}
-            >
-              Verificar uno manualmente
-            </button>
-            <button 
-            className='btn-verify'
-            style={{background: 'red', color: 'white', marginBottom: '120px'}}
-              onClick={() => handleReset(product.id)}
-            >
-              Empezar de nuevo la verification
-            </button></div>)}
-            
-          
+
+
         </div>
       ))}
-      {isSearchByQrEnabled && <QrVerifyProduct  
+      {isSearchByQrEnabled && <QrVerifyProduct
         handleVerify={handleVerify}
         setisSearchByQrEnabled={setisSearchByQrEnabled}
-        
-        />}
-      
-      {verifiedProducts === products.length &&
-       ( <button
-        onClick={handleUpdateOrder}
-        style={{
-          position: 'fixed',
-          bottom: '1rem', // bottom-4 es 1rem
-          left: '50%',
-          transform: 'translateX(-50%)',
-          backgroundColor: '#007AFF',
-          color: 'white',
-          padding: '0.75rem 1.5rem', // px-6 es 1.5rem y py-3 es 0.75rem
-          borderRadius: '0.5rem', // rounded-lg es 0.5rem
-          transition: 'background-color 0.3s ease', // transition-colors
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', // shadow-lg
-          ':hover': {
-            backgroundColor: '#0066CC',
-          },
-        }}
-      >
-        Marcar como Listo para Despachar
-      </button>)}
 
-      
+      />}
+
+      {verifiedProducts === products.length &&
+        (<button
+          onClick={handleUpdateOrder}
+          style={{
+            position: 'fixed',
+            bottom: '1rem', // bottom-4 es 1rem
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: '#007AFF',
+            color: 'white',
+            padding: '0.75rem 1.5rem', // px-6 es 1.5rem y py-3 es 0.75rem
+            borderRadius: '0.5rem', // rounded-lg es 0.5rem
+            transition: 'background-color 0.3s ease', // transition-colors
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', // shadow-lg
+            ':hover': {
+              backgroundColor: '#0066CC',
+            },
+          }}
+        >
+          Marcar como Listo para Despachar
+        </button>)}
+
+
     </div>
   );
 };
