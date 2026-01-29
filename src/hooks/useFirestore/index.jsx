@@ -189,30 +189,47 @@ const useFirestore = () => {
 
     const filterOrdersByDate = async() => {
       const orders = await getOrders();
-      // Ordenar el array
+
+      // Ordenar el array (maneja tanto formato antiguo como nuevo)
       const filteredOrders = orders.sort((a, b) => {
-        // Ejemplo: "24/01/2025, 18:19"
-        // Ejemplo: "25/01/2025, 19:20"
-    
-        // Función para convertir la fecha al formato correcto
-        function parseCustomDate(dateString) {
-            const [datePart, timePart] = dateString.split(', ');
+        // Función para obtener fecha como Date object
+        function getOrderDate(order) {
+          // Formato nuevo: createdAt (Firestore Timestamp)
+          if (order.createdAt) {
+            // Si es un Timestamp de Firestore
+            if (order.createdAt.toDate) {
+              return order.createdAt.toDate();
+            }
+            // Si ya es un Date object
+            if (order.createdAt instanceof Date) {
+              return order.createdAt;
+            }
+            // Si es un string ISO
+            return new Date(order.createdAt);
+          }
+
+          // Formato antiguo: fecha (string español "24/01/2025, 18:19")
+          if (order.fecha) {
+            const [datePart, timePart] = order.fecha.split(', ');
             const [day, month, year] = datePart.split('/');
             const formattedDate = `${year}-${month}-${day}`;
             return new Date(`${formattedDate}T${timePart}`);
+          }
+
+          // Fallback: usar fecha actual si no hay ninguna
+          console.warn('Order without valid date:', order);
+          return new Date(0); // Época Unix (muy antigua)
         }
-    
+
         // Convertir las fechas a objetos Date válidos
-        const dateA = parseCustomDate(a.fecha);
-        const dateB = parseCustomDate(b.fecha);
-    
-        // Debería mostrar una fecha válida
-        // Debería mostrar una fecha válida
-    
+        const dateA = getOrderDate(a);
+        const dateB = getOrderDate(b);
+
         // Ordenar de más reciente a más antiguo
         return dateB - dateA;
-    });
-      console.log(filteredOrders)
+      });
+
+      console.log('Filtered orders:', filteredOrders);
       return filteredOrders;
     }
 

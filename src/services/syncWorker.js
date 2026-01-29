@@ -20,7 +20,9 @@ import {
   doc,
   writeBatch,
   serverTimestamp,
-  getDoc
+  getDoc,
+  runTransaction,
+  increment
 } from 'firebase/firestore';
 
 class SyncWorker {
@@ -217,37 +219,91 @@ class SyncWorker {
 
       if (orderSnap.exists()) {
         // Order already synced, mark as completed
-        await updatePendingOrder(orderId, { status: 'synced' });
+        await updatePendingOrder(orderId, { syncStatus: 'synced' });
+        console.log(`✅ Order ${orderId} already exists in Firestore`);
         return {
           success: true,
           data: { message: 'Order already exists in Firestore' }
         };
       }
 
-      // Create batch write
-      const batch = writeBatch(firestore);
+      console.log(`📤 Syncing order to Firestore with atomic stock updates:`, order);
 
-      // Add order to Firestore
-      batch.set(orderRef, {
-        ...order.orderData,
-        syncedAt: serverTimestamp(),
-        createdAt: serverTimestamp()
+      // Use Firestore transaction for atomic stock updates
+      const result = await runTransaction(firestore, async (transaction) => {
+        // 1. Create order in Firestore
+        const firestoreOrderData = {
+          // New format
+          orderCode: order.orderCode,
+          customerName: order.customerName,
+          phone: order.phone,
+          address: order.address,
+          products: order.products,
+          totalAmount: order.totalAmount,
+          status: order.status,
+          createdAt: serverTimestamp(),
+          syncedAt: serverTimestamp(),
+
+          // Legacy fields for backwards compatibility with old UI
+          cliente: order.customerName,
+          telefono: order.phone,
+          direccion: order.address,
+          estado: order.status,
+          // fecha will be set after transaction (can't use serverTimestamp in client format)
+        };
+
+        transaction.set(orderRef, firestoreOrderData);
+
+        // 2. Apply stock deltas atomically
+        for (const product of order.products) {
+          if (product.stockDelta) {
+            const productRef = doc(firestore, 'products', product.productId);
+
+            // Use increment() for atomic update
+            // This prevents race conditions when multiple devices sync simultaneously
+            transaction.update(productRef, {
+              stock: increment(product.stockDelta), // stockDelta is negative
+              updatedAt: serverTimestamp()
+            });
+
+            console.log(`📊 Applying stock delta for ${product.productSnapshot.name}: ${product.stockDelta}`);
+          }
+        }
+
+        return { orderId };
       });
 
-      // Commit batch
-      await batch.commit();
+      // Update order with formatted fecha (for backwards compatibility)
+      const now = new Date();
+      const formattedFecha = now.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      await writeBatch(firestore)
+        .update(orderRef, { fecha: formattedFecha })
+        .commit();
+
+      // Update metadata catalog (products were updated)
+      const metadataRef = doc(firestore, 'metadata', 'catalog');
+      await writeBatch(firestore)
+        .set(metadataRef, { lastUpdated: serverTimestamp() }, { merge: true })
+        .commit();
 
       // Update pending order status
       await updatePendingOrder(orderId, {
-        status: 'synced',
+        syncStatus: 'synced',
         syncedAt: new Date().toISOString()
       });
 
-      console.log(`✅ Order ${orderId} synced to Firestore`);
+      console.log(`✅ Order ${orderId} synced to Firestore with atomic stock updates`);
 
       return {
         success: true,
-        data: { orderId }
+        data: result
       };
     } catch (error) {
       console.error('❌ Failed to sync order:', error);

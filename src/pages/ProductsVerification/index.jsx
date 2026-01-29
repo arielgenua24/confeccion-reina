@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import useFirestoreContext from '../../hooks/useFirestoreContext';
+import useOrderDetails from '../../hooks/useOrderDetails';
 import { useOrder } from '../../hooks/useOrder';
 import LoadingComponent from '../../components/Loading';
 import { useParams, useSearchParams } from 'react-router-dom';
@@ -21,8 +22,10 @@ const ProductVerification = () => {
   const [verifiedProducts, setVerifiedProducts] = useState(0);
   const [isLoading, setIsLoading] = useState(false)
   const [totalAccount, setTotalAccount] = useState(0)
+  const [orderData, setOrderData] = useState(null);
 
-  const { updateOrder, getProductsByOrder } = useFirestoreContext();
+  const { updateOrder } = useFirestoreContext();
+  const { getOrderWithProducts } = useOrderDetails();
   const { setOrdersState } = useOrder()
 
   const orderEstado = searchParams.get("orderEstado");
@@ -31,13 +34,22 @@ const ProductVerification = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
-      const productsData = await getProductsByOrder(orderId);
-      setProducts(productsData);
-      console.log(productsData)
-      setLoading(false);
+      try {
+        console.log('🔍 Fetching order and products for:', orderId);
+        const { order, products: productsData, source, format } = await getOrderWithProducts(orderId);
+
+        console.log(`✅ Loaded from ${source} (${format} format):`, productsData);
+
+        setOrderData(order);
+        setProducts(productsData);
+      } catch (error) {
+        console.error('❌ Error loading order:', error);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchProducts();
-  }, [orderId]);
+  }, [orderId, getOrderWithProducts]);
 
   const handleVerify = (productId) => {
     console.log(productId)
@@ -92,8 +104,9 @@ const ProductVerification = () => {
 
   const totalFinal = useMemo(() => {
     return products.reduce((acumulador, producto) => {
-      // Se calcula el total por producto: stock * precio
-      return acumulador + (producto.stock * producto.productData.price);
+      // Handle both formats
+      const price = producto.productData?.price || producto.productSnapshot?.price || 0;
+      return acumulador + (producto.stock * price);
     }, 0);
   }, [products]);
 

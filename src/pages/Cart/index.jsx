@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {useOrder} from '../../hooks/useOrder';
-import useFirestoreContext from '../../hooks/useFirestoreContext'
+import useLocalOrders from '../../hooks/useLocalOrders';
 import OrderCard from '../../components/OrderCard';
 import OrderSummary from '../../components/OrderSumary';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +9,8 @@ import LoadingComponent from '../../components/Loading';
 const Cart = () => {
     const { cart, order, resetOrderValues } = useOrder();
     const [error, setError ] = useState(false)
-    const { createOrderWithProducts } = useFirestoreContext()
+    const [errorMessage, setErrorMessage] = useState('')
+    const { createOrder, isCreating } = useLocalOrders()
 
     const [products, setProduct] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -41,44 +42,62 @@ const Cart = () => {
 
     const handleSubmit = async () => {
       setIsLoading(true)
-        if(cart.length < 1) {
-          setError(true)
-          return null
-        }
-        console.log(products)
-        try {
-          const currentDateTime = getCurrentDateTime();
-          const orderResultId = await createOrderWithProducts(
-            currentDateTime, 
-            order.customerName, 
-            order.phone, 
-            order.address, 
-            products
-          );
-          if (orderResultId) {
-            resetOrderValues();
-            navigate(`/succeeded-order/${orderResultId}`);
-            setIsLoading(false)
-        } else {
-            setIsLoading(false)
-              setError(true)
-              window.scrollTo(0, 0);
-          }
+      setError(false)
+      setErrorMessage('')
 
-          console.log("Orden creada:", orderResultId);
-          
-        } catch(e) {
-          setIsLoading(false)
-          console.error("Error al crear la orden:", e);
-          // Aquí puedes manejar el error, por ejemplo mostrar una notificación al usuario
-        }
+      // Validate cart not empty
+      if(cart.length < 1) {
+        setError(true)
+        setErrorMessage('El carrito está vacío')
+        setIsLoading(false)
+        return null
+      }
+
+      // Customer data is optional - use defaults if not provided
+      const customerData = {
+        customerName: order.customerName || 'Cliente sin nombre',
+        phone: order.phone || 'Sin teléfono',
+        address: order.address || 'Sin dirección'
       };
+
+      console.log('🚀 Creating optimistic order with cart:', cart)
+
+      try {
+        // Create order locally (instant, <100ms)
+        const result = await createOrder(
+          customerData,
+          cart // Pass cart directly (useLocalOrders handles both formats)
+        );
+
+        if (result.success) {
+          console.log(`✅ Order created in ${result.duration.toFixed(2)}ms: ${result.orderId}`);
+
+          // Reset cart and navigate to success page
+          resetOrderValues();
+          navigate(`/succeeded-order/${result.orderId}`);
+          setIsLoading(false)
+        } else {
+          // Handle validation errors (e.g., insufficient stock)
+          console.error('❌ Order creation failed:', result.error);
+          setError(true)
+          setErrorMessage(result.error || 'Error al crear la orden')
+          setIsLoading(false)
+          window.scrollTo(0, 0);
+        }
+      } catch(e) {
+        setIsLoading(false)
+        setError(true)
+        setErrorMessage(e.message || 'Error inesperado al crear la orden')
+        console.error("❌ Error al crear la orden:", e);
+        window.scrollTo(0, 0);
+      }
+    };
 
 
 
     return (
         <div style={{minHeight: '1100px', paddingBottom: "100px"}}>
-            <LoadingComponent isLoading={isLoading}/>
+            <LoadingComponent isLoading={isLoading || isCreating}/>
 
             <OrderSummary order={order} cart={cart}/>
 
@@ -162,22 +181,23 @@ const Cart = () => {
           alignItems: 'center',
           zIndex: '10000'
         }}>
-             <h1> ERROR, cantidad insuficiente </h1>
-             <div>
-              <span>Parece que hubo un problema con el stock o tu pedido. Revisa tu stock actual o dile a tu cliente que no tienes suficiente stock </span>
+             <h1> ERROR </h1>
+             <div style={{ textAlign: 'center', padding: '0 20px' }}>
+              <span>{errorMessage || 'Parece que hubo un problema con el stock o tu pedido. Revisa tu stock actual o dile a tu cliente que no tienes suficiente stock'}</span>
              </div>
-          
-             <buton 
-              style={{width: '100px', 
+
+             <buton
+              style={{width: '100px',
                 padding: '20px' ,
-                backgroundColor: '#fff', 
-                color: '#000', 
+                backgroundColor: '#fff',
+                color: '#000',
                 fontWeight: '400',
                 borderRadius: '20px',
                 fontSize: '24px'
               }}
               onClick={() => {
                 setError(false)
+                setErrorMessage('')
                 navigate('/select-products')
               }}
               >Entendido

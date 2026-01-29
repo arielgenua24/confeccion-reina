@@ -146,6 +146,98 @@ export const updateProduct = async (id, data) => {
 };
 
 /**
+ * Apply stock delta to a product (increment/decrement)
+ * Used for reserving stock when creating orders
+ *
+ * @param {string} id - Product ID
+ * @param {number} delta - Amount to change (negative = decrease, positive = increase)
+ * @returns {Promise<Object>} - { success, newStock?, error? }
+ */
+export const applyStockDelta = async (id, delta) => {
+  try {
+    const product = await db.products.get(id);
+
+    if (!product) {
+      return {
+        success: false,
+        error: 'Product not found'
+      };
+    }
+
+    const currentStock = Number(product.stock) || 0;
+    const newStock = currentStock + delta;
+
+    if (newStock < 0) {
+      return {
+        success: false,
+        error: `Cannot apply delta ${delta}. Current stock: ${currentStock}`,
+        currentStock
+      };
+    }
+
+    await db.products.update(id, { stock: newStock });
+    console.log(`📊 Stock updated for ${product.name}: ${currentStock} → ${newStock} (delta: ${delta})`);
+
+    return {
+      success: true,
+      newStock,
+      previousStock: currentStock
+    };
+  } catch (error) {
+    console.error('❌ Failed to apply stock delta:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+};
+
+/**
+ * Reserve stock for multiple products (decrease stock locally)
+ * Used when creating orders offline
+ *
+ * @param {Array} stockDeltas - Array of { productId, delta }
+ * @returns {Promise<Object>} - { success, results, error? }
+ */
+export const reserveStock = async (stockDeltas) => {
+  try {
+    const results = [];
+
+    for (const { productId, delta } of stockDeltas) {
+      const result = await applyStockDelta(productId, delta);
+      results.push({ productId, ...result });
+
+      if (!result.success) {
+        // Rollback previous changes
+        console.warn(`⚠️ Failed to reserve stock for ${productId}, rolling back...`);
+        for (const prevResult of results.slice(0, -1)) {
+          if (prevResult.success) {
+            // Reverse the delta
+            await applyStockDelta(prevResult.productId, -delta);
+          }
+        }
+        return {
+          success: false,
+          error: `Stock reservation failed for product ${productId}`,
+          results
+        };
+      }
+    }
+
+    return {
+      success: true,
+      results
+    };
+  } catch (error) {
+    console.error('❌ Failed to reserve stock:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+};
+
+/**
  * Delete a single product
  *
  * @param {string} id - Product ID
@@ -363,8 +455,13 @@ export const deletePendingOrder = async (orderId) => {
  */
 export const addSyncTask = async (task) => {
   try {
+    // Generate taskId if not provided
+    if (!task.taskId) {
+      task.taskId = `task_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    }
+
     await db.syncQueue.put(task);
-    console.log(`✅ Added sync task ${task.taskId}`);
+    console.log(`✅ Added sync task ${task.taskId} (${task.type})`);
     return true;
   } catch (error) {
     console.error('❌ Failed to add sync task:', error);
@@ -375,17 +472,19 @@ export const addSyncTask = async (task) => {
 /**
  * Get pending sync tasks (ordered by priority)
  *
+ * @param {number} limit - Maximum number of tasks to return
  * @returns {Promise<Array>}
  */
-export const getPendingSyncTasks = async () => {
+export const getPendingSyncTasks = async (limit = 10) => {
   try {
     const now = new Date().toISOString();
 
-    // Get tasks that are queued or failed, and ready to retry
+    // Get tasks that are pending or failed, and ready to retry
     const tasks = await db.syncQueue
       .where('status')
-      .anyOf(['queued', 'failed'])
+      .anyOf(['pending', 'failed'])
       .and(task => !task.nextRetryAt || task.nextRetryAt <= now)
+      .limit(limit)
       .sortBy('priority');
 
     return tasks.reverse(); // Higher priority first

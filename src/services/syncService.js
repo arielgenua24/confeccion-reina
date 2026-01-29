@@ -328,33 +328,74 @@ export const deltaSync = async (lastSyncTimestamp) => {
 };
 
 /**
- * Smart sync - Automatically chooses between full and delta sync
+ * Smart sync - Two-way sync (upload pending changes + download updates)
  * This is the main function to call for syncing
  *
  * @returns {Promise<Object>} - Sync results
  */
 export const smartSync = async () => {
   try {
-    console.log('🧠 Running smart sync...');
+    console.log('🧠 Running smart sync (two-way)...');
 
-    // Check if sync is needed
+    const results = {
+      uploadQueue: { processed: false },
+      downloadSync: { processed: false }
+    };
+
+    // STEP 1: Process upload queue (pending orders, etc.)
+    // This runs FIRST to upload local changes made offline
+    const { getPendingSyncTasks } = await import('./cacheService');
+    const pendingTasks = await getPendingSyncTasks();
+
+    if (pendingTasks && pendingTasks.length > 0) {
+      console.log(`📤 Found ${pendingTasks.length} pending tasks in upload queue`);
+
+      // Import syncWorker to process queue
+      const { forceProcessQueue } = await import('./syncWorker');
+      await forceProcessQueue();
+
+      results.uploadQueue = {
+        processed: true,
+        taskCount: pendingTasks.length
+      };
+    } else {
+      console.log('✅ Upload queue empty');
+      results.uploadQueue = { processed: true, taskCount: 0 };
+    }
+
+    // STEP 2: Check if we need to download updates from Firestore
     const checkResult = await checkForUpdates();
 
     if (!checkResult.needsSync) {
-      console.log('✅ No sync needed');
-      return {
-        success: true,
+      console.log('✅ No download needed');
+      results.downloadSync = {
+        processed: true,
         skipped: true,
         reason: checkResult.reason
       };
+      return {
+        success: true,
+        results
+      };
     }
 
-    // Perform appropriate sync type
+    // STEP 3: Perform appropriate download sync type
+    let downloadResult;
     if (checkResult.syncType === 'full') {
-      return await fullSync();
+      downloadResult = await fullSync();
     } else if (checkResult.syncType === 'delta') {
-      return await deltaSync(checkResult.localTimestamp);
+      downloadResult = await deltaSync(checkResult.localTimestamp);
     }
+
+    results.downloadSync = {
+      processed: true,
+      ...downloadResult
+    };
+
+    return {
+      success: true,
+      results
+    };
   } catch (error) {
     console.error('❌ Smart sync failed:', error);
     return {

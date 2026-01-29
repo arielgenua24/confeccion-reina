@@ -7,6 +7,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import BackNav from './components/navbar';
 import QrSearchHandler from './components/QrSearchHandler';
 import AuthRoute from './hooks/AuthRoute';
+import LazyLoadErrorBoundary from './components/LazyLoadErrorBoundary';
+import LazyLoadingFallback from './components/LazyLoadingFallback';
 
 import { FirestoreProvider } from './context/firestoreContext';
 import { OrderProvider } from './context/OrderContext';
@@ -88,9 +90,11 @@ export default function App() {
         <OrderProvider>
           <BackNav />
           <AuthRoute>
-            <Suspense fallback={<div>Cargando...</div>}>
-              <AppRouter />
-            </Suspense>
+            <LazyLoadErrorBoundary>
+              <Suspense fallback={<LazyLoadingFallback />}>
+                <AppRouter />
+              </Suspense>
+            </LazyLoadErrorBoundary>
           </AuthRoute>
         </OrderProvider>
       </FirestoreProvider>

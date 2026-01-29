@@ -11,7 +11,8 @@ import {
   getPendingOrders as getPendingOrdersFromDB,
   updatePendingOrder,
   addSyncTask,
-  getProduct
+  getProduct,
+  reserveStock
 } from '../../services/cacheService';
 import syncEvents from '../../services/syncEvents';
 
@@ -106,17 +107,19 @@ const useLocalOrders = () => {
         throw new Error(`Stock validation failed: ${errorMsg}`);
       }
 
-      // Step 2: Generate order ID
+      // Step 2: Generate order ID and code
       const orderId = generateOrderId();
+      const orderCode = orderId.slice(-8); // Use last 8 characters as order code
       const now = new Date().toISOString();
 
-      // Step 3: Prepare order data with product snapshots
+      // Step 3: Prepare order data with product snapshots AND stock deltas
       const orderProducts = products.map(cartItem => {
         const product = cartItem.product || cartItem.item;
         const variants = cartItem.selectedVariants || {
           size: null,
           color: null
         };
+        const quantitySold = Number(cartItem.quantity);
 
         return {
           productId: product.id,
@@ -127,12 +130,14 @@ const useLocalOrders = () => {
             imageUrl: product.imageUrl || null,
             category: product.category || null
           },
-          quantity: Number(cartItem.quantity),
+          quantity: quantitySold,
           selectedVariants: {
             size: variants.size || null,
             color: variants.color || null
           },
-          subtotal: Number(product.price) * Number(cartItem.quantity)
+          subtotal: Number(product.price) * quantitySold,
+          // CRITICAL: Store stock delta for atomic Firestore update
+          stockDelta: -quantitySold // Negative = reduction
         };
       });
 
@@ -140,7 +145,7 @@ const useLocalOrders = () => {
 
       const completeOrderData = {
         orderId,
-        orderCode: `TEMP_${orderId.slice(-8)}`, // Temporary code until synced
+        orderCode, // Final order code
         customerName: orderData.customerName,
         phone: orderData.phone,
         address: orderData.address,
@@ -152,11 +157,26 @@ const useLocalOrders = () => {
         attempts: 0
       };
 
-      // Step 4: Save to IndexedDB pendingOrders
+      // Step 4: Reserve stock locally (decrease stock in IndexedDB)
+      const stockDeltas = orderProducts.map(p => ({
+        productId: p.productId,
+        delta: p.stockDelta // Negative value
+      }));
+
+      console.log(`📊 Reserving stock locally:`, stockDeltas);
+      const reservationResult = await reserveStock(stockDeltas);
+
+      if (!reservationResult.success) {
+        throw new Error(`Stock reservation failed: ${reservationResult.error}`);
+      }
+
+      console.log(`✅ Stock reserved locally`);
+
+      // Step 5: Save to IndexedDB pendingOrders
       await savePendingOrder(completeOrderData);
       console.log(`💾 Order saved to IndexedDB: ${orderId}`);
 
-      // Step 5: Add to sync queue
+      // Step 6: Add to sync queue
       await addSyncTask({
         type: 'sync_order',
         payload: { orderId },
@@ -166,7 +186,7 @@ const useLocalOrders = () => {
       });
       console.log(`📋 Order added to sync queue: ${orderId}`);
 
-      // Step 6: Notify listeners
+      // Step 7: Notify listeners
       syncEvents.emit('order_created', { orderId, orderData: completeOrderData });
 
       const duration = performance.now() - startTime;
