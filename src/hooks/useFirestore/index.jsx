@@ -19,7 +19,9 @@ import {
   orderBy,
   limit,
   startAfter,
-  where
+  where,
+  serverTimestamp,
+  writeBatch
 } from "firebase/firestore";
 
 
@@ -68,7 +70,8 @@ const useFirestore = () => {
         price, // price es un número, no se convierte
         details: processedDetails,
         stock, // stock es un número, no se convierte
-        updatedAt: formattedDate,
+        updatedAt: serverTimestamp(), // Use Firestore server timestamp for delta sync
+        createdAt: formattedDate, // Keep formatted date for display purposes
       };
 
       // Add imageUrl only if it exists
@@ -79,6 +82,13 @@ const useFirestore = () => {
       const docRef = await addDoc(collection(db, "products"), productData);
       console.log("Producto agregado con ID: ", docRef.id);
       const productId = docRef.id;
+
+      // Update metadata/catalog to track global changes
+      const metadataRef = doc(db, 'metadata', 'catalog');
+      await setDoc(metadataRef, {
+        lastUpdated: serverTimestamp(),
+      }, { merge: true });
+
       return productId;
     } catch (e) {
       console.error("Error agregando producto: ", e);
@@ -132,10 +142,22 @@ const useFirestore = () => {
     const { productRef } = await getProduct(productId);
     console.log(productRef);
 
-    return updateDoc(productRef, {
-     ...values,
-    updatedAt: formattedDate,
+    // Use writeBatch to update both product and metadata atomically
+    const batch = writeBatch(db);
+
+    // Update the product with server timestamp
+    batch.update(productRef, {
+      ...values,
+      updatedAt: serverTimestamp(),
     });
+
+    // Update metadata/catalog to track global changes
+    const metadataRef = doc(db, 'metadata', 'catalog');
+    batch.set(metadataRef, {
+      lastUpdated: serverTimestamp(),
+    }, { merge: true });
+
+    return batch.commit();
   }
 
   const deleteProduct = async (productId) => {

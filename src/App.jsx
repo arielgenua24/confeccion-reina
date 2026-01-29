@@ -1,5 +1,5 @@
 import { HashRouter, useRoutes } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -10,6 +10,9 @@ import AuthRoute from './hooks/AuthRoute';
 
 import { FirestoreProvider } from './context/firestoreContext';
 import { OrderProvider } from './context/OrderContext';
+import { initializeDB } from './db/indexedDB';
+import { initializeSyncScheduler } from './services/syncScheduler';
+import { startSyncWorker } from './services/syncWorker';
 
 // Lazy load de páginas
 const Inventory = lazy(() => import('./pages/Inventory'));
@@ -24,6 +27,8 @@ const Inbox = lazy(() => import('./pages/inbox'));
 const Home = lazy(() => import('./pages/Home'));
 const Login = lazy(() => import('./pages/Login'));
 const Product = lazy(() => import('./pages/Products'));
+const MigrationRunner = lazy(() => import('./pages/MigrationRunner'));
+const SyncDebug = lazy(() => import('./pages/SyncDebug'));
 
 function AppRouter() {
   let router = useRoutes([
@@ -41,11 +46,42 @@ function AppRouter() {
     { path: '/succeeded-order/:id', element: <SuccededOrder /> },
     { path: '/inbox', element: <Inbox /> },
     { path: '/login', element: <Login /> },
+    { path: '/migration-runner', element: <MigrationRunner /> },
+    { path: '/sync-debug', element: <SyncDebug /> },
   ]);
   return router;
 }
 
 export default function App() {
+  // Initialize IndexedDB and sync services when app loads (non-blocking)
+  useEffect(() => {
+    // Run in background, don't block rendering
+    const initServices = async () => {
+      try {
+        // Step 1: Initialize IndexedDB
+        await initializeDB();
+        console.log('✅ IndexedDB initialized');
+
+        // Step 2: Initialize sync scheduler (handles automatic sync triggers)
+        await initializeSyncScheduler();
+        console.log('✅ Sync scheduler initialized');
+
+        // Step 3: Start sync worker (processes background sync queue)
+        startSyncWorker();
+        console.log('✅ Sync worker started');
+      } catch (error) {
+        console.error('Failed to initialize services:', error);
+      }
+    };
+
+    // Defer initialization slightly to not block initial render
+    const timer = setTimeout(() => {
+      initServices();
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <HashRouter>
       <FirestoreProvider>

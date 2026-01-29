@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import EditProductBtn from "../EditProduct";
 import QRButton from "../QrGenerateBtn";
 import { Search, X, FileX, Loader2 } from "lucide-react";
-import useFirestoreContext from "../../hooks/useFirestoreContext";
+import useProducts from "../../hooks/useProducts";
 import './styles.css';
 
 function ProductSearch({ setQRcode, isCartEnabled }) {
@@ -13,7 +13,7 @@ function ProductSearch({ setQRcode, isCartEnabled }) {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
-  const { searchProductsByNameOrCode } = useFirestoreContext();
+  const { searchProductsByNameOrCode } = useProducts();
 
   useEffect(() => {
     if (!searchTerm.trim()) {

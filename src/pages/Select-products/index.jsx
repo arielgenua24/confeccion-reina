@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import useFirestoreContext from "../../hooks/useFirestoreContext";
+import useProducts from "../../hooks/useProducts";
 import  { useOrder }  from "../../hooks/useOrder";
 import ProductSearch from "../../components/ProductSearch";
 import qrIcon from '../../assets/icons/icons8-qr-100.png';
@@ -9,65 +9,55 @@ import './styles.css'
 function SelectProducts() {
       const [products, setProducts] = useState([]);
       const [isLoading, setIsLoading] = useState(false);
-      const [lastVisibleDoc, setLastVisibleDoc] = useState(null);
+      const [currentPage, setCurrentPage] = useState(0);
       const [hasMore, setHasMore] = useState(true);
-      const PRODUCTS_PER_PAGE = 10; // O el valor que prefieras
+      const PRODUCTS_PER_PAGE = 10;
 
       const navigate = useNavigate();
 
-      const { getProducts, } = useFirestoreContext();
+      const { getProductsPaginated } = useProducts();
 
        const loadInitialProducts = useCallback(async () => {
-        console.log('[loadInitialProducts] Iniciando carga inicial.');
+        console.log('[loadInitialProducts] Iniciando carga inicial desde IndexedDB.');
         setIsLoading(true);
         try {
-          console.log('[loadInitialProducts] Obteniendo productos...');
-          const fetchedProductsData = await getProducts(PRODUCTS_PER_PAGE);
-          console.log('[loadInitialProducts] fetchedProductsData:', fetchedProductsData);
-          if (fetchedProductsData && Array.isArray(fetchedProductsData.products)) {
-            setProducts(fetchedProductsData.products);
-            setLastVisibleDoc(fetchedProductsData.lastVisibleDoc);
-            setHasMore(fetchedProductsData.products.length === PRODUCTS_PER_PAGE);
-            console.log('[loadInitialProducts] Productos actualizados. New products.length:', fetchedProductsData.products.length, 'New hasMore:', fetchedProductsData.products.length === PRODUCTS_PER_PAGE);
-          } else {
-            console.error('[loadInitialProducts] Error: fetchedProductsData.products no es un array o fetchedProductsData es nulo/undefined', fetchedProductsData);
-            setProducts([]);
-            setHasMore(false);
-          }
+          const result = await getProductsPaginated(PRODUCTS_PER_PAGE, 0);
+          console.log('[loadInitialProducts] Resultado:', result);
+
+          setProducts(result.products);
+          setCurrentPage(0);
+          setHasMore(result.hasMore);
+          console.log(`[loadInitialProducts] ✅ Cargados ${result.products.length} productos`);
         } catch (error) {
-          console.error("[loadInitialProducts] Error cargando productos iniciales:", error);
+          console.error("[loadInitialProducts] Error cargando productos:", error);
           setProducts([]);
           setHasMore(false);
         } finally {
           setIsLoading(false);
-          console.log('[loadInitialProducts] Finalizado. isLoading debería ser false.');
         }
-      }, [getProducts, PRODUCTS_PER_PAGE]);
+      }, [getProductsPaginated, PRODUCTS_PER_PAGE]);
 
       const loadMoreProducts = useCallback(async () => {
-        console.log('[loadMoreProducts] Iniciando. isLoading:', isLoading, 'hasMore:', hasMore, 'lastVisibleDoc:', !!lastVisibleDoc);
-        if (isLoading || !hasMore || !lastVisibleDoc) return;
-        setIsLoading(true); 
+        console.log('[loadMoreProducts] Iniciando. Página actual:', currentPage);
+        if (isLoading || !hasMore) return;
+
+        setIsLoading(true);
         try {
-          const fetchedProductsData = await getProducts(PRODUCTS_PER_PAGE, lastVisibleDoc);
-          console.log('[loadMoreProducts] fetchedProductsData:', fetchedProductsData);
-          if (fetchedProductsData && Array.isArray(fetchedProductsData.products)) {
-            setProducts(prevProducts => [...prevProducts, ...fetchedProductsData.products]);
-            setLastVisibleDoc(fetchedProductsData.lastVisibleDoc);
-            setHasMore(fetchedProductsData.products.length === PRODUCTS_PER_PAGE);
-            console.log('[loadMoreProducts] Productos actualizados. New products.length:', fetchedProductsData.products.length, 'New hasMore:', fetchedProductsData.products.length === PRODUCTS_PER_PAGE);
-          } else {
-            console.error('[loadMoreProducts] Error: fetchedProductsData.products no es un array o fetchedProductsData es nulo/undefined para loadMore', fetchedProductsData);
-            setHasMore(false); // Detener carga si hay error
-          }
+          const nextPage = currentPage + 1;
+          const result = await getProductsPaginated(PRODUCTS_PER_PAGE, nextPage);
+          console.log('[loadMoreProducts] Resultado:', result);
+
+          setProducts(prevProducts => [...prevProducts, ...result.products]);
+          setCurrentPage(nextPage);
+          setHasMore(result.hasMore);
+          console.log(`[loadMoreProducts] ✅ Agregados ${result.products.length} productos más`);
         } catch (error) {
           console.error("[loadMoreProducts] Error cargando más productos:", error);
-          setHasMore(false); // Detener carga si hay error
+          setHasMore(false);
         } finally {
-          setIsLoading(false); 
-          console.log('[loadMoreProducts] Finalizado. isLoading debería ser false.');
-        } 
-      }, [getProducts, isLoading, hasMore, lastVisibleDoc, PRODUCTS_PER_PAGE]);
+          setIsLoading(false);
+        }
+      }, [getProductsPaginated, isLoading, hasMore, currentPage, PRODUCTS_PER_PAGE]);
 
        useEffect(() => {
           console.log('[useEffect] Montaje del componente: Llamando a loadInitialProducts.');
