@@ -231,7 +231,74 @@ class SyncWorker {
 
       // Use Firestore transaction for atomic stock updates
       const result = await runTransaction(firestore, async (transaction) => {
-        // 1. Create order in Firestore
+        // CRITICAL: Firestore requires ALL READS FIRST, then ALL WRITES
+        // The order of operations in a transaction must be:
+        // 1. All reads (transaction.get)
+        // 2. All writes (transaction.set, transaction.update)
+        
+        // ============================================
+        // PHASE 1: ALL READS FIRST
+        // ============================================
+        
+        // Step A: Collect all products that need stock updates
+        const productsToUpdate = [];
+        for (const product of order.products) {
+          if (product.stockDelta) {
+            productsToUpdate.push({
+              productId: product.productId,
+              productRef: doc(firestore, 'products', product.productId),
+              delta: product.stockDelta,
+              name: product.productSnapshot.name
+            });
+          }
+        }
+
+        // Step B: READ ALL products first (Firestore transaction requirement)
+        const productSnapshots = [];
+        for (const productToUpdate of productsToUpdate) {
+          const productSnap = await transaction.get(productToUpdate.productRef);
+          productSnapshots.push({
+            snap: productSnap,
+            productData: productToUpdate
+          });
+        }
+
+        // Step C: Validate and calculate new stocks (no reads or writes, just calculations)
+        const stockUpdates = [];
+        for (const { snap, productData } of productSnapshots) {
+          if (!snap.exists()) {
+            console.error(`❌ Product ${productData.productId} does not exist in Firestore!`);
+            throw new Error(`Cannot apply stock delta: Product ${productData.name} not found in Firestore`);
+          }
+
+          const currentStock = Number(snap.data().stock) || 0;
+          const delta = Number(productData.delta);
+          const newStock = currentStock + delta;
+
+          console.log(`📊 Stock calculation for ${productData.name}:`);
+          console.log(`   Firestore current: ${currentStock}`);
+          console.log(`   Delta to apply: ${delta}`);
+          console.log(`   New stock: ${newStock}`);
+
+          if (newStock < 0) {
+            console.error(`❌ Stock would go negative for ${productData.name}: ${currentStock} + ${delta} = ${newStock}`);
+            throw new Error(`Insufficient stock in Firestore for ${productData.name}`);
+          }
+
+          stockUpdates.push({
+            ref: productData.productRef,
+            newStock: newStock,
+            name: productData.name,
+            currentStock: currentStock,
+            delta: delta
+          });
+        }
+
+        // ============================================
+        // PHASE 2: ALL WRITES AFTER ALL READS
+        // ============================================
+        
+        // Step D: Create order in Firestore (WRITE)
         const firestoreOrderData = {
           // New format
           orderCode: order.orderCode,
@@ -254,20 +321,14 @@ class SyncWorker {
 
         transaction.set(orderRef, firestoreOrderData);
 
-        // 2. Apply stock deltas atomically
-        for (const product of order.products) {
-          if (product.stockDelta) {
-            const productRef = doc(firestore, 'products', product.productId);
+        // Step E: WRITE ALL stock updates
+        for (const update of stockUpdates) {
+          transaction.update(update.ref, {
+            stock: update.newStock,
+            updatedAt: serverTimestamp()
+          });
 
-            // Use increment() for atomic update
-            // This prevents race conditions when multiple devices sync simultaneously
-            transaction.update(productRef, {
-              stock: increment(product.stockDelta), // stockDelta is negative
-              updatedAt: serverTimestamp()
-            });
-
-            console.log(`📊 Applying stock delta for ${product.productSnapshot.name}: ${product.stockDelta}`);
-          }
+          console.log(`✅ Firestore stock updated: ${update.currentStock} → ${update.newStock} (${update.delta})`);
         }
 
         return { orderId };
@@ -286,6 +347,27 @@ class SyncWorker {
       await writeBatch(firestore)
         .update(orderRef, { fecha: formattedFecha })
         .commit();
+
+      // Create products subcollection (for backwards compatibility with ProductsVerification)
+      // This allows ProductsVerification to work exactly as before
+      console.log('📦 Creating products subcollection for backwards compatibility...');
+
+      const batch = writeBatch(firestore);
+
+      for (const product of order.products) {
+        const productSubDocRef = doc(firestore, 'orders', orderId, 'products', product.productId);
+
+        batch.set(productSubDocRef, {
+          productSnapshot: product.productSnapshot,
+          stock: product.quantity,
+          verified: 0, // Start with 0 verified
+          selectedVariants: product.selectedVariants,
+          createdAt: serverTimestamp()
+        });
+      }
+
+      await batch.commit();
+      console.log(`✅ Created ${order.products.length} products in subcollection`);
 
       // Update metadata catalog (products were updated)
       const metadataRef = doc(firestore, 'metadata', 'catalog');

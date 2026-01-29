@@ -6,6 +6,7 @@ import useFirestoreContext from '../../hooks/useFirestoreContext';
 import LoadingComponent from '../../components/Loading';
 import PaymentNavbar from '../../components/PaymentNavbar';
 import ParticlesBackground from '../../components/ParticlesBackground';
+import { forceSync } from '../../services/syncScheduler';
 import './styles.css';
 
 function Home() {
@@ -37,6 +38,18 @@ function Home() {
         };
 
         checkAdmin();
+
+        // FORCE sync in background when user lands on Home (bypasses rate limiting)
+        // This ensures IndexedDB ALWAYS has latest products from Firestore
+        // Critical for scenarios like:
+        // - Admin changes stock in Firestore → User needs fresh data
+        // - Multiple devices updating inventory
+        console.log('🏠 Home mounted - forcing immediate sync (no rate limit)...');
+        forceSync().then(() => {
+            console.log('✅ Force sync completed on Home');
+        }).catch(err => {
+            console.error('❌ Force sync failed:', err);
+        });
 
     }, []);
 
