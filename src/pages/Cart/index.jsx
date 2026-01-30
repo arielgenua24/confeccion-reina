@@ -1,211 +1,172 @@
 import { useState, useEffect } from 'react';
-import {useOrder} from '../../hooks/useOrder';
+import { useOrder } from '../../hooks/useOrder';
 import useLocalOrders from '../../hooks/useLocalOrders';
 import OrderCard from '../../components/OrderCard';
 import OrderSummary from '../../components/OrderSumary';
 import { useNavigate } from 'react-router-dom';
 import LoadingComponent from '../../components/Loading';
+import ImageModal from '../../components/ImageModal';
+import './styles.css'; // Import new Airbnb styles
 
 const Cart = () => {
-    const { cart, order, resetOrderValues } = useOrder();
-    const [error, setError ] = useState(false)
-    const [errorMessage, setErrorMessage] = useState('')
-    const { createOrder, isCreating } = useLocalOrders()
+  const { cart, order, resetOrderValues } = useOrder();
+  const [error, setError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const { createOrder, isCreating } = useLocalOrders();
 
-    const [products, setProduct] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
+  const [products, setProduct] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
+  const navigate = useNavigate();
 
-    const navigate = useNavigate();
+  // Calculate Total Price
+  const totalPrice = cart.reduce((acc, item) => {
+    const price = item.product?.price || item.item?.price || 0;
+    const quantity = item.quantity || 1;
+    return acc + (price * quantity);
+  }, 0);
 
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('es-ES', { 
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-      };
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(price);
+  };
 
-      const getCurrentDateTime = () => {
-        const now = new Date();
-        return formatDate(now);
-      };
+  useEffect(() => {
+    if (cart) {
+      setProduct(cart);
+    }
+  }, [cart]);
 
-    useEffect(() => {
-        if (cart) {
-            setProduct(cart);
-        }
-    }, [cart]);
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    setError(false);
+    setErrorMessage('');
 
-    const handleSubmit = async () => {
-      setIsLoading(true)
-      setError(false)
-      setErrorMessage('')
+    // Validate cart not empty
+    if (cart.length < 1) {
+      setError(true);
+      setErrorMessage('El carrito está vacío');
+      setIsLoading(false);
+      return null;
+    }
 
-      // Validate cart not empty
-      if(cart.length < 1) {
-        setError(true)
-        setErrorMessage('El carrito está vacío')
-        setIsLoading(false)
-        return null
-      }
-
-      // Customer data is optional - use defaults if not provided
-      const customerData = {
-        customerName: order.customerName || 'Cliente sin nombre',
-        phone: order.phone || 'Sin teléfono',
-        address: order.address || 'Sin dirección'
-      };
-
-      console.log('🚀 Creating optimistic order with cart:', cart)
-
-      try {
-        // Create order locally (instant, <100ms)
-        const result = await createOrder(
-          customerData,
-          cart // Pass cart directly (useLocalOrders handles both formats)
-        );
-
-        if (result.success) {
-          console.log(`✅ Order created in ${result.duration.toFixed(2)}ms: ${result.orderId}`);
-
-          // Reset cart and navigate to success page
-          resetOrderValues();
-          navigate(`/succeeded-order/${result.orderId}`);
-          setIsLoading(false)
-        } else {
-          // Handle validation errors (e.g., insufficient stock)
-          console.error('❌ Order creation failed:', result.error);
-          setError(true)
-          setErrorMessage(result.error || 'Error al crear la orden')
-          setIsLoading(false)
-          window.scrollTo(0, 0);
-        }
-      } catch(e) {
-        setIsLoading(false)
-        setError(true)
-        setErrorMessage(e.message || 'Error inesperado al crear la orden')
-        console.error("❌ Error al crear la orden:", e);
-        window.scrollTo(0, 0);
-      }
+    const customerData = {
+      customerName: order.customerName || 'Cliente sin nombre',
+      phone: order.phone || 'Sin teléfono',
+      address: order.address || 'Sin dirección'
     };
 
+    console.log('🚀 Creating optimistic order with cart:', cart);
 
+    try {
+      const result = await createOrder(customerData, cart);
 
-    return (
-        <div style={{minHeight: '1100px', paddingBottom: "100px"}}>
-            <LoadingComponent isLoading={isLoading || isCreating}/>
+      if (result.success) {
+        console.log(`✅ Order created in ${result.duration.toFixed(2)}ms: ${result.orderId}`);
+        resetOrderValues();
+        navigate(`/succeeded-order/${result.orderId}`);
+        setIsLoading(false);
+      } else {
+        console.error('❌ Order creation failed:', result.error);
+        setError(true);
+        setErrorMessage(result.error || 'Error al crear la orden');
+        setIsLoading(false);
+        window.scrollTo(0, 0);
+      }
+    } catch (e) {
+      setIsLoading(false);
+      setError(true);
+      setErrorMessage(e.message || 'Error inesperado al crear la orden');
+      console.error("❌ Error al crear la orden:", e);
+      window.scrollTo(0, 0);
+    }
+  };
 
-            <OrderSummary order={order} cart={cart}/>
+  return (
+    <div className="cart-page-container">
+      <LoadingComponent isLoading={isLoading || isCreating} />
 
-            <span style={{height: '300px', margin: '20px'}}>DETALLES DE LA ORDEN</span>
+      <div className="cart-header">
+        <h1 className="cart-title">Tu Carrito</h1>
+        <p className="cart-subtitle">{cart.length} {cart.length === 1 ? 'producto' : 'productos'} seleccionados</p>
+      </div>
 
-            <ul>
-                {products.map((item, index) => {
-                   console.log(item)
-                   // Handle both old format (item.item) and new format (item.product)
-                   const product = item.product || item.item;
-                   const variants = item.selectedVariants || { size: item.item?.size || null, color: item.item?.color || null };
-                   return <OrderCard key={index} product={product} quantity={item.quantity} selectedVariants={variants} />
-                })}
-            </ul>
+      <OrderSummary order={order} cart={cart} />
 
-            <div style={{
-                position: 'fixed',
-                bottom: 0,
-                left: 0,
-                width: '100%',
-                height: '66px',
-                backgroundColor: 'white',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                padding: '0 16px',
-                boxShadow: '0px -2px 10px rgba(0,0,0,0.1)'
-            }}>
-              { cart.length >= 1 ? (
-                   <button 
-                   onClick={() => handleSubmit()}
-                   style={{
-                       backgroundColor: '#0FCA37',
-                       color: 'white',
-                       width: '100%',
-                       height: '44px',
-                       borderRadius: '20px',
-                       border: 'none',
-                       fontSize: '16px',
-                       fontWeight: 'bold',
-                       cursor: 'pointer'
-                   }}>
-                      Finalizar Pedido
-                   </button>
-                    ) : (
-                    <button 
-                      onClick={() => navigate('/select-products')}
+      <h2 className="cart-section-title">Detalles del pedido</h2>
 
-                    style={{
-                      backgroundColor: '#f1f1f1',
-                      color: '#000',
-                      width: '100%',
-                      height: '44px',
-                      borderRadius: '20px',
-                      border: 'none',
-                      fontSize: '16px',
-                      fontWeight: 'bold',
-                      cursor: 'pointer'
-                  }}> Volver al inventario para agregar productos </button>
-                )
-              }
-               
+      <ul className="cart-items-list">
+        {products.map((item, index) => {
+          const product = item.product || item.item;
+          const variants = item.selectedVariants || { size: item.item?.size || null, color: item.item?.color || null };
+          return <OrderCard
+            key={index}
+            product={product}
+            quantity={item.quantity}
+            selectedVariants={variants}
+            onImageClick={(url) => setSelectedImage(url)}
+          />
+        })}
+      </ul>
+
+      {/* Airbnb Style Sticky Footer */}
+      <div className="cart-footer">
+        {cart.length >= 1 ? (
+          <>
+            <div className="cart-total-container">
+              <span className="cart-total-label">Total estimado</span>
+              <span className="cart-total-amount">{formatPrice(totalPrice)}</span>
             </div>
 
-            {error && (
-        <div style={{
-          backgroundColor: "red",
-          color: "#fff",
-          borderRadius: "20px",
-          border: "none",
-          padding: "10px 20px",
-          cursor: "pointer",
-          position: 'absolute',
-          top: '0px',
-          left: '0px',
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'Column',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          zIndex: '10000'
-        }}>
-             <h1> ERROR </h1>
-             <div style={{ textAlign: 'center', padding: '0 20px' }}>
-              <span>{errorMessage || 'Parece que hubo un problema con el stock o tu pedido. Revisa tu stock actual o dile a tu cliente que no tienes suficiente stock'}</span>
-             </div>
+            <button
+              className="cart-checkout-btn"
+              onClick={() => handleSubmit()}
+            >
+              Finalizar Pedido • {formatPrice(totalPrice)}
+            </button>
+          </>
+        ) : (
+          <button
+            className="cart-back-btn"
+            onClick={() => navigate('/select-products')}
+          >
+            Volver al inventario
+          </button>
+        )}
+      </div>
 
-             <buton
-              style={{width: '100px',
-                padding: '20px' ,
-                backgroundColor: '#fff',
-                color: '#000',
-                fontWeight: '400',
-                borderRadius: '20px',
-                fontSize: '24px'
-              }}
+      {error && (
+        <div className="cart-error-overlay">
+          <div className="cart-error-content">
+            <h1 className="cart-error-title">¡Ups! Algo salió mal</h1>
+            <p className="cart-error-message">
+              {errorMessage || 'Parece que hubo un problema con el stock o tu pedido. Revisa tu stock actual.'}
+            </p>
+            <button
+              className="cart-error-btn"
               onClick={() => {
-                setError(false)
-                setErrorMessage('')
-                navigate('/select-products')
+                setError(false);
+                setErrorMessage('');
               }}
-              >Entendido
-              </buton>
+            >
+              Entendido
+            </button>
+          </div>
         </div>
-              )}
-        </div>
-    );
+      )}
+
+      <ImageModal
+        isOpen={!!selectedImage}
+        imageSrc={selectedImage}
+        onClose={() => setSelectedImage(null)}
+      />
+    </div>
+  );
 };
 
 export default Cart;

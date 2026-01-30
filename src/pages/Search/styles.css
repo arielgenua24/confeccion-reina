@@ -1,0 +1,539 @@
+/* ============================================
+   SEARCH PAGE - AIRBNB STYLE
+   Premium Full-Screen Search Experience
+   ============================================ */
+
+/* Base Variables - Airbnb Palette */
+:root {
+    --airbnb-black: #222222;
+    --airbnb-gray-dark: #717171;
+    --airbnb-gray-medium: #B0B0B0;
+    --airbnb-gray-light: #DDDDDD;
+    --airbnb-gray-bg: #F7F7F7;
+    --airbnb-white: #FFFFFF;
+    --airbnb-pink: #FF385C;
+    --airbnb-pink-dark: #E31C5F;
+    --airbnb-green: #008A05;
+    --airbnb-red: #C13515;
+    --airbnb-font: 'Circular', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --airbnb-radius: 12px;
+    --airbnb-radius-lg: 16px;
+    --airbnb-radius-full: 32px;
+    --airbnb-shadow: 0 2px 16px rgba(0, 0, 0, 0.12);
+    --airbnb-transition: all 0.2s ease;
+}
+
+/* ============================================
+   PAGE LAYOUT
+   ============================================ */
+.search-page {
+    min-height: 100vh;
+    background: var(--airbnb-white);
+    padding-bottom: 100px;
+    font-family: var(--airbnb-font);
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+.search-page-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 24px;
+    background: var(--airbnb-white);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.search-back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: var(--airbnb-transition);
+    color: var(--airbnb-black);
+}
+
+.search-back-btn:hover {
+    background: var(--airbnb-gray-bg);
+}
+
+.search-page-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--airbnb-black);
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+/* ============================================
+   SEARCH INPUT - AIRBNB STYLE
+   ============================================ */
+.search-input-container {
+    padding: 8px 24px 16px;
+}
+
+.search-input-wrapper {
+    display: flex;
+    align-items: center;
+    background: var(--airbnb-white);
+    border: 1px solid var(--airbnb-gray-light);
+    border-radius: var(--airbnb-radius-full);
+    padding: 14px 20px;
+    transition: var(--airbnb-transition);
+}
+
+.search-input-wrapper:focus-within {
+    border-color: var(--airbnb-black);
+    box-shadow: 0 0 0 2px var(--airbnb-black);
+}
+
+.search-input-icon {
+    color: var(--airbnb-black);
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.search-page-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--airbnb-black);
+    font-family: var(--airbnb-font);
+    outline: none;
+}
+
+.search-page-input::placeholder {
+    color: var(--airbnb-gray-dark);
+}
+
+.search-clear-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: var(--airbnb-gray-bg);
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--airbnb-gray-dark);
+    transition: var(--airbnb-transition);
+}
+
+.search-clear-btn:hover {
+    background: var(--airbnb-gray-light);
+    color: var(--airbnb-black);
+}
+
+/* ============================================
+   SECTIONS
+   ============================================ */
+.search-section {
+    padding: 8px 24px;
+}
+
+.search-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.search-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--airbnb-gray-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.section-icon {
+    color: var(--airbnb-gray-medium);
+}
+
+.search-clear-all {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--airbnb-black);
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+}
+
+.search-clear-all:hover {
+    color: var(--airbnb-gray-dark);
+}
+
+/* ============================================
+   RECENT SEARCHES
+   ============================================ */
+.recent-searches-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.recent-search-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    transition: var(--airbnb-transition);
+    border-radius: var(--airbnb-radius);
+}
+
+.recent-search-item:hover {
+    background: var(--airbnb-gray-bg);
+    margin: 0 -12px;
+    padding: 12px;
+    width: calc(100% + 24px);
+}
+
+.recent-search-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: var(--airbnb-gray-bg);
+    border-radius: var(--airbnb-radius);
+    color: var(--airbnb-gray-dark);
+    flex-shrink: 0;
+}
+
+.recent-search-text {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--airbnb-black);
+}
+
+/* ============================================
+   PRODUCT LIST - AIRBNB STYLE
+   ============================================ */
+.product-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.product-list-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--airbnb-gray-light);
+}
+
+.product-list-item:last-child {
+    border-bottom: none;
+}
+
+/* Product Image */
+.product-item-image {
+    width: 64px;
+    height: 64px;
+    border-radius: var(--airbnb-radius);
+    overflow: hidden;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #FFF5F5 0%, #FFF0E6 50%, #F0FFF4 100%);
+}
+
+.product-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.product-item-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--airbnb-gray-medium);
+}
+
+/* Product Info */
+.product-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.product-item-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--airbnb-black);
+    margin: 0 0 4px 0;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.product-item-details {
+    font-size: 14px;
+    color: var(--airbnb-gray-dark);
+    margin: 0 0 6px 0;
+    line-height: 1.4;
+}
+
+.product-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.product-item-price {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--airbnb-black);
+}
+
+.product-item-stock {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--airbnb-green);
+}
+
+.product-item-stock.low {
+    color: var(--airbnb-red);
+}
+
+/* ============================================
+   PRODUCT ACTIONS
+   ============================================ */
+.product-item-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+/* Quantity Selector - Large & Prominent */
+.quantity-selector-large {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #FFFFFF;
+    border: 1px solid var(--airbnb-gray-light);
+    border-radius: var(--airbnb-radius-full);
+    padding: 4px;
+    width: 140px;
+    height: 48px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.qty-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--airbnb-black);
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--airbnb-transition);
+}
+
+.qty-btn:hover:not(:disabled) {
+    background: var(--airbnb-gray-bg);
+}
+
+.qty-btn:disabled {
+    color: var(--airbnb-gray-light);
+    cursor: not-allowed;
+}
+
+.qty-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--airbnb-black);
+    min-width: 30px;
+    text-align: center;
+}
+
+/* Add Button - Large */
+.add-btn-large {
+    margin-top: 12px;
+    width: 140px;
+    height: 48px;
+    border: none;
+    background: var(--airbnb-black);
+    color: var(--airbnb-white);
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: var(--airbnb-radius-lg);
+    cursor: pointer;
+    transition: var(--airbnb-transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.add-btn-large:hover:not(:disabled) {
+    background: #000000;
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.add-btn-large:disabled {
+    background: var(--airbnb-gray-light);
+    color: var(--airbnb-gray-dark);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.add-btn-large.added {
+    background: var(--airbnb-green);
+    color: var(--airbnb-white);
+}
+
+/* ============================================
+   EMPTY STATE
+   ============================================ */
+.search-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--airbnb-gray-dark);
+}
+
+.search-empty p {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--airbnb-black);
+    margin: 16px 0 4px;
+}
+
+.search-empty span {
+    font-size: 14px;
+    color: var(--airbnb-gray-dark);
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+.search-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: var(--airbnb-white);
+    border-top: 1px solid var(--airbnb-gray-light);
+    z-index: 100;
+}
+
+.footer-clear-btn {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--airbnb-black);
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 12px 0;
+}
+
+.footer-clear-btn:hover {
+    color: var(--airbnb-gray-dark);
+}
+
+.footer-search-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 24px;
+    background: var(--airbnb-pink);
+    color: var(--airbnb-white);
+    border: none;
+    border-radius: var(--airbnb-radius);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--airbnb-transition);
+}
+
+.footer-search-btn:hover {
+    background: var(--airbnb-pink-dark);
+    transform: scale(1.02);
+}
+
+/* ============================================
+   LOADING ANIMATION
+   ============================================ */
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.searching .product-list-item {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 480px) {
+    .search-page-header {
+        padding: 12px 16px;
+    }
+
+    .search-page-title {
+        font-size: 22px;
+    }
+
+    .search-input-container,
+    .search-section {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .search-footer {
+        padding: 12px 16px;
+    }
+
+    .product-item-image {
+        width: 56px;
+        height: 56px;
+    }
+
+    .product-item-name {
+        font-size: 15px;
+    }
+}

@@ -6,12 +6,14 @@
   padding: 16px;
   margin: 16px 0;
   transition: transform 0.2s ease-in-out;
-  height: 430px;
+  height: auto;
+  min-height: 380px;
 }
 
 .cart-card-content {
   display: flex;
-  height: 230px;
+  height: auto;
+  min-height: 230px;
 }
 
 .cart-order-card:hover {
@@ -52,6 +54,31 @@
   background: #f9f9f9;
 }
 
+/* New Stock Indicator Styles */
+.cart-info-item.stock-low {
+  background-color: #ffe6e6;
+  /* Light red */
+  border: 1px solid #ffcccc;
+}
+
+.cart-info-item.stock-low .cart-info-value {
+  color: #cc0000;
+  font-weight: bold;
+}
+
+.cart-info-item.stock-good {
+  background-color: #e6ffed;
+  /* Light green */
+  border: 1px solid #ccffda;
+}
+
+.cart-info-item.stock-good .cart-info-value {
+  color: #008069;
+  /* WhatsApp Green Dark */
+  font-weight: bold;
+}
+
+
 .cart-info-label {
   font-weight: bold;
   color: #555;
@@ -67,7 +94,8 @@
   margin-top: 32px;
 }
 
-.cart-modify-button, .cart-delete-button {
+.cart-modify-button,
+.cart-delete-button {
   padding: 10px 16px;
   border: none;
   border-radius: 8px;

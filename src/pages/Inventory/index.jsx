@@ -7,6 +7,7 @@ import ProductSearch from '../../components/ProductSearch';
 import EditProductBtn from '../../components/EditProduct';
 import QRButton from '../../components/QrGenerateBtn';
 import LoadingComponent from '../../components/Loading';
+import ImageModal from '../../components/ImageModal';
 import { auth } from '../../firebaseSetUp';
 import qrIcon from '../../assets/icons/icons8-qr-100.png';
 
@@ -24,6 +25,7 @@ const Inventory = () => {
     stock: '',
     imageUrl: null
   });
+  const [selectedImage, setSelectedImage] = useState(null);
   const [lastVisibleDoc, setLastVisibleDoc] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const PRODUCTS_PER_PAGE = 10;
@@ -42,7 +44,7 @@ const Inventory = () => {
 
   const loadInitialProducts = useCallback(async () => {
     if (isLoading) {
-       return; 
+      return;
     }
     setIsLoading(true);
     try {
@@ -55,7 +57,7 @@ const Inventory = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [getProducts, PRODUCTS_PER_PAGE]); 
+  }, [getProducts, PRODUCTS_PER_PAGE]);
 
   const loadMoreProducts = useCallback(async () => {
     if (isLoading || !hasMore || !lastVisibleDoc) return;
@@ -74,7 +76,7 @@ const Inventory = () => {
 
   useEffect(() => {
     loadInitialProducts();
-  }, [loadInitialProducts]); 
+  }, [loadInitialProducts]);
 
   const handleSubmit = async (e) => {
     setIsLoading(true);
@@ -146,7 +148,7 @@ const Inventory = () => {
           const product = productsToUpload[i];
           try {
             if (!product.name || product.price === undefined || product.stock === undefined) {
-                throw new Error(`Producto en índice ${i} (${product.name || 'Nombre desconocido'}) tiene datos faltantes o inválidos. Campos requeridos: name, price, size, color, stock.`);
+              throw new Error(`Producto en índice ${i} (${product.name || 'Nombre desconocido'}) tiene datos faltantes o inválidos. Campos requeridos: name, price, size, color, stock.`);
             }
             // Asegurar tipos de datos antes de enviar a addProduct
             await addProduct(
@@ -171,9 +173,9 @@ const Inventory = () => {
         }
         setBulkLoadErrorMessages(errorMessages);
         if (errorMessages.length > 0) {
-            alert(`Carga masiva completada con errores. ${currentSuccess} productos agregados, ${currentErrors} errores. Revise los mensajes de error.`);
+          alert(`Carga masiva completada con errores. ${currentSuccess} productos agregados, ${currentErrors} errores. Revise los mensajes de error.`);
         } else {
-            alert(`Carga masiva completada exitosamente. ${currentSuccess} productos agregados.`);
+          alert(`Carga masiva completada exitosamente. ${currentSuccess} productos agregados.`);
         }
         await loadInitialProducts(); // Recargar productos para reflejar los cambios
       } catch (error) {
@@ -183,17 +185,17 @@ const Inventory = () => {
         setBulkLoadErrorMessages(prevMessages => [...prevMessages, errorMessage]);
       } finally {
         setIsBulkLoading(false);
-        setJsonFile(null); 
+        setJsonFile(null);
         if (document.getElementById('json-upload-input')) {
-            document.getElementById('json-upload-input').value = ''; // Resetear el input de archivo
+          document.getElementById('json-upload-input').value = ''; // Resetear el input de archivo
         }
       }
     };
     reader.onerror = () => {
-        const readErrorMessage = "Error al leer el archivo.";
-        alert(readErrorMessage);
-        setBulkLoadErrorMessages(prevMessages => [...prevMessages, readErrorMessage]);
-        setIsBulkLoading(false);
+      const readErrorMessage = "Error al leer el archivo.";
+      alert(readErrorMessage);
+      setBulkLoadErrorMessages(prevMessages => [...prevMessages, readErrorMessage]);
+      setIsBulkLoading(false);
     };
     reader.readAsText(jsonFile);
   };
@@ -202,7 +204,7 @@ const Inventory = () => {
     <div className="container">
       <h1 className="TITLE">CATÁLOGO</h1>
 
-      <button 
+      <button
         style={{
           backgroundColor: '#F1F7FF',
           border: '1px solid #0990FF',
@@ -215,34 +217,34 @@ const Inventory = () => {
           alignItems: 'center',
           gap: '5px'
         }}
-      onClick={() => {
-        navigate('/qrsearch?redirect=product_data');
-      }}> BUSCAR POR QR 
+        onClick={() => {
+          navigate('/qrsearch?redirect=product_data');
+        }}> BUSCAR POR QR
         <img src={qrIcon} alt="Qr icon" style={{
-                        width: '30px',
-                        height: '30px',
-                      }} />
+          width: '30px',
+          height: '30px',
+        }} />
       </button>
-      
-      <ProductSearch products={products} setQRcode={setQRcode}/>
+
+      <ProductSearch products={products} setQRcode={setQRcode} />
 
       {/* Sección de Carga Masiva de JSON */}
       <div className="bulkUploadSection" style={{ margin: '20px 0', padding: '20px', border: '1px solid #e0e0e0', borderRadius: '8px', backgroundColor: '#f9f9f9' }}>
-        <h3 className="subtitle" style={{marginTop: '0', marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '10px'}}>JSON for the developer, Ariel</h3>
-        <input 
-          type="file" 
+        <h3 className="subtitle" style={{ marginTop: '0', marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>JSON for the developer, Ariel</h3>
+        <input
+          type="file"
           id="json-upload-input"
-          accept=".json" 
-          onChange={handleJsonFileChange} 
+          accept=".json"
+          onChange={handleJsonFileChange}
           disabled={isBulkLoading}
           style={{ display: 'block', margin: '15px 0', padding: '10px', border: '1px solid #ccc', borderRadius: '4px', width: 'calc(100% - 22px)' }}
         />
-        <button 
-          onClick={handleBulkUpload} 
+        <button
+          onClick={handleBulkUpload}
           disabled={!jsonFile || isBulkLoading}
-          className="addButton-bulk" 
+          className="addButton-bulk"
           style={{
-            marginRight: '10px', 
+            marginRight: '10px',
             backgroundColor: (!jsonFile || isBulkLoading) ? '#bdc3c7' : '#27ae60', // verde para activo, gris para deshabilitado
             color: 'white',
             padding: '10px 20px',
@@ -254,25 +256,25 @@ const Inventory = () => {
           {isBulkLoading ? 'Cargando JSON...' : 'Iniciar Carga de JSON'}
         </button>
         {isBulkLoading && (
-          <div style={{marginTop: '15px'}}>
+          <div style={{ marginTop: '15px' }}>
             <p>Procesando: {bulkLoadProgress.processed} de {bulkLoadProgress.total} productos.</p>
-            <p style={{color: 'green'}}>Éxitos: {bulkLoadProgress.success}</p>
-            <p style={{color: 'red'}}>Errores: {bulkLoadProgress.errors}</p>
+            <p style={{ color: 'green' }}>Éxitos: {bulkLoadProgress.success}</p>
+            <p style={{ color: 'red' }}>Errores: {bulkLoadProgress.errors}</p>
             <LoadingComponent isLoading={true} />
           </div>
         )}
         {bulkLoadErrorMessages.length > 0 && !isBulkLoading && (
           <div style={{ marginTop: '20px', color: '#c0392b', border: '1px solid #e74c3c', padding: '15px', borderRadius: '4px', backgroundColor: '#fbeae5' }}>
-            <h4 style={{marginTop: '0', marginBottom: '10px'}}>Detalles de errores en la carga:</h4>
-            <ul style={{paddingLeft: '20px', margin: '0', maxHeight: '150px', overflowY: 'auto'}}>
+            <h4 style={{ marginTop: '0', marginBottom: '10px' }}>Detalles de errores en la carga:</h4>
+            <ul style={{ paddingLeft: '20px', margin: '0', maxHeight: '150px', overflowY: 'auto' }}>
               {bulkLoadErrorMessages.map((msg, index) => (
-                <li key={index} style={{marginBottom: '5px'}}>{msg}</li>
+                <li key={index} style={{ marginBottom: '5px' }}>{msg}</li>
               ))}
             </ul>
           </div>
         )}
-         {!isBulkLoading && bulkLoadProgress.processed > 0 && bulkLoadErrorMessages.length === 0 && bulkLoadProgress.success === bulkLoadProgress.total && (
-            <p style={{ marginTop: '15px', color: '#27ae60', fontWeight: 'bold' }}>¡Todos los productos ({bulkLoadProgress.success}) se cargaron exitosamente!</p>
+        {!isBulkLoading && bulkLoadProgress.processed > 0 && bulkLoadErrorMessages.length === 0 && bulkLoadProgress.success === bulkLoadProgress.total && (
+          <p style={{ marginTop: '15px', color: '#27ae60', fontWeight: 'bold' }}>¡Todos los productos ({bulkLoadProgress.success}) se cargaron exitosamente!</p>
         )}
       </div>
 
@@ -288,41 +290,45 @@ const Inventory = () => {
 
               <div className='deleteButtonContainer'>
                 <button
-                    className="deleteButton"
-                    style={{backgroundColor: 'red', color: 'white'}}
-                    onClick={() => handleDelete(product.id)}
-                  >
-                    ELIMINAR
+                  className="deleteButton"
+                  style={{ backgroundColor: 'red', color: 'white' }}
+                  onClick={() => handleDelete(product.id)}
+                >
+                  ELIMINAR
                 </button>
               </div>
 
-                {/* Product Image */}
-                {product.imageUrl && (
-                  <div className="productImageContainer">
-                    <img
-                      src={product.imageUrl}
-                      alt={product.name}
-                      className="productImage"
-                    />
-                  </div>
-                )}
-
-                <h3 className="productTitle">{product.name}</h3>
-                <p className="productDetail">{product.productCode}</p>
-                <p className="productDetail">Precio: ${product.price}</p>
-                <p className="productDetail">Stock: {product.stock}</p>
-                <p className="productDetail">{product.details || 'Sin detalles'}</p>
-
-
-                <QRButton 
-                    product={product}
-                    onQRGenerate={() => setQRcode(product)}
+              {/* Product Image */}
+              {product.imageUrl && (
+                <div
+                  className="productImageContainer"
+                  onClick={() => setSelectedImage(product.imageUrl)}
+                  style={{ cursor: 'zoom-in' }}
+                >
+                  <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    className="productImage"
                   />
+                </div>
+              )}
+
+              <h3 className="productTitle">{product.name}</h3>
+              <p className="productDetail">{product.productCode}</p>
+              <p className="productDetail">Precio: ${product.price}</p>
+              <p className="productDetail">Stock: {product.stock}</p>
+              <p className="productDetail">{product.details || 'Sin detalles'}</p>
 
 
-                <EditProductBtn product_id={product.id}/>
+              <QRButton
+                product={product}
+                onQRGenerate={() => setQRcode(product)}
+              />
 
-              </div>
+
+              <EditProductBtn product_id={product.id} />
+
+            </div>
           ))}
         </div>
 
@@ -333,12 +339,12 @@ const Inventory = () => {
           </button>
         )}
         {!isLoading && !hasMore && products.length > 0 && (
-            <p style={{ textAlign: 'center', margin: '20px' }}>No hay más productos para mostrar.</p>
-         )}
+          <p style={{ textAlign: 'center', margin: '20px' }}>No hay más productos para mostrar.</p>
+        )}
 
       </section>
 
-      <button 
+      <button
         onClick={() => setIsModalOpen(true)}
         className="addButton"
       >
@@ -346,15 +352,21 @@ const Inventory = () => {
       </button>
 
       {isModalOpen && (
-        <ProductFormModal handleSubmit={handleSubmit} newProduct={newProduct} setNewProduct={setNewProduct} setIsModalOpen={setIsModalOpen}/>
+        <ProductFormModal handleSubmit={handleSubmit} newProduct={newProduct} setNewProduct={setNewProduct} setIsModalOpen={setIsModalOpen} />
       )}
 
       {QRcode && (
-        <QRModal 
+        <QRModal
           QRcode={QRcode}
           setQRcode={setQRcode}
         />
       )}
+
+      <ImageModal
+        isOpen={!!selectedImage}
+        imageSrc={selectedImage}
+        onClose={() => setSelectedImage(null)}
+      />
     </div>
   );
 };

@@ -4,14 +4,14 @@ import './styles.css';
 import { useOrder } from '../../hooks/useOrder';
 import { useNavigate } from 'react-router-dom';
 
-const OrderCard = ({ product, quantity, selectedVariants }) => {
+const OrderCard = ({ product, quantity, selectedVariants, onImageClick }) => {
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
-  const { deleteItem } = useOrder() 
+  const { deleteItem } = useOrder()
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', { 
+    return date.toLocaleDateString('es-ES', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -22,7 +22,7 @@ const OrderCard = ({ product, quantity, selectedVariants }) => {
 
   const DeleteConfirmationModal = ({ show, onClose }) => {
     if (!show) return null;
-  
+
     return (
       <div style={styles.modalBackground}>
         <div style={styles.modalContainer}>
@@ -41,7 +41,7 @@ const OrderCard = ({ product, quantity, selectedVariants }) => {
       };
       deleteItem(itemToDelete);
       setShowModal(true); // Muestra el modal
-  
+
       // Cierra el modal después de 2 segundos
     }
   };
@@ -82,8 +82,28 @@ const OrderCard = ({ product, quantity, selectedVariants }) => {
         <h3 className="cart-card-title">{product.name}</h3>
         <span className="cart-product-code">{product.productCode}</span>
       </div>
-      
-      <div className="cart-card-content">
+
+      <div className="cart-card-content" style={{ flexDirection: 'column', height: 'auto' }}>
+        {product.imageUrl && (
+          <div
+            className="cart-product-image-container"
+            onClick={() => onImageClick && onImageClick(product.imageUrl)}
+            style={{
+              width: '100%',
+              height: '150px',
+              marginBottom: '10px',
+              borderRadius: '8px',
+              overflow: 'hidden',
+              cursor: 'zoom-in'
+            }}
+          >
+            <img
+              src={product.imageUrl}
+              alt={product.name}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          </div>
+        )}
         <div className="cart-info-grid">
           <div className="cart-info-item">
             <span className="cart-info-label">Detalles</span>
@@ -92,6 +112,10 @@ const OrderCard = ({ product, quantity, selectedVariants }) => {
           <div className="cart-info-item">
             <span className="cart-info-label">Cantidad</span>
             <span className="cart-info-value">{quantity}</span>
+          </div>
+          <div className={`cart-info-item ${product.stock < 10 ? 'stock-low' : 'stock-good'}`}>
+            <span className="cart-info-label">Stock Disp.</span>
+            <span className="cart-info-value">{product.stock}</span>
           </div>
           {selectedVariants?.color && (
             <div className="cart-info-item">
@@ -115,7 +139,7 @@ const OrderCard = ({ product, quantity, selectedVariants }) => {
           </div>
         </div>
       </div>
-      
+
       <div className="cart-card-actions">
         <button className="cart-modify-button" onClick={() => {
           const params = new URLSearchParams({
@@ -131,7 +155,7 @@ const OrderCard = ({ product, quantity, selectedVariants }) => {
           Eliminar del pedido
         </button>
       </div>
-      
+
       <div className="cart-card-footer">
         <span className="cart-update-date">Actualizado: {formatDate(product.updatedAt)}</span>
       </div>
