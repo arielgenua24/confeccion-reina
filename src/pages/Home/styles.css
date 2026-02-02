@@ -108,6 +108,20 @@
     margin-top: 30px;
 }
 
+/* "Notas del Equipo" - Amarillo Apple Notes style */
+.notes {
+    background: linear-gradient(135deg, #FFCC00 0%, #FFD93D 100%);
+    color: #1D1D1F;
+    border: 2px solid #FFB800;
+    margin-top: 16px;
+    font-weight: 600;
+}
+
+.notes:hover {
+    background: linear-gradient(135deg, #FFD700 0%, #FFE066 100%);
+    border-color: #FFA500;
+}
+
 /* Animación al aparecer */
 @keyframes fadeIn {
     fr

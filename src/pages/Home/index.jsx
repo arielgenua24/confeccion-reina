@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useOrder } from '../../hooks/useOrder';
-import { Inbox, ShoppingCart, List, Package } from 'lucide-react';
+import { Inbox, ShoppingCart, List, Package, MessageSquare } from 'lucide-react';
 import useFirestoreContext from '../../hooks/useFirestoreContext';
 import LoadingComponent from '../../components/Loading';
 import PaymentNavbar from '../../components/PaymentNavbar';
@@ -98,6 +98,15 @@ function Home() {
                         <Package size={24} className="home-icon" />
                         Catálogo
                         <span className="home-subtext">Agrega tus productos y controla tu stock</span>
+                    </button>
+                </Link>
+
+                {/* Team Notes - Communication Log */}
+                <Link to="/team-notes" className="home-link">
+                    <button className="home-btn notes">
+                        <MessageSquare size={24} className="home-icon" />
+                        Notas del Equipo
+                        <span className="home-subtext">Comunicación y registro de eventos</span>
                     </button>
                 </Link>
             </div>

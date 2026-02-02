@@ -34,6 +34,7 @@ const Product = lazy(() => import('./pages/Products'));
 const MigrationRunner = lazy(() => import('./pages/MigrationRunner'));
 const SyncDebug = lazy(() => import('./pages/SyncDebug'));
 const SearchPage = lazy(() => import('./pages/Search'));
+const TeamNotesPage = lazy(() => import('./pages/TeamNotesPage'));
 
 function AppRouter() {
   let router = useRoutes([
@@ -56,6 +57,7 @@ function AppRouter() {
     { path: '/migration-runner', element: <MigrationRunner /> },
     { path: '/sync-debug', element: <SyncDebug /> },
     { path: '/search', element: <SearchPage /> },
+    { path: '/team-notes', element: <TeamNotesPage /> },
   ]);
   return router;
 }

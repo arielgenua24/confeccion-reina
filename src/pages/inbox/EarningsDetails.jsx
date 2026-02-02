@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import useFirestoreContext from '../../hooks/useFirestoreContext'
 import LoadingComponent from '../../components/Loading'
+import ImageModal from '../../components/ImageModal'
 import './EarningsDetails.css'
 
 function EarningsDetails() {
@@ -13,6 +14,7 @@ function EarningsDetails() {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedDay, setSelectedDay] = useState(null)
   const [selectedOrder, setSelectedOrder] = useState(null)
+  const [modalImage, setModalImage] = useState(null)
 
   // Fetch orders
   useEffect(() => {
@@ -136,13 +138,44 @@ function EarningsDetails() {
             </button>
             <h2 className="ed-title">Detalle de Venta</h2>
           </div>
+          
           <div className="ed-order-summary">
             <span className="ed-order-id">ID: {selectedOrder.id.slice(0, 8)}...</span>
             <span className="ed-order-total">{formatCurrency(selectedOrder.total)}</span>
           </div>
+
+          <div className="ed-customer-details">
+            <h3 className="ed-section-title">Datos del Cliente</h3>
+            <div className="ed-detail-row">
+              <span className="ed-detail-label">Comprador:</span>
+              <span className="ed-detail-value">{selectedOrder.cliente || 'N/A'}</span>
+            </div>
+            <div className="ed-detail-row">
+              <span className="ed-detail-label">Domicilio:</span>
+              <span className="ed-detail-value">{selectedOrder.direccion || 'N/A'}</span>
+            </div>
+            <div className="ed-detail-row">
+              <span className="ed-detail-label">Teléfono:</span>
+              <span className="ed-detail-value">{selectedOrder.telefono || 'N/A'}</span>
+            </div>
+          </div>
+
+          <h3 className="ed-section-title" style={{marginTop: '24px', marginBottom: '12px'}}>Productos</h3>
           <div className="ed-list">
             {selectedOrder.products?.map((item, idx) => (
               <div key={idx} className="ed-list-item product">
+                {item.productData?.imageUrl && (
+                  <img 
+                    src={item.productData.imageUrl} 
+                    alt={item.productData.name} 
+                    className="ed-product-image"
+                    loading="lazy"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setModalImage(item.productData.imageUrl)
+                    }}
+                  />
+                )}
                 <div className="ed-item-info">
                   <span className="ed-item-name">{item.productData?.name || 'Producto'}</span>
                   <span className="ed-item-sub">{item.stock} x {formatCurrency(item.productData?.price || 0)}</span>
@@ -256,6 +289,12 @@ function EarningsDetails() {
     <div className="ed-container">
       <LoadingComponent isLoading={isLoading} />
       {!isLoading && renderContent()}
+      
+      <ImageModal 
+        isOpen={!!modalImage}
+        imageSrc={modalImage}
+        onClose={() => setModalImage(null)}
+      />
     </div>
   )
 }
