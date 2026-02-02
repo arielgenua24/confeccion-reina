@@ -18,6 +18,7 @@ function Orders() {
   const [orders, setOrders] = useState([])
   const [QRcode, setQRcode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [openMenuOrderId, setOpenMenuOrderId] = useState(null); // Track which order's menu is open
 
   const { deleteOrder } = useFirestoreContext()
   const { getAllOrders } = useHybridOrders()
@@ -56,6 +57,7 @@ function Orders() {
   }
 
   const handleRetrySync = async (orderId) => {
+    setOpenMenuOrderId(null); // Close menu
     if (window.confirm('¿Reintentar sincronización de esta orden?')) {
       setIsLoading(true)
       const success = await syncOrder(orderId)
@@ -68,6 +70,21 @@ function Orders() {
       setIsLoading(false)
     }
   }
+
+  const toggleMenu = (orderId) => {
+    setOpenMenuOrderId(openMenuOrderId === orderId ? null : orderId);
+  }
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (openMenuOrderId) {
+        setOpenMenuOrderId(null);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [openMenuOrderId]);
 
   return (
     <div className="orders-container">
@@ -100,13 +117,85 @@ function Orders() {
          
 
       <div className="orders-list">
-      {orders.map((order) => (
+      {orders.map((order) => {
+        const isNotSynced = order.syncStatus === 'pending' || order.syncStatus === 'syncing' || order.syncStatus === 'failed';
+        const isMenuOpen = openMenuOrderId === (order.id || order.orderId);
+
+        return (
         <div key={order.id} className="order-card">
-          <div style={{width: '100%', display: 'flex', justifyContent: 'space-between', marginBottom: '2rem'}}>
-                <QRButton
-                      product={order}
-                      onQRGenerate={setQRcode}
-                    />
+          <div style={{width: '100%', display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', position: 'relative'}}>
+                {/* Show QR button ONLY for synced orders */}
+                {!isNotSynced && (
+                  <QRButton
+                    product={order}
+                    onQRGenerate={setQRcode}
+                  />
+                )}
+
+                {/* Show 3-dot menu for pending/syncing/failed orders */}
+                {isNotSynced && (
+                  <div style={{ position: 'relative' }}>
+                    <button
+                      style={{
+                        backgroundColor: '#6c757d',
+                        color: '#fff',
+                        padding: '0.5rem 1rem',
+                        borderRadius: '0.25rem',
+                        fontSize: '20px',
+                        fontWeight: 'bold',
+                        border: 'none',
+                        cursor: 'pointer'
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleMenu(order.id || order.orderId);
+                      }}
+                    >
+                      ⋮
+                    </button>
+
+                    {/* Floating menu */}
+                    {isMenuOpen && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: '0',
+                          marginTop: '5px',
+                          backgroundColor: '#fff',
+                          border: '2px solid #dee2e6',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                          zIndex: 1000,
+                          minWidth: '200px'
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          style={{
+                            width: '100%',
+                            textAlign: 'left',
+                            padding: '12px 16px',
+                            border: 'none',
+                            backgroundColor: 'transparent',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            color: '#212529',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            transition: 'background-color 0.2s'
+                          }}
+                          onClick={() => handleRetrySync(order.id || order.orderId)}
+                          onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+                          onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                        >
+                          🔄 Reintentar sincronización
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
 
               <button
                 style={{backgroundColor: '#f44336', color: '#fff', padding: '0.5rem', borderRadius: '0.25rem'}}
@@ -128,18 +217,24 @@ function Orders() {
               marginBottom: '10px',
               display: 'flex',
               alignItems: 'center',
+              justifyContent: 'space-between',
               gap: '8px'
             }}>
-              <span style={{
-                display: 'inline-block',
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                backgroundColor: '#ffc107',
-                animation: 'pulse 1.5s infinite'
-              }}></span>
-              <span style={{ fontSize: '14px', color: '#856404' }}>
-                ⏳ Pendiente de sincronización
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{
+                  display: 'inline-block',
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  backgroundColor: '#ffc107',
+                  animation: 'pulse 1.5s infinite'
+                }}></span>
+                <span style={{ fontSize: '14px', color: '#856404' }}>
+                  ⏳ Pendiente de sincronización
+                </span>
+              </div>
+              <span style={{ fontSize: '12px', color: '#856404', fontStyle: 'italic' }}>
+                (Usa el menú ⋮ para reintentar)
               </span>
             </div>
           )}
@@ -170,7 +265,7 @@ function Orders() {
             </div>
           )}
 
-          {/* ✅ NEW: Failed sync status */}
+          {/* ✅ Failed sync status - Only show error and local verification */}
           {order.syncStatus === 'failed' && (
             <div style={{
               backgroundColor: '#f8d7da',
@@ -226,21 +321,7 @@ function Orders() {
                 >
                   📦 Verificar Productos (Local)
                 </button>
-                <button
-                  style={{
-                    backgroundColor: '#28a745',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    padding: '8px 16px',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold'
-                  }}
-                  onClick={() => handleRetrySync(order.id || order.orderId)}
-                >
-                  🔄 Reintentar Sincronización
-                </button>
+                {/* Retry button removed - now in 3-dot menu above */}
               </div>
             </div>
           )}
@@ -296,7 +377,8 @@ function Orders() {
           )}
     </div>
         </div>
-      ))}
+      );
+      })}
   </div>
 
   {QRcode && (

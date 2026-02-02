@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import useFirestoreContext from '../../hooks/useFirestoreContext'
+import useIsAdmin from '../../hooks/useIsAdmin'
 import LoadingComponent from '../../components/Loading'
 import ImageUpload from '../../components/ImageUpload'
 import showSuggestionNotification from '../../utils/showSuggestionNotification'
@@ -14,6 +15,7 @@ function ProductFormModal({handleSubmit, newProduct, setNewProduct, setIsModalOp
   const [imageUrl, setImageUrl] = useState(null);
 
   const {getAllProducts} = useFirestoreContext();
+  const { isAdmin, isLoading: isAdminLoading } = useIsAdmin();
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -121,13 +123,28 @@ function ProductFormModal({handleSubmit, newProduct, setNewProduct, setIsModalOp
             existingImageUrl={imageUrl}
           />
 
-          {['price', 'details', 'stock'].map(field => (
+          {['price', 'details', 'stock'].map(field => {
+            // ✅ SECURITY: Only admin can modify stock
+            const isStockField = field === 'stock';
+            const isDisabled = isStockField && !isAdmin;
+
+            return (
             <div key={field} className="formGroup">
               <label className="label">
-                {field === 'price' ? 'Precio' : 
-                field === 'details' ? 'Detalles del producto' : 
-                field === 'stock' ? 'Cantidad en inventario' : 
+                {field === 'price' ? 'Precio' :
+                field === 'details' ? 'Detalles del producto' :
+                field === 'stock' ? 'Cantidad en inventario' :
                 field}
+                {isDisabled && (
+                  <span style={{
+                    marginLeft: '8px',
+                    fontSize: '12px',
+                    color: '#dc3545',
+                    fontWeight: 'bold'
+                  }}>
+                    🔒 Solo Admin
+                  </span>
+                )}
               </label>
               {field === 'details' ? (
                 <textarea
@@ -141,19 +158,39 @@ function ProductFormModal({handleSubmit, newProduct, setNewProduct, setIsModalOp
                   rows={3}
                 />
               ) : (
-                <input
-                  type={field === 'price' || field === 'stock' ? 'number' : 'text'}
-                  value={newProduct[field] || ''}
-                  onChange={(e) => setNewProduct({
-                    ...newProduct,
-                    [field]: e.target.value
-                  })}
-                  className="input"
-                  required
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={field === 'price' || field === 'stock' ? 'number' : 'text'}
+                    value={newProduct[field] || ''}
+                    onChange={(e) => setNewProduct({
+                      ...newProduct,
+                      [field]: e.target.value
+                    })}
+                    className="input"
+                    required={!isDisabled}
+                    disabled={isDisabled}
+                    style={{
+                      backgroundColor: isDisabled ? '#f5f5f5' : 'white',
+                      cursor: isDisabled ? 'not-allowed' : 'text',
+                      opacity: isDisabled ? 0.6 : 1
+                    }}
+                    title={isDisabled ? 'Solo el administrador puede modificar el stock' : ''}
+                  />
+                  {isDisabled && (
+                    <div style={{
+                      marginTop: '4px',
+                      fontSize: '11px',
+                      color: '#6c757d',
+                      fontStyle: 'italic'
+                    }}>
+                      El stock solo puede ser modificado por el administrador para prevenir irregularidades
+                    </div>
+                  )}
+                </div>
               )}
             </div>
-          ))}
+          );
+          })}
 
           <div className="buttonGroup">
              <button

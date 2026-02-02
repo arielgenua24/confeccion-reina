@@ -246,7 +246,7 @@ function SearchPage() {
                                     style={{ cursor: product.imageUrl ? 'zoom-in' : 'default' }}
                                 >
                                     {product.imageUrl ? (
-                                        <img src={product.imageUrl} alt={product.name} />
+                                        <img src={product.imageUrl} alt={product.name} loading="lazy" />
                                     ) : (
                                         <div className="product-item-placeholder">
                                             <Package size={24} />

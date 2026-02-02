@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import useFirestoreContext from '../../hooks/useFirestoreContext';
+import useIsAdmin from '../../hooks/useIsAdmin';
 import LoadingComponent from "../../components/Loading";
 import ImageUpload from "../../components/ImageUpload";
 import { format, set } from 'date-fns';
@@ -17,6 +18,7 @@ function Product() {
   const [isLoading, setIsLoading] = useState(false);
 
   const { getProduct, updateProduct, deleteProduct } = useFirestoreContext();
+  const { isAdmin, isLoading: isAdminLoading } = useIsAdmin();
 
   const [name, setName] = useState(product.name);
   const [price, setPrice] = useState(product.price);
@@ -116,8 +118,43 @@ function Product() {
           />
 
           <div className="input-group">
-            <span>Cantidad total en stock</span>
-            <input type="number" className="product-input" placeholder={`Stock: ${product.stock}`} value={stock} onChange={handleInputChange(setStock)} />
+            <span>
+              Cantidad total en stock
+              {!isAdmin && (
+                <span style={{
+                  marginLeft: '8px',
+                  fontSize: '12px',
+                  color: '#dc3545',
+                  fontWeight: 'bold'
+                }}>
+                  🔒 Solo Admin
+                </span>
+              )}
+            </span>
+            <input
+              type="number"
+              className="product-input"
+              placeholder={`Stock: ${product.stock}`}
+              value={stock}
+              onChange={handleInputChange(setStock)}
+              disabled={!isAdmin}
+              style={{
+                backgroundColor: !isAdmin ? '#f5f5f5' : 'white',
+                cursor: !isAdmin ? 'not-allowed' : 'text',
+                opacity: !isAdmin ? 0.6 : 1
+              }}
+              title={!isAdmin ? 'Solo el administrador puede modificar el stock' : ''}
+            />
+            {!isAdmin && (
+              <div style={{
+                marginTop: '4px',
+                fontSize: '11px',
+                color: '#6c757d',
+                fontStyle: 'italic'
+              }}>
+                El stock solo puede ser modificado por el administrador para prevenir irregularidades
+              </div>
+            )}
           </div>
 
           {changes ? (

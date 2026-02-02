@@ -27,6 +27,7 @@ const SuccededOrder = lazy(() => import('./pages/Succeded-order'));
 const ProductVerification = lazy(() => import('./pages/ProductsVerification'));
 const LocalOrderVerification = lazy(() => import('./pages/LocalOrderVerification'));
 const Inbox = lazy(() => import('./pages/inbox'));
+const EarningsDetails = lazy(() => import('./pages/inbox/EarningsDetails'));
 const Home = lazy(() => import('./pages/Home'));
 const Login = lazy(() => import('./pages/Login'));
 const Product = lazy(() => import('./pages/Products'));
@@ -50,6 +51,7 @@ function AppRouter() {
     { path: '/qrsearch', element: <QrSearchHandler /> },
     { path: '/succeeded-order/:id', element: <SuccededOrder /> },
     { path: '/inbox', element: <Inbox /> },
+    { path: '/inbox/earnings/:period', element: <EarningsDetails /> },
     { path: '/login', element: <Login /> },
     { path: '/migration-runner', element: <MigrationRunner /> },
     { path: '/sync-debug', element: <SyncDebug /> },

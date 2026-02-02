@@ -309,6 +309,7 @@ const Inventory = () => {
                     src={product.imageUrl}
                     alt={product.name}
                     className="productImage"
+                    loading="lazy"
                   />
                 </div>
               )}

@@ -133,6 +133,28 @@ const ProductVerification = () => {
           <h3>Codigo del producto: {product.productData.productCode}</h3>
           {orderEstado == 'listo para despachar' ? (<div className="verification-complete">
             <div className="product-details">
+              {/* Product Image - Dispatch Mode */}
+              {product.productData?.imageUrl && (
+                <div style={{
+                  marginBottom: '1rem',
+                  display: 'flex',
+                  justifyContent: 'center'
+                }}>
+                  <img
+                    src={product.productData.imageUrl}
+                    alt={product.productData.name}
+                    loading="lazy"
+                    style={{
+                      width: '150px',
+                      height: '150px',
+                      objectFit: 'cover',
+                      borderRadius: '8px',
+                      border: '2px solid #28a745'
+                    }}
+                  />
+                </div>
+              )}
+
               <p className="stock-info">
                 Total verificado: <span>{product.stock} unidades</span>
               </p>
@@ -167,6 +189,28 @@ const ProductVerification = () => {
           </div>)
             : (
               <div>
+                {/* Product Image - Verification Mode */}
+                {product.productSnapshot?.imageUrl && (
+                  <div style={{
+                    marginBottom: '1rem',
+                    display: 'flex',
+                    justifyContent: 'center'
+                  }}>
+                    <img
+                      src={product.productSnapshot.imageUrl}
+                      alt={product.productSnapshot.name}
+                      loading="lazy"
+                      style={{
+                        width: '150px',
+                        height: '150px',
+                        objectFit: 'cover',
+                        borderRadius: '8px',
+                        border: '2px solid #e0e0e0'
+                      }}
+                    />
+                  </div>
+                )}
+
                 <p>
                   Verificados: <span>{product.verified}</span> de {product.stock}
                 </p>
