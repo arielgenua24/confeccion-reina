@@ -29,14 +29,40 @@ const compressImage = (file) => {
  * This keeps the private key secure on the server
  */
 const getAuthParams = async () => {
-  const authEndpoint = window.location.hostname === "localhost"
-    ? "http://localhost:3001/api/auth"
-    : "/api/auth";
+  // Smart endpoint detection:
+  // 1. If VITE_IMAGEKIT_AUTH_ENDPOINT is set, use it
+  // 2. If accessing via localhost, use localhost:3001
+  // 3. If accessing via ngrok or other network, use same origin + /api/auth
+
+  let authEndpoint;
+
+  if (import.meta.env.VITE_IMAGEKIT_AUTH_ENDPOINT) {
+    // Use environment variable if explicitly set
+    authEndpoint = import.meta.env.VITE_IMAGEKIT_AUTH_ENDPOINT;
+  } else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+    // On localhost, use the local API server
+    authEndpoint = "http://localhost:3001/api/auth";
+  } else {
+    // On ngrok or other network access, use same origin
+    authEndpoint = `${window.location.origin}/api/auth`;
+  }
+
+  console.log('Using auth endpoint:', authEndpoint);
 
   const response = await fetch(authEndpoint);
   if (!response.ok) {
-    throw new Error('Failed to get authentication parameters');
+    const errorText = await response.text();
+    console.error('Auth endpoint error:', errorText);
+    throw new Error(`Failed to get authentication parameters: ${response.status} ${response.statusText}`);
   }
+
+  const contentType = response.headers.get('content-type');
+  if (!contentType || !contentType.includes('application/json')) {
+    const errorText = await response.text();
+    console.error('Non-JSON response received:', errorText);
+    throw new Error('Auth endpoint returned non-JSON response. Check API server is running.');
+  }
+
   return await response.json();
 };
 

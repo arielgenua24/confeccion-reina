@@ -127,7 +127,7 @@ const Cart = () => {
               className="cart-checkout-btn"
               onClick={() => handleSubmit()}
             >
-              Finalizar Pedido • {formatPrice(totalPrice)}
+              Finalizar Pedido
             </button>
           </>
         ) : (
