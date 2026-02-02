@@ -25,6 +25,7 @@ const SelectProducts = lazy(() => import('./pages/Select-products'));
 const SelectProductAmount = lazy(() => import('./modals/SelectProductAmount'));
 const SuccededOrder = lazy(() => import('./pages/Succeded-order'));
 const ProductVerification = lazy(() => import('./pages/ProductsVerification'));
+const LocalOrderVerification = lazy(() => import('./pages/LocalOrderVerification'));
 const Inbox = lazy(() => import('./pages/inbox'));
 const Home = lazy(() => import('./pages/Home'));
 const Login = lazy(() => import('./pages/Login'));
@@ -42,6 +43,7 @@ function AppRouter() {
     { path: '/product/:id', element: <Product /> },
     { path: '/orders', element: <Orders /> },
     { path: '/ProductsVerification/:orderId', element: <ProductVerification /> },
+    { path: '/local-order-verification/:orderId', element: <LocalOrderVerification /> },
     { path: '/new-order', element: <NewOrder /> },
     { path: '/Select-products', element: <SelectProducts /> },
     { path: '/select-product-amount/:id', element: <SelectProductAmount /> },

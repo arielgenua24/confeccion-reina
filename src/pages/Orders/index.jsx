@@ -1,5 +1,6 @@
 import useFirestoreContext from '../../hooks/useFirestoreContext'
 import useHybridOrders from '../../hooks/useHybridOrders'
+import useLocalOrders from '../../hooks/useLocalOrders'
 import LoadingComponent from '../../components/Loading'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
@@ -20,6 +21,7 @@ function Orders() {
 
   const { deleteOrder } = useFirestoreContext()
   const { getAllOrders } = useHybridOrders()
+  const { syncOrder } = useLocalOrders()
 
   const { setOrdersState } = useOrder();
 
@@ -43,14 +45,28 @@ function Orders() {
   console.log('📊 All orders (local + Firestore):', orders)
 
   const handleDelete = async (order) => {
-   
+
     if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
       setIsLoading(true)
       setIsNewData(!isNewData)
       await deleteOrder(order.id);
       setIsLoading(false)
     }
-   
+
+  }
+
+  const handleRetrySync = async (orderId) => {
+    if (window.confirm('¿Reintentar sincronización de esta orden?')) {
+      setIsLoading(true)
+      const success = await syncOrder(orderId)
+      if (success) {
+        alert('✅ Orden añadida a la cola de sincronización. Se procesará en breve.')
+        setIsNewData(!isNewData) // Refresh orders list
+      } else {
+        alert('❌ Error al reintentar sincronización. Por favor intenta de nuevo.')
+      }
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -154,6 +170,81 @@ function Orders() {
             </div>
           )}
 
+          {/* ✅ NEW: Failed sync status */}
+          {order.syncStatus === 'failed' && (
+            <div style={{
+              backgroundColor: '#f8d7da',
+              border: '2px solid #dc3545',
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '10px'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginBottom: '8px'
+              }}>
+                <span style={{
+                  display: 'inline-block',
+                  width: '12px',
+                  height: '12px',
+                  borderRadius: '50%',
+                  backgroundColor: '#dc3545'
+                }}></span>
+                <span style={{ fontSize: '14px', color: '#721c24', fontWeight: 'bold' }}>
+                  ❌ Error en la sincronización
+                </span>
+              </div>
+              {order.lastError && (
+                <div style={{
+                  fontSize: '12px',
+                  color: '#721c24',
+                  marginBottom: '10px',
+                  fontStyle: 'italic'
+                }}>
+                  Error: {order.lastError}
+                </div>
+              )}
+              <div style={{
+                display: 'flex',
+                gap: '10px',
+                flexWrap: 'wrap'
+              }}>
+                <button
+                  style={{
+                    backgroundColor: '#007bff',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '8px 16px',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
+                  }}
+                  onClick={() => navigate(`/local-order-verification/${order.id || order.orderId}`)}
+                >
+                  📦 Verificar Productos (Local)
+                </button>
+                <button
+                  style={{
+                    backgroundColor: '#28a745',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '8px 16px',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
+                  }}
+                  onClick={() => handleRetrySync(order.id || order.orderId)}
+                >
+                  🔄 Reintentar Sincronización
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="order-header">
             { order.estado === 'listo para despachar' ?  (<div>
             <span style={{ backgroundColor: '#0FCA37', color: '#fff', padding: '0.5rem', borderRadius: '0.25rem' }}>
@@ -180,26 +271,29 @@ function Orders() {
             <p><strong>Teléfono:</strong> {order.telefono}</p>
           </div>
           <div className="verify-products">
-          <button
-            className="verify-button"
-            onClick={() => navigate(`/ProductsVerification/${order.id}/?orderEstado=${order.estado}`)}
-            disabled={order.syncStatus === 'pending' || order.syncStatus === 'syncing'}
-            style={{
-              opacity: (order.syncStatus === 'pending' || order.syncStatus === 'syncing') ? 0.5 : 1,
-              cursor: (order.syncStatus === 'pending' || order.syncStatus === 'syncing') ? 'not-allowed' : 'pointer'
-            }}
-            title={
-              order.syncStatus === 'pending'
-                ? 'Esperando sincronización con Firestore'
-                : order.syncStatus === 'syncing'
-                ? 'Sincronizando...'
-                : ''
-            }
-          >
-            {order.syncStatus === 'pending' || order.syncStatus === 'syncing'
-              ? '⏳ Sincronizando...'
-              : 'Verificar Productos'}
-          </button>
+          {/* Only show this button for synced orders (not failed) */}
+          {order.syncStatus !== 'failed' && (
+            <button
+              className="verify-button"
+              onClick={() => navigate(`/ProductsVerification/${order.id}/?orderEstado=${order.estado}`)}
+              disabled={order.syncStatus === 'pending' || order.syncStatus === 'syncing'}
+              style={{
+                opacity: (order.syncStatus === 'pending' || order.syncStatus === 'syncing') ? 0.5 : 1,
+                cursor: (order.syncStatus === 'pending' || order.syncStatus === 'syncing') ? 'not-allowed' : 'pointer'
+              }}
+              title={
+                order.syncStatus === 'pending'
+                  ? 'Esperando sincronización con Firestore'
+                  : order.syncStatus === 'syncing'
+                  ? 'Sincronizando...'
+                  : ''
+              }
+            >
+              {order.syncStatus === 'pending' || order.syncStatus === 'syncing'
+                ? '⏳ Sincronizando...'
+                : 'Verificar Productos'}
+            </button>
+          )}
     </div>
         </div>
       ))}

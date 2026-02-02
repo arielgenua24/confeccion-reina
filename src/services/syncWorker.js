@@ -127,18 +127,28 @@ class SyncWorker {
         lastAttemptAt: new Date().toISOString()
       });
 
+      // ✅ ADD TIMEOUT: If sync takes longer than 30 seconds, mark as failed
+      const SYNC_TIMEOUT_MS = 30000; // 30 seconds
+
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Sync timeout: took longer than 30 seconds')), SYNC_TIMEOUT_MS);
+      });
+
       let result;
-      switch (type) {
-        case 'sync_order':
-          result = await this.syncOrder(payload);
-          break;
-        case 'sync_product_update':
-          result = await this.syncProductUpdate(payload);
-          break;
-        default:
-          console.warn(`Unknown task type: ${type}`);
-          result = { success: false, error: 'Unknown task type' };
-      }
+      const syncPromise = (async () => {
+        switch (type) {
+          case 'sync_order':
+            return await this.syncOrder(payload);
+          case 'sync_product_update':
+            return await this.syncProductUpdate(payload);
+          default:
+            console.warn(`Unknown task type: ${type}`);
+            return { success: false, error: 'Unknown task type' };
+        }
+      })();
+
+      // Race between sync and timeout
+      result = await Promise.race([syncPromise, timeoutPromise]);
 
       if (result.success) {
         // Mark task as completed
@@ -235,11 +245,11 @@ class SyncWorker {
         // The order of operations in a transaction must be:
         // 1. All reads (transaction.get)
         // 2. All writes (transaction.set, transaction.update)
-        
+
         // ============================================
         // PHASE 1: ALL READS FIRST
         // ============================================
-        
+
         // Step A: Collect all products that need stock updates
         const productsToUpdate = [];
         for (const product of order.products) {
@@ -263,8 +273,7 @@ class SyncWorker {
           });
         }
 
-        // Step C: Validate and calculate new stocks (no reads or writes, just calculations)
-        const stockUpdates = [];
+        // Step C: Validate stocks (no reads or writes, just validation)
         for (const { snap, productData } of productSnapshots) {
           if (!snap.exists()) {
             console.error(`❌ Product ${productData.productId} does not exist in Firestore!`);
@@ -273,31 +282,23 @@ class SyncWorker {
 
           const currentStock = Number(snap.data().stock) || 0;
           const delta = Number(productData.delta);
-          const newStock = currentStock + delta;
+          const projectedStock = currentStock + delta;
 
-          console.log(`📊 Stock calculation for ${productData.name}:`);
+          console.log(`📊 Stock validation for ${productData.name}:`);
           console.log(`   Firestore current: ${currentStock}`);
           console.log(`   Delta to apply: ${delta}`);
-          console.log(`   New stock: ${newStock}`);
+          console.log(`   Projected stock: ${projectedStock}`);
 
-          if (newStock < 0) {
-            console.error(`❌ Stock would go negative for ${productData.name}: ${currentStock} + ${delta} = ${newStock}`);
+          if (projectedStock < 0) {
+            console.error(`❌ Stock would go negative for ${productData.name}: ${currentStock} + ${delta} = ${projectedStock}`);
             throw new Error(`Insufficient stock in Firestore for ${productData.name}`);
           }
-
-          stockUpdates.push({
-            ref: productData.productRef,
-            newStock: newStock,
-            name: productData.name,
-            currentStock: currentStock,
-            delta: delta
-          });
         }
 
         // ============================================
         // PHASE 2: ALL WRITES AFTER ALL READS
         // ============================================
-        
+
         // Step D: Create order in Firestore (WRITE)
         const firestoreOrderData = {
           // New format
@@ -321,14 +322,19 @@ class SyncWorker {
 
         transaction.set(orderRef, firestoreOrderData);
 
-        // Step E: WRITE ALL stock updates
-        for (const update of stockUpdates) {
-          transaction.update(update.ref, {
-            stock: update.newStock,
+        // Step E: WRITE ALL stock updates using ATOMIC INCREMENT
+        // ✅ This prevents race conditions when multiple orders update the same product
+        for (const { snap, productData } of productSnapshots) {
+          const currentStock = Number(snap.data().stock) || 0;
+          const delta = Number(productData.delta);
+          const projectedStock = currentStock + delta;
+
+          transaction.update(productData.productRef, {
+            stock: increment(productData.delta),  // ✅ ATOMIC - safe for concurrent updates
             updatedAt: serverTimestamp()
           });
 
-          console.log(`✅ Firestore stock updated: ${update.currentStock} → ${update.newStock} (${update.delta})`);
+          console.log(`✅ Atomic stock update: ${currentStock} → ${projectedStock} (delta: ${productData.delta})`);
         }
 
         return { orderId };
@@ -389,6 +395,14 @@ class SyncWorker {
       };
     } catch (error) {
       console.error('❌ Failed to sync order:', error);
+
+      // ✅ Mark order as failed in IndexedDB so UI can show error
+      await updatePendingOrder(orderId, {
+        syncStatus: 'failed',
+        lastError: error.message,
+        failedAt: new Date().toISOString()
+      });
+
       return {
         success: false,
         error: error.message

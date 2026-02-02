@@ -104,7 +104,7 @@ const useLocalOrders = () => {
         const errorMsg = stockValidation.errors
           .map(e => `${e.productName}: ${e.error}`)
           .join(', ');
-        throw new Error(`Stock validation failed: ${errorMsg}`);
+        throw new Error(`Falla en validación de stock: ${errorMsg}`);
       }
 
       // Step 2: Generate order ID and code
