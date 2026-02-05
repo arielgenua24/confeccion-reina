@@ -2,6 +2,17 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import useFirestoreContext from "../../hooks/useFirestoreContext";
 
+// Rutas públicas que NO requieren autenticación
+const PUBLIC_ROUTES = [
+    '/login',
+    '/mi-compra'  // Página pública para que clientes vean su compra
+];
+
+// Función para verificar si una ruta es pública
+const isPublicRoute = (pathname) => {
+    return PUBLIC_ROUTES.some(route => pathname.startsWith(route));
+};
+
 // eslint-disable-next-line react/prop-types
 function AuthRoute({ children }) {
     const { user, getAdmin } = useFirestoreContext();
@@ -21,12 +32,22 @@ function AuthRoute({ children }) {
 
         checkAdmin(); // Llamamos a la función asíncrona
 
+        // Si es ruta pública, no verificar autenticación
+        if (isPublicRoute(location.pathname)) {
+            return;
+        }
+
         if (!user && location.pathname !== "/login") {
             navigate("/login");
         } else if (user && location.pathname === "/login") {
             navigate("/home");
         }
     }, [user, location.pathname, navigate, getAdmin]); // Añadimos getAdmin a las dependencias
+
+    // Si es ruta pública, renderizar directamente
+    if (isPublicRoute(location.pathname)) {
+        return children;
+    }
 
     if (!user && location.pathname !== "/login") {
         return null; // No renderiza rutas protegidas si no está autenticado

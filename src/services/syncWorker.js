@@ -16,13 +16,11 @@ import {
 
 import { db as firestore } from '../firebaseSetUp';
 import {
-  collection,
   doc,
   writeBatch,
   serverTimestamp,
   getDoc,
-  runTransaction,
-  increment
+  runTransaction
 } from 'firebase/firestore';
 
 class SyncWorker {
@@ -322,19 +320,18 @@ class SyncWorker {
 
         transaction.set(orderRef, firestoreOrderData);
 
-        // Step E: WRITE ALL stock updates using ATOMIC INCREMENT
-        // ✅ This prevents race conditions when multiple orders update the same product
+        // Step E: WRITE ALL stock updates using the projected stock calculated in JS
         for (const { snap, productData } of productSnapshots) {
           const currentStock = Number(snap.data().stock) || 0;
           const delta = Number(productData.delta);
           const projectedStock = currentStock + delta;
 
           transaction.update(productData.productRef, {
-            stock: increment(productData.delta),  // ✅ ATOMIC - safe for concurrent updates
+            stock: projectedStock,
             updatedAt: serverTimestamp()
           });
 
-          console.log(`✅ Atomic stock update: ${currentStock} → ${projectedStock} (delta: ${productData.delta})`);
+          console.log(`✅ Stock update: ${currentStock} → ${projectedStock} (delta: ${delta})`);
         }
 
         return { orderId };

@@ -1,7 +1,7 @@
 .orders-container {
     padding: 20px;
   }
-  
+
   .orders-list {
     display: flex;
     flex-wrap: wrap;
@@ -10,42 +10,172 @@
     gap: 24px;
     padding: 24px;
   }
-  
+
   .order-card {
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 15px;
+    border: 1px solid #e5e5ea;
+    border-radius: 16px;
+    padding: 16px;
     background-color: #fff;
     margin: 0;
-    /* Añadimos min-width para evitar tarjetas muy estrechas */
-    max-width: 290px;
-    /* Quitamos el max-width fijo para permitir el diseño flexible */
+    max-width: 320px;
     flex-grow: 1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.2s ease;
   }
-  
+
+  .order-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Order Card Header - Nueva estructura */
+  .order-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f0f0f0;
+    gap: 12px;
+  }
+
+  .share-buttons-container {
+    flex-shrink: 0;
+  }
+
+  .order-actions-right {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  /* Menu button */
+  .menu-btn {
+    background-color: #f5f5f7;
+    color: #1d1d1f;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    border: 1px solid #e5e5ea;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .menu-btn:hover {
+    background-color: #e8e8ed;
+  }
+
+  /* Floating menu */
+  .floating-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 6px;
+    background-color: #fff;
+    border: 1px solid #e5e5ea;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    z-index: 1000;
+    min-width: 220px;
+    overflow: hidden;
+  }
+
+  .menu-item {
+    width: 100%;
+    text-align: left;
+    padding: 14px 16px;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    color: #1d1d1f;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s ease;
+  }
+
+  .menu-item:hover {
+    background-color: #f5f5f7;
+  }
+
+  /* Delete button */
+  .delete-btn {
+    background-color: #fff;
+    color: #ff3b30;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #ff3b30;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .delete-btn:hover {
+    background-color: #ff3b30;
+    color: #fff;
+  }
+
   .order-header {
     border-bottom: 1px solid #eee;
     margin-bottom: 10px;
     padding-bottom: 10px;
   }
-  
+
   .order-details {
     margin-bottom: 15px;
   }
-  
+
+  .order-details p {
+    margin: 6px 0;
+    font-size: 14px;
+    color: #3c3c43;
+  }
+
+  .order-details strong {
+    color: #1d1d1f;
+  }
+
   .products-list {
     background-color: #f9f9f9;
     padding: 10px;
     border-radius: 4px;
   }
-  
+
   .product-item {
     padding: 10px;
     border-bottom: 1px solid #eee;
   }
-  
+
   .product-item:last-child {
     border-bottom: none;
+  }
+
+  /* Verify button mejorado */
+  .verify-button {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #0A84FF 0%, #0066CC 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .verify-button:hover:not(:disabled) {
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+  }
+
+  .verify-button:disabled {
+    background: #c7c7cc;
+    cursor: not-allowed;
   }
 
   /* Animations for sync status indicators */
@@ -64,5 +194,14 @@
     }
     100% {
       transform: rotate(360deg);
+    }
+  }
+
+  @keyframes jump {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(-3px);
     }
   }

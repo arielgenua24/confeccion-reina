@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import useLocalOrders from '../../hooks/useLocalOrders';
 import checkIcon from '../../assets/icons/icons8-check-96.png';
-import qrIcon from '../../assets/icons/icons8-qr-100.png';
-import QRmodal from '../../modals/Qrmodal';
+import ClientShareActions from '../../components/ClientShareActions';
+import './styles.css';
 
 
 function SuccededOrder() {
@@ -11,7 +11,6 @@ function SuccededOrder() {
     const { id } = useParams();
     const { getOrderById } = useLocalOrders();
     const [orderData, setOrderData] = useState(null);
-    const [qrCode, setQrCode] = useState("");
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -109,76 +108,22 @@ function SuccededOrder() {
               : 'Pedido creado. Se sincronizará automáticamente cuando haya conexión.'}
           </h2>
 
-          <div style={{
-            backgroundColor: '#f2f2f2',
-            display: 'flex',
-            borderRadius: '20px',
-            overflow: 'hidden',
-            margin: '0 20px'
-          }}>
-            <div style={{
-              flex: 1,
-              padding: '15px',
-              borderRight: '1px solid #0990FF',
-              textAlign: 'center'
-            }}>
-              <span style={{ fontWeight: 'bold' }}>Código del pedido</span>
-              <p style={{ margin: '5px 0', color: '#0990FF', fontSize: '18px' }}>
-                {orderData.orderCode}
-              </p>
-            </div>
-            
-            <div style={{
-              padding: '15px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <button 
-                onClick={() => {
-                  setQrCode(orderData)
-                  console.log(orderData.orderCode)
-                
-                }}
-                style={{
-                backgroundColor: '#F1F7FF',
-                border: '1px solid #0990FF',
-                borderRadius: '20px',
-                color: '#0990FF',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                padding: '10px 15px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px'
-              }}>
-                VER QR
-                <img src={qrIcon} alt="Qr icon" style={{
-                  width: '47px',
-                  height: '47px',
-                }} />
-              </button>
-            </div>
+          {/* Código del pedido */}
+          <div className="order-code-card">
+            <span className="order-code-label">Código del pedido</span>
+            <span className="order-code-value">{orderData.orderCode}</span>
           </div>
-    
-          <button 
+
+          {/* Sección para compartir con el cliente */}
+          <ClientShareActions order={orderData} variant="full" />
+
+          <button
           onClick={() => {
             navigate('/orders');
           }}
-          style={{
-            position: 'fixed',
-            bottom: '0px',
-            left: 0,
-            width: '100%',
-            backgroundColor: '#0E6FFF',
-            color: 'white',
-            border: 'none',
-            padding: '15px',
-            fontSize: '16px'
-          }}>
+          className="go-to-orders-btn">
             OK, IR A PEDIDOS
           </button>
-          {qrCode && <QRmodal QRcode={orderData} setQRcode={setQrCode} orderCode={true} />}
 
         </div>
       );

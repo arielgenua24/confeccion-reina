@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
 import QRmodal from '../../modals/Qrmodal';
 import QRButton from '../../components/QrGenerateBtn';
+import ClientShareActions from '../../components/ClientShareActions';
 import qrIcon from '../../assets/icons/icons8-qr-100.png';
 import { useOrder } from '../../hooks/useOrder';
 import OrderSearch from '../../components/OrderSearch';
@@ -123,88 +124,57 @@ function Orders() {
 
         return (
         <div key={order.id} className="order-card">
-          <div style={{width: '100%', display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', position: 'relative'}}>
-                {/* Show QR button ONLY for synced orders */}
-                {!isNotSynced && (
-                  <QRButton
-                    product={order}
-                    onQRGenerate={setQRcode}
-                  />
-                )}
+          {/* Header con acciones */}
+          <div className="order-card-header">
+            {/* Botones de compartir con cliente - SIEMPRE visibles (usan IndexedDB) */}
+            <div className="share-buttons-container" style={{ position: 'relative' }}>
+              <ClientShareActions order={order} variant="compact" />
+            </div>
 
-                {/* Show 3-dot menu for pending/syncing/failed orders */}
-                {isNotSynced && (
-                  <div style={{ position: 'relative' }}>
-                    <button
-                      style={{
-                        backgroundColor: '#6c757d',
-                        color: '#fff',
-                        padding: '0.5rem 1rem',
-                        borderRadius: '0.25rem',
-                        fontSize: '20px',
-                        fontWeight: 'bold',
-                        border: 'none',
-                        cursor: 'pointer'
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleMenu(order.id || order.orderId);
-                      }}
-                    >
-                      ⋮
-                    </button>
+            {/* Acciones adicionales */}
+            <div className="order-actions-right">
+              {/* QR interno para verificación (solo synced) */}
+              {!isNotSynced && (
+                <QRButton
+                  product={order}
+                  onQRGenerate={setQRcode}
+                />
+              )}
 
-                    {/* Floating menu */}
-                    {isMenuOpen && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: '100%',
-                          left: '0',
-                          marginTop: '5px',
-                          backgroundColor: '#fff',
-                          border: '2px solid #dee2e6',
-                          borderRadius: '8px',
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                          zIndex: 1000,
-                          minWidth: '200px'
-                        }}
-                        onClick={(e) => e.stopPropagation()}
+              {/* Menú 3-dot para órdenes no sincronizadas */}
+              {isNotSynced && (
+                <div style={{ position: 'relative' }}>
+                  <button
+                    className="menu-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleMenu(order.id || order.orderId);
+                    }}
+                  >
+                    ⋮
+                  </button>
+
+                  {/* Floating menu */}
+                  {isMenuOpen && (
+                    <div className="floating-menu" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        className="menu-item"
+                        onClick={() => handleRetrySync(order.id || order.orderId)}
                       >
-                        <button
-                          style={{
-                            width: '100%',
-                            textAlign: 'left',
-                            padding: '12px 16px',
-                            border: 'none',
-                            backgroundColor: 'transparent',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            color: '#212529',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            transition: 'background-color 0.2s'
-                          }}
-                          onClick={() => handleRetrySync(order.id || order.orderId)}
-                          onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
-                          onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                        >
-                          🔄 Reintentar sincronización
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
+                        🔄 Reintentar sincronización
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <button
-                style={{backgroundColor: '#f44336', color: '#fff', padding: '0.5rem', borderRadius: '0.25rem'}}
-                onClick={() => {
-                  handleDelete(order)
-                }}
-              > Eliminar
+                className="delete-btn"
+                onClick={() => handleDelete(order)}
+              >
+                Eliminar
               </button>
-
+            </div>
           </div>
 
           {/* Sync Status Indicator */}

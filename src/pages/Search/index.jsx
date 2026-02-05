@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, ArrowLeft, X, Package, TrendingUp, Clock, Sparkles } from "lucide-react";
+import { Search, ArrowLeft, X, Package, Clock, Sparkles, ShoppingCart, Check } from "lucide-react";
 import useProducts from "../../hooks/useProducts";
 import { useOrder } from "../../hooks/useOrder";
 import ImageModal from "../../components/ImageModal";
@@ -15,11 +15,17 @@ function SearchPage() {
     const [quantities, setQuantities] = useState({});
     const [selectedImage, setSelectedImage] = useState(null);
     const [addedProducts, setAddedProducts] = useState({});
+    const [addToast, setAddToast] = useState({
+        visible: false,
+        productName: "",
+        quantity: 0,
+    });
     const inputRef = useRef(null);
+    const toastTimerRef = useRef(null);
 
     const navigate = useNavigate();
     const { searchProductsByNameOrCode, getProductsPaginated } = useProducts();
-    const { addItem } = useOrder();
+    const { addItem, cart, updateQuantity, findItem } = useOrder();
 
     // Focus input on mount
     useEffect(() => {
@@ -101,6 +107,14 @@ function SearchPage() {
     };
 
     const handleQuantityChange = useCallback((productId, delta, maxStock) => {
+        // If user touches quantity again, we assume they want to add again -> reset CTA to “Agregar”.
+        setAddedProducts(prev => {
+            if (!prev?.[productId]) return prev;
+            const next = { ...prev };
+            delete next[productId];
+            return next;
+        });
+
         setQuantities(prev => {
             const current = prev[productId] || 1;
             const newQuantity = Math.max(1, Math.min(current + delta, maxStock));
@@ -113,32 +127,54 @@ function SearchPage() {
 
         console.log('🛒 Adding to cart:', product.name, 'qty:', quantity);
 
-        addItem({
+        const cartItem = {
             product: product,
             quantity: quantity,
             selectedVariants: {
                 size: product.size || null,
                 color: product.color || null
             }
-        });
+
+        };
+
+        // IMPORTANT: In Search we want “last quantity wins” (override), not accumulate.
+        // If the item already exists, update its quantity instead of adding again.
+        const existingItem = findItem(cartItem);
+        if (existingItem) {
+            updateQuantity(cartItem, quantity);
+        } else {
+            addItem(cartItem);
+        }
 
         // Save search term
         if (searchTerm.trim()) {
-            const term = searchTerm.trim();
-            const updated = [term, ...recentSearches.filter(s => s !== term)].slice(0, 5);
-            setRecentSearches(updated);
-            localStorage.setItem('recentProductSearches', JSON.stringify(updated));
+            saveRecentSearch(searchTerm.trim());
         }
 
-        // Show added feedback
+        // Show added feedback (sticky until quantity changes)
         setAddedProducts(prev => ({ ...prev, [product.id]: true }));
-        setTimeout(() => {
-            setAddedProducts(prev => ({ ...prev, [product.id]: false }));
-        }, 2000);
 
-        // Reset quantity
-        setQuantities(prev => ({ ...prev, [product.id]: 1 }));
+        // Global toast feedback (immediate + hard to miss)
+        if (toastTimerRef.current) {
+            clearTimeout(toastTimerRef.current);
+        }
+        setAddToast({
+            visible: true,
+            productName: product?.name || "Producto",
+            quantity,
+        });
+        toastTimerRef.current = setTimeout(() => {
+            setAddToast(prev => ({ ...prev, visible: false }));
+        }, 2400);
+
+        // Intentionally do NOT reset quantity.
+        // Requirement: button should stay “Añadido” until user changes quantity again.
     };
+
+    const cartItemsCount = Array.isArray(cart) ? cart.length : 0;
+    const cartUnitsCount = Array.isArray(cart)
+        ? cart.reduce((acc, item) => acc + (Number(item?.quantity) || 0), 0)
+        : 0;
 
     const formatPrice = (price) => {
         return new Intl.NumberFormat('es-AR', {
@@ -160,6 +196,11 @@ function SearchPage() {
 
     return (
         <div className="search-page">
+            {/* A11y live region for cart feedback */}
+            <div className="sr-only" aria-live="polite" aria-atomic="true">
+                {addToast.visible ? `${addToast.productName} añadido al carrito. Cantidad: ${addToast.quantity}.` : ""}
+            </div>
+
             {/* Image Modal */}
             <ImageModal
                 isOpen={!!selectedImage}
@@ -238,7 +279,7 @@ function SearchPage() {
                         const isAdded = addedProducts[product.id];
 
                         return (
-                            <div key={product.id} className="product-list-item">
+                            <div key={product.id} className={`product-list-item ${isAdded ? 'just-added' : ''}`}>
                                 {/* Product Image */}
                                 <div
                                     className="product-item-image"
@@ -297,7 +338,17 @@ function SearchPage() {
                                         onClick={() => handleAddToCart(product)}
                                         disabled={isOutOfStock}
                                     >
-                                        {isAdded ? '✓ Agregado' : 'Agregar'}
+                                        {isAdded ? (
+                                            <>
+                                                <Check size={18} />
+                                                Añadido
+                                            </>
+                                        ) : (
+                                            <>
+                                                <ShoppingCart size={18} />
+                                                Agregar
+                                            </>
+                                        )}
                                     </button>
                                 </div>
                             </div>
@@ -308,7 +359,7 @@ function SearchPage() {
                     {searchTerm && !isSearching && searchResults.length === 0 && (
                         <div className="search-empty">
                             <Package size={48} strokeWidth={1.5} />
-                            <p>No encontramos productos para "{searchTerm}"</p>
+                            <p>No encontramos productos para &quot;{searchTerm}&quot;</p>
                             <span>Probá con otro nombre o código</span>
                         </div>
                     )}
@@ -326,6 +377,29 @@ function SearchPage() {
                 >
                     <Package size={18} />
                     Ir al carrito
+                    {cartItemsCount > 0 && (
+                        <span className="cart-badge" aria-label={`${cartUnitsCount} unidades en carrito`}>
+                            {cartUnitsCount}
+                        </span>
+                    )}
+                </button>
+            </div>
+
+            {/* Add-to-cart Toast */}
+            <div className={`add-toast ${addToast.visible ? 'visible' : ''}`} role="status" aria-live="polite">
+                <div className="add-toast-content">
+                    <div className="add-toast-icon">
+                        <Check size={18} />
+                    </div>
+                    <div className="add-toast-text">
+                        <div className="add-toast-title">Añadido al carrito</div>
+                        <div className="add-toast-subtitle">
+                            {addToast.productName} · x{addToast.quantity}
+                        </div>
+                    </div>
+                </div>
+                <button className="add-toast-action" onClick={() => navigate('/cart')}>
+                    Ver carrito
                 </button>
             </div>
         </div>
