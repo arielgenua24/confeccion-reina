@@ -1,17 +1,13 @@
 import { QrCode } from "lucide-react";
+import './styles.css';
 
 // eslint-disable-next-line react/prop-types
 const QRButton = ({ product, onQRGenerate, }) => {
   return (
     <div className={`QR-buttonContaine`}>
       <button
-        style={{
-          backgroundColor: "#fff",
-          border: "3px solid rgb(9, 144, 255)",
-          display: "flex",
-          alignItems: "center"
-        }}
         className="QR-qrButton"
+        type="button"
         onClick={() => onQRGenerate(product)}
       >
        <QrCode size="24" /> 

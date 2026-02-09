@@ -5,11 +5,9 @@ import LoadingComponent from '../../components/Loading';
 import { useParams, useSearchParams } from 'react-router-dom';
 import QrVerifyProduct from '../../components/QrVerifyProduct';
 import ProductVerificationStatus from '../../components/ProductVerificationStatus';
-import qrIcon from '../../assets/icons/icons8-qr-100.png';
 import { useNavigate } from 'react-router-dom';
 
 import './styles.css';
-import { set } from 'date-fns';
 
 const ProductVerification = () => {
   const navigate = useNavigate();
@@ -20,7 +18,6 @@ const ProductVerification = () => {
   const { orderId } = useParams();
   const [verifiedProducts, setVerifiedProducts] = useState(0);
   const [isLoading, setIsLoading] = useState(false)
-  const [totalAccount, setTotalAccount] = useState(0)
 
   const { updateOrder, getProductsByOrder } = useFirestoreContext();
   const { setOrdersState } = useOrder()
@@ -120,69 +117,61 @@ const ProductVerification = () => {
 
         </div>)}
 
-      <div className="final-total-wrapper">
-        <div className="final-total">
-          <span className="total-label">Total Final</span>
-          <span className="total-amount">${totalFinal.toLocaleString()} ✅</span>
+      <div className="pv-final-total-wrapper">
+        <div className="pv-final-total">
+          <span className="pv-total-label">Total Final</span>
+          <span className="pv-total-amount">${totalFinal.toLocaleString()} ✅</span>
         </div>
       </div>
 
       {products.map((product) => (
-        <div key={product.id} className="verification-product-item">
+        <div key={product.id} className="pv-product-item">
           <ProductVerificationStatus orderStatus={orderEstado} product={product} verifiedProducts={verifiedProducts} setVerifiedProducts={setVerifiedProducts} />
           <h3>Codigo del producto: {product.productData.productCode}</h3>
-          {orderEstado == 'listo para despachar' ? (<div className="verification-complete">
-            <div className="product-details">
+          {orderEstado == 'listo para despachar' ? (<div className="pv-verification-complete">
+            <div className="pv-product-details">
               {/* Product Image - Dispatch Mode */}
               {product.productData?.imageUrl && (
-                <div style={{
-                  marginBottom: '1rem',
-                  display: 'flex',
-                  justifyContent: 'center'
-                }}>
+                <div className="pv-image-wrap">
                   <img
                     src={product.productData.imageUrl}
                     alt={product.productData.name}
                     loading="lazy"
-                    style={{
-                      width: '150px',
-                      height: '150px',
-                      objectFit: 'cover',
-                      borderRadius: '8px',
-                      border: '2px solid #28a745'
-                    }}
+                    className="pv-product-image pv-dispatch-image"
                   />
                 </div>
               )}
 
-              <p className="stock-info">
+              <div className="pv-product-info">
+                <p className="pv-stock-info">
                 Total verificado: <span>{product.stock} unidades</span>
               </p>
-              <div className="product-specs">
-                <p>
-                  <strong>Producto:</strong> {product.productData.name}
-                </p>
-                <p>
-                  <strong>Detalles:</strong> {product.productData.details || 'Sin detalles'}
-                </p>
-                {product.selectedVariants?.color && (
+                <div className="pv-product-specs">
                   <p>
-                    <strong>Color:</strong> {product.selectedVariants.color}
+                    <strong>Producto:</strong> {product.productData.name}
                   </p>
-                )}
-                {product.selectedVariants?.size && (
                   <p>
-                    <strong>Talle:</strong> {product.selectedVariants.size}
+                    <strong>Detalles:</strong> {product.productData.details || 'Sin detalles'}
                   </p>
-                )}
-                <p>
-                  <strong>Precio:</strong> {product.productData.price}
-                </p>
-                <div className="total-price-container">
-                  <p className="total-price">
-                    <strong>Total:</strong>
-                    <span>${product.stock * product.productData.price}</span>
+                  {product.selectedVariants?.color && (
+                    <p>
+                      <strong>Color:</strong> {product.selectedVariants.color}
+                    </p>
+                  )}
+                  {product.selectedVariants?.size && (
+                    <p>
+                      <strong>Talle:</strong> {product.selectedVariants.size}
+                    </p>
+                  )}
+                  <p>
+                    <strong>Precio:</strong> {product.productData.price}
                   </p>
+                  <div className="pv-total-price-container">
+                    <p className="pv-total-price">
+                      <strong>Total:</strong>
+                      <span>${product.stock * product.productData.price}</span>
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -191,22 +180,12 @@ const ProductVerification = () => {
               <div>
                 {/* Product Image - Verification Mode */}
                 {product.productSnapshot?.imageUrl && (
-                  <div style={{
-                    marginBottom: '1rem',
-                    display: 'flex',
-                    justifyContent: 'center'
-                  }}>
+                  <div className="pv-image-wrap">
                     <img
                       src={product.productSnapshot.imageUrl}
                       alt={product.productSnapshot.name}
                       loading="lazy"
-                      style={{
-                        width: '150px',
-                        height: '150px',
-                        objectFit: 'cover',
-                        borderRadius: '8px',
-                        border: '2px solid #e0e0e0'
-                      }}
+                      className="pv-product-image"
                     />
                   </div>
                 )}
@@ -239,16 +218,16 @@ const ProductVerification = () => {
 
             )}
           {orderEstado !== 'listo para despachar' && (
-            <div className="verification-actions">
+            <div className="pv-verification-actions">
               <button
-                className='btn-verify manual'
+                className='pv-btn pv-btn-manual'
                 onClick={() => handleVerify(product.id)}
                 disabled={product.verified >= product.stock}
               >
                 Verificar uno manualmente
               </button>
               <button
-                className='btn-verify reset'
+                className='pv-btn pv-btn-reset'
                 onClick={() => handleReset(product.id)}
               >
                 Empezar de cero la verificación

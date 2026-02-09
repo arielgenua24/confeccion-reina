@@ -38,6 +38,11 @@ function BackNav() {
       'select-product-amount': 'Cantidad de Productos',
     };
     
+    // Hide navbar on public customer-facing routes and login
+    if (location.pathname.startsWith('/mi-compra')) {
+        return null;
+    }
+
     if(location.pathname !== '/' && location.pathname !== '/home') {
         return (
             <nav style={navStyle}>

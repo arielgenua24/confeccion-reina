@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useOrder } from '../../hooks/useOrder';
 import useLocalOrders from '../../hooks/useLocalOrders';
 import OrderCard from '../../components/OrderCard';
@@ -42,6 +42,35 @@ const Cart = () => {
     }
   }, [cart]);
 
+  // Group cart items by product ID to detect shared-stock conflicts
+  const groupedProducts = useMemo(() => {
+    const groups = {};
+    products.forEach((item) => {
+      const product = item.product || item.item;
+      const id = product?.id;
+      if (!id) return;
+      if (!groups[id]) {
+        groups[id] = {
+          name: product.name,
+          stock: Number(product.stock || 0),
+          productId: id,
+          items: [],
+          totalRequested: 0,
+        };
+      }
+      groups[id].items.push(item);
+      groups[id].totalRequested += Number(item.quantity || 1);
+    });
+    return groups;
+  }, [products]);
+
+  // Check if any group exceeds stock (single items OR grouped variants)
+  const hasStockConflict = useMemo(() => {
+    return Object.values(groupedProducts).some(
+      (group) => group.totalRequested > group.stock
+    );
+  }, [groupedProducts]);
+
   const handleSubmit = async () => {
     setIsLoading(true);
     setError(false);
@@ -52,6 +81,24 @@ const Cart = () => {
       setError(true);
       setErrorMessage('El carrito está vacío');
       setIsLoading(false);
+      return null;
+    }
+
+    // Validate aggregated stock before submitting
+    const stockErrors = Object.values(groupedProducts)
+      .filter((g) => g.totalRequested > g.stock)
+      .map(
+        (g) =>
+          `"${g.name}": pediste ${g.totalRequested} pero solo hay ${g.stock} en stock`
+      );
+
+    if (stockErrors.length > 0) {
+      setError(true);
+      setErrorMessage(
+        `Stock insuficiente:\n${stockErrors.join('\n')}\n\nAjustá las cantidades antes de finalizar.`
+      );
+      setIsLoading(false);
+      window.scrollTo(0, 0);
       return null;
     }
 
@@ -100,19 +147,95 @@ const Cart = () => {
 
       <h2 className="cart-section-title">Detalles del pedido</h2>
 
-      <ul className="cart-items-list">
-        {products.map((item, index) => {
-          const product = item.product || item.item;
-          const variants = item.selectedVariants || { size: item.item?.size || null, color: item.item?.color || null };
-          return <OrderCard
-            key={index}
-            product={product}
-            quantity={item.quantity}
-            selectedVariants={variants}
-            onImageClick={(url) => setSelectedImage(url)}
-          />
+      {/* Render grouped products */}
+      <div className="cart-items-list">
+        {Object.values(groupedProducts).map((group) => {
+          const isGrouped = group.items.length > 1;
+          const overStock = group.totalRequested > group.stock;
+
+          if (!isGrouped) {
+            // Single item
+            const item = group.items[0];
+            const product = item.product || item.item;
+            const variants = item.selectedVariants || { size: null, color: null };
+            return (
+              <div key={`${product.id}-${variants.size}-${variants.color}`}>
+                {overStock && (
+                  <div className="cart-stock-control cart-stock-control--danger" style={{ marginBottom: 8 }}>
+                    <div className="cart-stock-control-row">
+                      <span>Pediste:</span>
+                      <strong>{group.totalRequested}</strong>
+                    </div>
+                    <div className="cart-stock-control-row">
+                      <span>En stock:</span>
+                      <strong>{group.stock}</strong>
+                    </div>
+                    <div className="cart-stock-control-warning">
+                      Estás pidiendo {group.totalRequested - group.stock} más de lo disponible. Ajustá la cantidad.
+                    </div>
+                  </div>
+                )}
+                <OrderCard
+                  product={product}
+                  quantity={item.quantity}
+                  selectedVariants={variants}
+                  onImageClick={(url) => setSelectedImage(url)}
+                />
+              </div>
+            );
+          }
+
+          // Multiple variants of the same product — group them
+          return (
+            <div
+              key={group.productId}
+              className={`cart-stock-group ${overStock ? 'cart-stock-group--danger' : 'cart-stock-group--ok'}`}
+            >
+              <div className="cart-stock-group-header">
+                <span className="cart-stock-group-name">{group.name}</span>
+                <span className="cart-stock-group-badge">
+                  {group.items.length} variantes
+                </span>
+              </div>
+
+              {/* Horizontal scroll of variant cards */}
+              <div className="cart-stock-group-scroll">
+                {group.items.map((item) => {
+                  const product = item.product || item.item;
+                  const variants = item.selectedVariants || { size: null, color: null };
+                  return (
+                    <div className="cart-stock-group-card" key={`${product.id}-${variants.size}-${variants.color}`}>
+                      <OrderCard
+                        product={product}
+                        quantity={item.quantity}
+                        selectedVariants={variants}
+                        onImageClick={(url) => setSelectedImage(url)}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Stock control bar */}
+              <div className={`cart-stock-control ${overStock ? 'cart-stock-control--danger' : 'cart-stock-control--ok'}`}>
+                <div className="cart-stock-control-row">
+                  <span>Agregados en total:</span>
+                  <strong>{group.totalRequested}</strong>
+                </div>
+                <div className="cart-stock-control-row">
+                  <span>En stock:</span>
+                  <strong>{group.stock}</strong>
+                </div>
+                {overStock && (
+                  <div className="cart-stock-control-warning">
+                    Estás pidiendo {group.totalRequested - group.stock} más de lo disponible. Ajustá las cantidades.
+                  </div>
+                )}
+              </div>
+            </div>
+          );
         })}
-      </ul>
+      </div>
 
       {/* Airbnb Style Sticky Footer */}
       <div className="cart-footer">
@@ -126,8 +249,10 @@ const Cart = () => {
             <button
               className="cart-checkout-btn"
               onClick={() => handleSubmit()}
+              disabled={hasStockConflict}
+              title={hasStockConflict ? 'Hay conflictos de stock, ajustá las cantidades' : ''}
             >
-              Finalizar Pedido
+              {hasStockConflict ? 'Revisar stock' : 'Finalizar Pedido'}
             </button>
           </>
         ) : (
@@ -144,7 +269,7 @@ const Cart = () => {
         <div className="cart-error-overlay">
           <div className="cart-error-content">
             <h1 className="cart-error-title">¡Ups! Algo salió mal</h1>
-            <p className="cart-error-message">
+            <p className="cart-error-message" style={{ whiteSpace: 'pre-line' }}>
               {errorMessage || 'Parece que hubo un problema con el stock o tu pedido. Revisa tu stock actual.'}
             </p>
             <button

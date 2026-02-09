@@ -133,15 +133,6 @@ function MiCompra() {
             </div>
           </div>
 
-          <div className={`order-status status-${order.status?.replace(/\s+/g, '-')}`}>
-            {order.status === 'listo para despachar' ? (
-              <>✅ Listo para despachar</>
-            ) : order.status === 'entregado' ? (
-              <>🎉 Entregado</>
-            ) : (
-              <>⏳ {order.status || 'En preparación'}</>
-            )}
-          </div>
         </div>
 
         {/* Lista de productos */}

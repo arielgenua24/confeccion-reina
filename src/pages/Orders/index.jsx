@@ -90,31 +90,23 @@ function Orders() {
   return (
     <div className="orders-container">
        <LoadingComponent isLoading={isLoading} />
-      <h1>Órdenes</h1>
+      <div className="orders-header">
+        <div className="orders-title">
+          <h1>Órdenes</h1>
+          <p>Revisa, comparte y gestiona cada orden en segundos.</p>
+        </div>
+        <button
+          className="qr-search-btn"
+          onClick={() => {
+            navigate('/qrsearch?redirect=order-data');
+          }}
+        >
+          Buscar por QR
+          <img src={qrIcon} alt="Qr icon" />
+        </button>
+      </div>
 
       <OrderSearch orders={orders} isActionEnabled={true}/>
-
-      <button 
-              style={{
-                backgroundColor: '#F1F7FF',
-                border: '1px solid #0990FF',
-                borderRadius: '20px',
-                color: '#0990FF',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                padding: '10px 15px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px'
-              }}
-            onClick={() => {
-              navigate('/qrsearch?redirect=order-data');
-            }}> BUSCAR POR QR 
-              <img src={qrIcon} alt="Qr icon" style={{
-                              width: '30px',
-                              height: '30px',
-                            }} />
-            </button>
          
 
       <div className="orders-list">
@@ -123,233 +115,149 @@ function Orders() {
         const isMenuOpen = openMenuOrderId === (order.id || order.orderId);
 
         return (
-        <div key={order.id} className="order-card">
-          {/* Header con acciones */}
-          <div className="order-card-header">
-            {/* Botones de compartir con cliente - SIEMPRE visibles (usan IndexedDB) */}
-            <div className="share-buttons-container" style={{ position: 'relative' }}>
-              <ClientShareActions order={order} variant="compact" />
+          <div key={order.id} className="order-card">
+            <div className="order-card-top">
+              <div className="order-identity">
+                <span className="order-label">Orden</span>
+                <h3 className="order-code">#{order.orderCode}</h3>
+                <span className="order-date">Fecha: {order.fecha}</span>
+              </div>
+              <span className={`status-pill ${order.estado === 'listo para despachar' ? 'ready' : 'attention'}`}>
+                Estado: {order.estado}
+              </span>
             </div>
 
-            {/* Acciones adicionales */}
-            <div className="order-actions-right">
-              {/* QR interno para verificación (solo synced) */}
-              {!isNotSynced && (
-                <QRButton
-                  product={order}
-                  onQRGenerate={setQRcode}
-                />
-              )}
+            {/* Sync Status Indicator */}
+            {order.syncStatus === 'pending' && (
+              <div className="sync-banner sync-banner--pending">
+                <div className="sync-banner-left">
+                  <span className="sync-dot"></span>
+                  <span>Pendiente de sincronización</span>
+                </div>
+                <span className="sync-hint">Usa Opciones para reintentar</span>
+              </div>
+            )}
 
-              {/* Menú 3-dot para órdenes no sincronizadas */}
-              {isNotSynced && (
-                <div style={{ position: 'relative' }}>
+            {order.syncStatus === 'syncing' && (
+              <div className="sync-banner sync-banner--syncing">
+                <span className="sync-spinner"></span>
+                <span>Sincronizando</span>
+              </div>
+            )}
+
+            {/* Failed sync status - Only show error and local verification */}
+            {order.syncStatus === 'failed' && (
+              <div className="sync-banner sync-banner--failed">
+                <div className="sync-banner-left">
+                  <span className="sync-dot sync-dot--danger"></span>
+                  <span>Error en la sincronización</span>
+                </div>
+                {order.lastError && (
+                  <div className="sync-error">
+                    Error: {order.lastError}
+                  </div>
+                )}
+                <div className="sync-actions">
                   <button
-                    className="menu-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleMenu(order.id || order.orderId);
-                    }}
+                    className="primary-btn"
+                    onClick={() => navigate(`/local-order-verification/${order.id || order.orderId}`)}
                   >
-                    ⋮
+                    Verificar productos (local)
                   </button>
+                </div>
+              </div>
+            )}
 
-                  {/* Floating menu */}
-                  {isMenuOpen && (
-                    <div className="floating-menu" onClick={(e) => e.stopPropagation()}>
+            <div className="order-details">
+              <div className="order-detail">
+                <span className="detail-label">Cliente</span>
+                <span className="detail-value">{order.cliente}</span>
+              </div>
+              <div className="order-detail">
+                <span className="detail-label">Dirección</span>
+                <span className="detail-value">{order.direccion}</span>
+              </div>
+              <div className="order-detail">
+                <span className="detail-label">Teléfono</span>
+                <span className="detail-value">{order.telefono}</span>
+              </div>
+            </div>
+
+            <div className="order-actions">
+              <div className="order-actions-row">
+                <span className="actions-label">Compartir con cliente</span>
+                <div className="share-buttons-container">
+                  <ClientShareActions order={order} variant="compact" />
+                </div>
+              </div>
+
+              <div className="order-actions-row">
+                <span className="actions-label">Acciones de orden</span>
+                <div className="order-actions-right">
+                  {!isNotSynced && (
+                    <QRButton
+                      product={order}
+                      onQRGenerate={setQRcode}
+                    />
+                  )}
+
+                  {isNotSynced && (
+                    <div className="menu-wrapper">
                       <button
-                        className="menu-item"
-                        onClick={() => handleRetrySync(order.id || order.orderId)}
+                        className="menu-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleMenu(order.id || order.orderId);
+                        }}
                       >
-                        🔄 Reintentar sincronización
+                        Opciones <span>⋮</span>
                       </button>
+
+                      {isMenuOpen && (
+                        <div className="floating-menu" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            className="menu-item"
+                            onClick={() => handleRetrySync(order.id || order.orderId)}
+                          >
+                            Reintentar sincronización
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
+
+                  <button
+                    className="delete-btn"
+                    onClick={() => handleDelete(order)}
+                  >
+                    Eliminar orden
+                  </button>
                 </div>
-              )}
-
-              <button
-                className="delete-btn"
-                onClick={() => handleDelete(order)}
-              >
-                Eliminar
-              </button>
-            </div>
-          </div>
-
-          {/* Sync Status Indicator */}
-          {order.syncStatus === 'pending' && (
-            <div style={{
-              backgroundColor: '#fff3cd',
-              border: '1px solid #ffc107',
-              borderRadius: '8px',
-              padding: '8px 12px',
-              marginBottom: '10px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '8px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{
-                  display: 'inline-block',
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  backgroundColor: '#ffc107',
-                  animation: 'pulse 1.5s infinite'
-                }}></span>
-                <span style={{ fontSize: '14px', color: '#856404' }}>
-                  ⏳ Pendiente de sincronización
-                </span>
               </div>
-              <span style={{ fontSize: '12px', color: '#856404', fontStyle: 'italic' }}>
-                (Usa el menú ⋮ para reintentar)
-              </span>
-            </div>
-          )}
 
-          {order.syncStatus === 'syncing' && (
-            <div style={{
-              backgroundColor: '#d1ecf1',
-              border: '1px solid #0dcaf0',
-              borderRadius: '8px',
-              padding: '8px 12px',
-              marginBottom: '10px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <span style={{
-                display: 'inline-block',
-                width: '12px',
-                height: '12px',
-                border: '2px solid #0dcaf0',
-                borderTop: '2px solid transparent',
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite'
-              }}></span>
-              <span style={{ fontSize: '14px', color: '#055160' }}>
-                🔄 Sincronizando...
-              </span>
-            </div>
-          )}
-
-          {/* ✅ Failed sync status - Only show error and local verification */}
-          {order.syncStatus === 'failed' && (
-            <div style={{
-              backgroundColor: '#f8d7da',
-              border: '2px solid #dc3545',
-              borderRadius: '8px',
-              padding: '12px',
-              marginBottom: '10px'
-            }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                marginBottom: '8px'
-              }}>
-                <span style={{
-                  display: 'inline-block',
-                  width: '12px',
-                  height: '12px',
-                  borderRadius: '50%',
-                  backgroundColor: '#dc3545'
-                }}></span>
-                <span style={{ fontSize: '14px', color: '#721c24', fontWeight: 'bold' }}>
-                  ❌ Error en la sincronización
-                </span>
-              </div>
-              {order.lastError && (
-                <div style={{
-                  fontSize: '12px',
-                  color: '#721c24',
-                  marginBottom: '10px',
-                  fontStyle: 'italic'
-                }}>
-                  Error: {order.lastError}
-                </div>
-              )}
-              <div style={{
-                display: 'flex',
-                gap: '10px',
-                flexWrap: 'wrap'
-              }}>
+              {order.syncStatus !== 'failed' && (
                 <button
-                  style={{
-                    backgroundColor: '#007bff',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    padding: '8px 16px',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold'
-                  }}
-                  onClick={() => navigate(`/local-order-verification/${order.id || order.orderId}`)}
+                  className="verify-button"
+                  onClick={() => navigate(`/ProductsVerification/${order.id}/?orderEstado=${order.estado}`)}
+                  disabled={order.syncStatus === 'pending' || order.syncStatus === 'syncing'}
+                  title={
+                    order.syncStatus === 'pending'
+                      ? 'Esperando sincronización con Firestore'
+                      : order.syncStatus === 'syncing'
+                      ? 'Sincronizando'
+                      : ''
+                  }
                 >
-                  📦 Verificar Productos (Local)
+                  {order.syncStatus === 'pending' || order.syncStatus === 'syncing'
+                    ? 'Sincronizando productos'
+                    : 'Verificar productos'}
                 </button>
-                {/* Retry button removed - now in 3-dot menu above */}
-              </div>
+              )}
             </div>
-          )}
-
-          <div className="order-header">
-            { order.estado === 'listo para despachar' ?  (<div>
-            <span style={{ backgroundColor: '#0FCA37', color: '#fff', padding: '0.5rem', borderRadius: '0.25rem' }}>
-              Estado: {order.estado} 🎉
-            </span>
-            </div>
-              ) : <span style={{
-                backgroundColor: '#fff9c4', // Amarillo crema
-                padding: '0.2rem 0.5rem',
-                border: '2px solid #fbc02d',
-                borderRadius: '4px',
-                marginLeft: '0.5rem',
-                display: 'inline-flex',
-                alignItems: 'center',
-                animation: 'jump 0.5s infinite alternate', // Animación
-              }}>Estado: {order.estado}⚠️</span> }
-
-            <h3>Código de orden: {order.orderCode}</h3>
-            <p>Fecha: {order.fecha}</p>
           </div>
-          <div className="order-details">
-            <p><strong>Cliente:</strong> {order.cliente}</p>
-            <p><strong>Dirección:</strong> {order.direccion}</p>
-            <p><strong>Teléfono:</strong> {order.telefono}</p>
-          </div>
-          <div className="verify-products">
-          {/* Only show this button for synced orders (not failed) */}
-          {order.syncStatus !== 'failed' && (
-            <button
-              className="verify-button"
-              onClick={() => navigate(`/ProductsVerification/${order.id}/?orderEstado=${order.estado}`)}
-              disabled={order.syncStatus === 'pending' || order.syncStatus === 'syncing'}
-              style={{
-                opacity: (order.syncStatus === 'pending' || order.syncStatus === 'syncing') ? 0.5 : 1,
-                cursor: (order.syncStatus === 'pending' || order.syncStatus === 'syncing') ? 'not-allowed' : 'pointer'
-              }}
-              title={
-                order.syncStatus === 'pending'
-                  ? 'Esperando sincronización con Firestore'
-                  : order.syncStatus === 'syncing'
-                  ? 'Sincronizando...'
-                  : ''
-              }
-            >
-              {order.syncStatus === 'pending' || order.syncStatus === 'syncing'
-                ? '⏳ Sincronizando...'
-                : 'Verificar Productos'}
-            </button>
-          )}
-    </div>
-        </div>
-      );
+        );
       })}
-  </div>
+      </div>
 
   {QRcode && (
           <QRmodal 

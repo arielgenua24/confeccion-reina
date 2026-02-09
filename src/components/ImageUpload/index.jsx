@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import uploadImages from '../../services/uploadImage';
 import './styles.css';
 
@@ -13,6 +13,11 @@ function ImageUpload({ onImageUploaded, existingImageUrl = null }) {
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
 
+  // Keep preview in sync when DB image arrives asynchronously (e.g. /#/product/:id)
+  useEffect(() => {
+    setPreview(existingImageUrl || null);
+  }, [existingImageUrl]);
+
   /**
    * Handle file selection (from input or drag-drop)
    */
@@ -20,15 +25,21 @@ function ImageUpload({ onImageUploaded, existingImageUrl = null }) {
     if (!file) return;
 
     // Validate file type
+    const supportedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/bmp', 'image/gif'];
     if (!file.type.startsWith('image/')) {
       setError('Por favor selecciona una imagen válida');
+      return;
+    }
+    if (!supportedTypes.includes(file.type)) {
+      setError(`Formato no soportado (${file.type.split('/')[1]}). Usá JPG, PNG o WEBP.`);
       return;
     }
 
     // Validate file size (max 20MB)
     const maxSize = 20 * 1024 * 1024; // 20MB
+    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
     if (file.size > maxSize) {
-      setError('La imagen es muy grande. Máximo 20MB. Intenta comprimirla primero.');
+      setError(`La imagen pesa ${fileSizeMB}MB y el máximo es 20MB. Comprimila antes de subirla.`);
       return;
     }
 
@@ -128,7 +139,7 @@ function ImageUpload({ onImageUploaded, existingImageUrl = null }) {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp,image/bmp,image/gif"
             onChange={handleInputChange}
             style={{ display: 'none' }}
           />
@@ -172,7 +183,7 @@ function ImageUpload({ onImageUploaded, existingImageUrl = null }) {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp,image/bmp,image/gif"
             onChange={handleInputChange}
             style={{ display: 'none' }}
           />
@@ -189,7 +200,7 @@ function ImageUpload({ onImageUploaded, existingImageUrl = null }) {
       {/* Help text */}
       {!preview && !error && (
         <p className="image-upload-help">
-          Tamaño máximo: 20MB. Formatos: JPG, PNG, WEBP
+          Máximo: 20MB. Formatos: JPG, PNG, WEBP, BMP, GIF
         </p>
       )}
     </div>

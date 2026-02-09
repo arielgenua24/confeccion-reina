@@ -220,6 +220,118 @@
     cursor: pointer;
 }
 
+/* ============================================
+   STOCK GROUP - Same product, different variants
+   ============================================ */
+.cart-stock-group {
+    border-radius: var(--airbnb-radius-lg);
+    padding: 16px;
+    margin: 0;
+}
+
+.cart-stock-group--ok {
+    border: 2px solid #d4edda;
+    background: #f8fff9;
+}
+
+.cart-stock-group--danger {
+    border: 2px solid var(--airbnb-red);
+    background: #fff5f3;
+}
+
+.cart-stock-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--airbnb-gray-light);
+}
+
+.cart-stock-group-name {
+    font-size: var(--font-md);
+    font-weight: 700;
+    color: var(--airbnb-black);
+    text-transform: capitalize;
+}
+
+.cart-stock-group-badge {
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--airbnb-black);
+    color: var(--airbnb-white);
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+.cart-stock-group-scroll {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 12px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.cart-stock-group-scroll::-webkit-scrollbar {
+    height: 4px;
+}
+
+.cart-stock-group-scroll::-webkit-scrollbar-thumb {
+    background: var(--airbnb-gray-medium);
+    border-radius: 4px;
+}
+
+.cart-stock-group-card {
+    min-width: 280px;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+}
+
+/* Stock control bar below grouped items */
+.cart-stock-control {
+    border-radius: var(--airbnb-radius);
+    padding: 12px 16px;
+    margin-top: 8px;
+    font-size: var(--font-sm);
+}
+
+.cart-stock-control--ok {
+    background: #e6f9ed;
+    border: 1px solid #b8e6c8;
+}
+
+.cart-stock-control--danger {
+    background: #ffeae6;
+    border: 1px solid #f5c6bc;
+}
+
+.cart-stock-control-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+}
+
+.cart-stock-control-row strong {
+    font-size: var(--font-base);
+}
+
+.cart-stock-control--danger .cart-stock-control-row strong {
+    color: var(--airbnb-red);
+}
+
+.cart-stock-control-warning {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: var(--airbnb-red);
+    color: var(--airbnb-white);
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    text-align: center;
+}
+
 /* Responsive adjustments */
 @media (min-width: 768px) {
     .cart-footer {

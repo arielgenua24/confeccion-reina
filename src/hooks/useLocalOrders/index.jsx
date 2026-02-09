@@ -47,17 +47,26 @@ const useLocalOrders = () => {
   const validateStock = useCallback(async (products) => {
     const errors = [];
 
+    // Aggregate total requested quantities per product ID
+    // This is critical: same product with different variants (size/color) shares the same stock
+    const aggregated = {};
     for (const cartItem of products) {
       const product = cartItem.product || cartItem.item;
-      const requestedQuantity = Number(cartItem.quantity);
+      const id = product.id;
+      if (!aggregated[id]) {
+        aggregated[id] = { productName: product.name, totalRequested: 0 };
+      }
+      aggregated[id].totalRequested += Number(cartItem.quantity);
+    }
 
+    for (const [productId, { productName, totalRequested }] of Object.entries(aggregated)) {
       // Get current product from IndexedDB
-      const currentProduct = await getProduct(product.id);
+      const currentProduct = await getProduct(productId);
 
       if (!currentProduct) {
         errors.push({
-          productId: product.id,
-          productName: product.name,
+          productId,
+          productName,
           error: 'Product not found in local database'
         });
         continue;
@@ -65,13 +74,13 @@ const useLocalOrders = () => {
 
       const availableStock = Number(currentProduct.stock);
 
-      if (availableStock < requestedQuantity) {
+      if (availableStock < totalRequested) {
         errors.push({
-          productId: product.id,
-          productName: product.name,
-          requested: requestedQuantity,
+          productId,
+          productName,
+          requested: totalRequested,
           available: availableStock,
-          error: `Insufficient stock: ${availableStock} available, ${requestedQuantity} requested`
+          error: `Stock insuficiente: hay ${availableStock} disponibles, pero se pidieron ${totalRequested} en total`
         });
       }
     }

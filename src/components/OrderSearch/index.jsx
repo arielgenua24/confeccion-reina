@@ -18,15 +18,18 @@ function OrderSearch({ orders, isActionEnabled }) {
   });
 
   const filteredOrders = useMemo(() => {
-    let result = searchOrders(orders, searchTerm);
-    
+    // When no search term, start from all orders
+    let result = searchTerm.trim()
+      ? searchOrders(orders, searchTerm)
+      : (orders || []);
+
     if (activeFilters.readyToDispatch) {
-      if(result != '') {
-        result = result.filter(order => order.estado === "listo para despachar");
-      }
-      
+      result = result.filter(order => {
+        const estado = (order?.estado ?? order?.status ?? '').toLowerCase();
+        return estado === "listo para despachar";
+      });
     }
-    
+
     return result;
   }, [orders, searchTerm, activeFilters]);
 
@@ -42,6 +45,9 @@ function OrderSearch({ orders, isActionEnabled }) {
     }));
   };
 
+  // Show results when searching or when filter is active
+  const showResults = isFocused || searchTerm.trim() || activeFilters.readyToDispatch;
+
   return (
     <div className="order-search-container">
       <div className="search-header">
@@ -50,15 +56,15 @@ function OrderSearch({ orders, isActionEnabled }) {
           <input
             className="search-input"
             type="text"
-            placeholder="Buscar órdenes..."
+            placeholder="Buscar por cliente, dirección, teléfono, código..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onFocus={() => setIsFocused(true)}
             onBlur={() => !searchTerm && setIsFocused(false)}
           />
           {searchTerm && (
-            <button 
-              className="clear-search-btn" 
+            <button
+              className="clear-search-btn"
               onClick={clearSearch}
               aria-label="Clear search"
             >
@@ -67,7 +73,7 @@ function OrderSearch({ orders, isActionEnabled }) {
           )}
         </div>
         <div className="filter-controls">
-          <button 
+          <button
             className={`filter-btn ${activeFilters.readyToDispatch ? 'active' : ''}`}
             onClick={() => toggleFilter('readyToDispatch')}
           >
@@ -76,61 +82,68 @@ function OrderSearch({ orders, isActionEnabled }) {
         </div>
       </div>
 
-      <div className={`results-container ${isFocused ? 'visible' : ''}`}>
+      <div className={`results-container ${showResults ? 'visible' : ''}`}>
         {filteredOrders.length === 0 ? (
           <div className="no-results">
-            No se encontraron órdenes
+            {searchTerm.trim()
+              ? `No se encontraron órdenes para "${searchTerm}"`
+              : 'No se encontraron órdenes'}
           </div>
         ) : (
           <ul className="results-list">
-            {filteredOrders.map((order) => (
-              <li 
-                key={order.id} 
-                className={`result-item ${order.estado === 'listo para despachar' ? 'ready-to-dispatch' : ''}`}
-              >
-                <div className="order-info">
-                  <h3 className="order-code">{order.orderCode}</h3>
-                  <div className="search-order-details">
-                    <span>Cliente: {order.cliente}</span>
-                    <span>Dirección: {order.direccion}</span>
-                    <span>Teléfono: {order.telefono}</span>
-                    <span>Fecha: {order.fecha}</span>
-                    <span className={`status-indicator ${order.estado.replace(/\s+/g, '-')}`}>
-                      Estado: {order.estado}
-                    </span>
+            {filteredOrders.map((order) => {
+              const status = (order?.estado ?? order?.status ?? "sin estado").toString();
+              const statusClassName = status.toLowerCase().replace(/\s+/g, "-");
+
+              return (
+                <li
+                  key={order.id}
+                  className={`result-item ${status === "listo para despachar" ? "ready-to-dispatch" : ""}`}
+                >
+                  <div className="order-info">
+                    <h3 className="order-code">{order.orderCode}</h3>
+                    <div className="search-order-details">
+                      <span>Cliente: {order.cliente}</span>
+                      <span>Dirección: {order.direccion}</span>
+                      <span>Teléfono: {order.telefono}</span>
+                      <span>Fecha: {order.fecha}</span>
+                      <span className={`status-indicator ${statusClassName}`}>
+                        Estado: {status}
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <div className="order-actions">
-                  {isActionEnabled && (
-                    <>
-                     <QRButton 
-                      product={order}
-                      onQRGenerate={setQRcode}
-                    /> 
-                      <button 
-                        className="verify-button"
-                        onClick={() => navigate(`/ProductsVerification/${order.id}/?orderEstado=${order.estado}`)}
-                      >
-                        Verificar Productos
-                      </button>
-                    </>
-                  )}
-                </div>
-              </li>
-            ))}
+                  <div className="order-actions">
+                    {isActionEnabled && (
+                      <>
+                       <QRButton
+                        product={order}
+                        onQRGenerate={setQRcode}
+                      />
+                        <button
+                          className="verify-button"
+                          onClick={() => navigate(`/ProductsVerification/${order.id}/?orderEstado=${status}`)}
+                        >
+                          Verificar Productos
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
 
       {QRcode && (
-      <QRmodal 
+      <QRmodal
       QRcode={QRcode}
       setQRcode={setQRcode}
       orderCode={true}
       />
   )}
     </div>
-    
+
   );
 }
 

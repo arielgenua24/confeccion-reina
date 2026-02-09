@@ -1,17 +1,27 @@
 function searchOrders(orders, searchTerm = '') {
-    if (!searchTerm) return '';
-  
-    const term = searchTerm.toLowerCase();
-    
-    return orders.filter(
-      (order) =>
-        order.cliente.toLowerCase().includes(term) ||
-        order.direccion.toLowerCase().includes(term) ||
-        order.estado.toLowerCase().includes(term) ||
-        order.orderCode.toLowerCase().includes(term) ||
-        order.telefono.toLowerCase().includes(term) ||
-        order.fecha.toLowerCase().includes(term)
-    );
-  }
+  if (!searchTerm) return [];
+  if (!Array.isArray(orders)) return [];
 
-  export default searchOrders;
+  const term = searchTerm.toLowerCase();
+  const normalize = (value) => (value ?? '').toString().toLowerCase();
+
+  return orders.filter((order) => {
+    const cliente = normalize(order?.cliente);
+    const direccion = normalize(order?.direccion);
+    const estado = normalize(order?.estado ?? order?.status);
+    const orderCode = normalize(order?.orderCode);
+    const telefono = normalize(order?.telefono);
+    const fecha = normalize(order?.fecha);
+
+    return (
+      cliente.includes(term) ||
+      direccion.includes(term) ||
+      estado.includes(term) ||
+      orderCode.includes(term) ||
+      telefono.includes(term) ||
+      fecha.includes(term)
+    );
+  });
+}
+
+export default searchOrders;
