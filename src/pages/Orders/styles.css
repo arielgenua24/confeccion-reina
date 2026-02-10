@@ -1,5 +1,6 @@
 .orders-container {
   padding: 28px;
+  box-sizing: border-box;
   font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   color: #1d1d1f;
 }
@@ -394,6 +395,33 @@
 }
 
 @media (max-width: 520px) {
+  .orders-container {
+    padding: 16px 12px 24px;
+  }
+
+  .orders-list {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .order-card {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .order-card-top {
+    flex-wrap: wrap;
+  }
+
+  .order-code {
+    font-size: 18px;
+    overflow-wrap: anywhere;
+  }
+
+  .status-pill {
+    max-width: 100%;
+  }
+
   .order-detail {
     grid-template-columns: 1fr;
   }

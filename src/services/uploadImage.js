@@ -1,5 +1,6 @@
 import ImageKit from "imagekit-javascript";
 import Compressor from 'compressorjs';
+import authCache from './imagekitAuthCache';
 
 // Initialize ImageKit with public key (safe to expose in frontend)
 const imagekit = new ImageKit({
@@ -25,51 +26,10 @@ const compressImage = (file) => {
 };
 
 /**
- * Get authentication parameters from backend
- * This keeps the private key secure on the server
- */
-const getAuthParams = async () => {
-  // Smart endpoint detection:
-  // 1. If VITE_IMAGEKIT_AUTH_ENDPOINT is set, use it
-  // 2. If accessing via localhost, use localhost:3001
-  // 3. If accessing via ngrok or other network, use same origin + /api/auth
-
-  let authEndpoint;
-
-  if (import.meta.env.VITE_IMAGEKIT_AUTH_ENDPOINT) {
-    // Use environment variable if explicitly set
-    authEndpoint = import.meta.env.VITE_IMAGEKIT_AUTH_ENDPOINT;
-  } else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-    // On localhost, use the local API server
-    authEndpoint = "http://localhost:3001/api/auth";
-  } else {
-    // On ngrok or other network access, use same origin
-    authEndpoint = `${window.location.origin}/api/auth`;
-  }
-
-  console.log('Using auth endpoint:', authEndpoint);
-
-  const response = await fetch(authEndpoint);
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('Auth endpoint error:', errorText);
-    throw new Error(`Failed to get authentication parameters: ${response.status} ${response.statusText}`);
-  }
-
-  const contentType = response.headers.get('content-type');
-  if (!contentType || !contentType.includes('application/json')) {
-    const errorText = await response.text();
-    console.error('Non-JSON response received:', errorText);
-    throw new Error('Auth endpoint returned non-JSON response. Check API server is running.');
-  }
-
-  return await response.json();
-};
-
-/**
  * Upload a single file to ImageKit
+ * Includes automatic retry logic for expired tokens
  */
-const uploadFile = async (file, authData) => {
+const uploadFile = async (file, authData, isRetry = false) => {
   return new Promise((resolve, reject) => {
     imagekit.upload({
       file: file,
@@ -78,9 +38,32 @@ const uploadFile = async (file, authData) => {
       signature: authData.signature,
       expire: authData.expire,
       folder: "/products", // Organize images in products folder
-    }, (err, result) => {
-      if (err) return reject(err);
-      resolve(result);
+    }, async (err, result) => {
+      if (err) {
+        // Check if error is related to expired/invalid token
+        const isAuthError =
+          err.message?.toLowerCase().includes('token') ||
+          err.message?.toLowerCase().includes('signature') ||
+          err.message?.toLowerCase().includes('expire') ||
+          err.message?.toLowerCase().includes('auth');
+
+        // If it's an auth error and we haven't retried yet, try again with fresh token
+        if (isAuthError && !isRetry) {
+          console.warn('[ImageKit Upload] Auth error detected, retrying with fresh token...');
+          try {
+            const freshAuth = await authCache.forceRefresh();
+            const retryResult = await uploadFile(file, freshAuth, true);
+            resolve(retryResult);
+          } catch (retryError) {
+            console.error('[ImageKit Upload] Retry failed:', retryError);
+            reject(retryError);
+          }
+        } else {
+          reject(err);
+        }
+      } else {
+        resolve(result);
+      }
     });
   });
 };
@@ -89,6 +72,11 @@ const uploadFile = async (file, authData) => {
  * Main function to upload images with compression
  * Accepts single image or array of images
  * Returns array of upload results with URLs
+ *
+ * Features:
+ * - Automatic token caching to reduce API calls
+ * - Transparent retry on token expiration
+ * - User never needs to re-upload due to expired tokens
  */
 async function uploadImages(images) {
   const imageArray = Array.isArray(images) ? images : [images];
@@ -100,25 +88,26 @@ async function uploadImages(images) {
 
   try {
     // Step 1: Compress all images
-    console.log('Compressing images...');
+    console.log('[Upload] Compressing images...');
     const compressed = await Promise.all(
       validImages.map(img => compressImage(img))
     );
 
-    // Step 2: Get authentication parameters
-    console.log('Getting authentication...');
-    const authData = await getAuthParams();
+    // Step 2: Get authentication parameters (from cache or fetch new)
+    console.log('[Upload] Getting authentication...');
+    const authData = await authCache.getAuthParams();
 
     // Step 3: Upload all compressed images
-    console.log('Uploading to ImageKit...');
+    // Note: uploadFile has built-in retry logic for expired tokens
+    console.log('[Upload] Uploading to ImageKit...');
     const results = await Promise.all(
       compressed.map(img => uploadFile(img, authData))
     );
 
-    console.log('Upload successful:', results);
+    console.log('[Upload] Success! Uploaded', results.length, 'image(s)');
     return results;
   } catch (error) {
-    console.error('Upload error:', error);
+    console.error('[Upload] Error:', error);
     throw new Error(`Error al subir imagen: ${error.message}`);
   }
 }

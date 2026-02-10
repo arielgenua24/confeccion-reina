@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import EditProductBtn from "../EditProduct";
 import QRButton from "../QrGenerateBtn";
 import ImageModal from "../ImageModal";
-import { Search, X, Package, Loader2, ShoppingCart } from "lucide-react";
+import { Search, Package, Loader2, ShoppingCart } from "lucide-react";
 import useProducts from "../../hooks/useProducts";
 import { useOrder } from "../../hooks/useOrder";
 import './styles.css';
@@ -147,7 +147,7 @@ function ProductSearch({ setQRcode, isCartEnabled }) {
                 onClick={clearSearch}
                 aria-label="Limpiar búsqueda"
               >
-                <X size={18} />
+                <span aria-hidden="true">X</span>
               </button>
             )}
           </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, ArrowLeft, X, Package, Clock, Sparkles, ShoppingCart, Check, ChevronDown, ChevronUp, Plus } from "lucide-react";
+import { Search, ArrowLeft, Package, Clock, Sparkles, ShoppingCart, Check, ChevronDown, ChevronUp, Plus } from "lucide-react";
 import useProducts from "../../hooks/useProducts";
 import { useOrder } from "../../hooks/useOrder";
 import { sanitizeVariantInput } from "../../utils/inputSanitizer";
@@ -321,7 +321,7 @@ function SearchPage() {
                     />
                     {searchTerm && (
                         <button className="search-clear-btn" onClick={clearSearch}>
-                            <X size={18} />
+                            <span aria-hidden="true">X</span>
                         </button>
                     )}
                 </div>
