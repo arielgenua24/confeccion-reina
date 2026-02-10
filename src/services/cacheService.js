@@ -164,19 +164,27 @@ export const applyStockDelta = async (id, delta) => {
       };
     }
 
+    const deltaNumber = Number(delta);
+    if (!Number.isFinite(deltaNumber)) {
+      return {
+        success: false,
+        error: `Invalid delta value: ${delta}`
+      };
+    }
+
     const currentStock = Number(product.stock) || 0;
-    const newStock = currentStock + delta;
+    const newStock = currentStock + deltaNumber;
 
     if (newStock < 0) {
       return {
         success: false,
-        error: `Cannot apply delta ${delta}. Current stock: ${currentStock}`,
+        error: `Cannot apply delta ${deltaNumber}. Current stock: ${currentStock}`,
         currentStock
       };
     }
 
     await db.products.update(id, { stock: newStock });
-    console.log(`📊 Stock updated for ${product.name}: ${currentStock} → ${newStock} (delta: ${delta})`);
+    console.log(`📊 Stock updated for ${product.name}: ${currentStock} → ${newStock} (delta: ${deltaNumber})`);
 
     return {
       success: true,
@@ -204,8 +212,9 @@ export const reserveStock = async (stockDeltas) => {
     const results = [];
 
     for (const { productId, delta } of stockDeltas) {
-      const result = await applyStockDelta(productId, delta);
-      results.push({ productId, ...result });
+      const deltaNumber = Number(delta);
+      const result = await applyStockDelta(productId, deltaNumber);
+      results.push({ productId, delta: deltaNumber, ...result });
 
       if (!result.success) {
         // Rollback previous changes
@@ -213,7 +222,7 @@ export const reserveStock = async (stockDeltas) => {
         for (const prevResult of results.slice(0, -1)) {
           if (prevResult.success) {
             // Reverse the delta
-            await applyStockDelta(prevResult.productId, -delta);
+            await applyStockDelta(prevResult.productId, -prevResult.delta);
           }
         }
         return {

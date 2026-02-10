@@ -45,8 +45,10 @@ function OrderSearch({ orders, isActionEnabled }) {
     }));
   };
 
-  // Show results when searching or when filter is active
-  const showResults = isFocused || searchTerm.trim() || activeFilters.readyToDispatch;
+  // Show results only when there is an active query or filter
+  const hasSearchTerm = Boolean(searchTerm.trim());
+  const showResults = hasSearchTerm || activeFilters.readyToDispatch;
+  const displayedOrders = showResults ? filteredOrders : [];
 
   return (
     <div className="order-search-container">
@@ -83,15 +85,15 @@ function OrderSearch({ orders, isActionEnabled }) {
       </div>
 
       <div className={`results-container ${showResults ? 'visible' : ''}`}>
-        {filteredOrders.length === 0 ? (
+        {showResults && displayedOrders.length === 0 ? (
           <div className="no-results">
             {searchTerm.trim()
               ? `No se encontraron órdenes para "${searchTerm}"`
               : 'No se encontraron órdenes'}
           </div>
-        ) : (
+        ) : showResults ? (
           <ul className="results-list">
-            {filteredOrders.map((order) => {
+            {displayedOrders.map((order) => {
               const status = (order?.estado ?? order?.status ?? "sin estado").toString();
               const statusClassName = status.toLowerCase().replace(/\s+/g, "-");
 
@@ -132,7 +134,7 @@ function OrderSearch({ orders, isActionEnabled }) {
               );
             })}
           </ul>
-        )}
+        ) : null}
       </div>
 
       {QRcode && (

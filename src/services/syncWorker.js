@@ -16,6 +16,7 @@ import {
 
 import { db as firestore } from '../firebaseSetUp';
 import {
+  collection,
   doc,
   writeBatch,
   serverTimestamp,
@@ -207,8 +208,15 @@ class SyncWorker {
    * @returns {Promise<Object>} - { success, data?, error? }
    */
   async syncOrder(payload) {
+    const orderId = payload?.orderId;
+
     try {
-      const { orderId } = payload;
+      if (!orderId) {
+        return {
+          success: false,
+          error: 'Missing orderId in sync payload'
+        };
+      }
 
       // Get pending order from IndexedDB
       const pendingOrders = await getPendingOrders();
@@ -248,18 +256,54 @@ class SyncWorker {
         // PHASE 1: ALL READS FIRST
         // ============================================
 
-        // Step A: Collect all products that need stock updates
-        const productsToUpdate = [];
+        // Step A: AGGREGATE stock deltas by productId
+        // CRITICAL FIX: If the same product has multiple variants (size/color),
+        // we need to SUM all their deltas before updating Firestore
+        // Example: Product #018 with 2 variants (negro/L: -2, azul/S: -3) → total delta: -5
+        const productDeltaMap = new Map();
+
         for (const product of order.products) {
-          if (product.stockDelta) {
-            productsToUpdate.push({
-              productId: product.productId,
-              productRef: doc(firestore, 'products', product.productId),
-              delta: product.stockDelta,
+          const rawProductId = product?.productId;
+          const productId = String(rawProductId ?? '').trim();
+          const delta = Number(product?.stockDelta);
+
+          if (!productId) {
+            console.warn('⚠️ Skipping product without valid productId:', product);
+            continue;
+          }
+
+          if (!Number.isFinite(delta) || delta === 0) {
+            console.warn(`⚠️ Skipping invalid stockDelta for ${productId}:`, product?.stockDelta);
+            continue;
+          }
+
+          if (String(rawProductId) !== productId) {
+            console.log(`🧹 Normalized productId "${rawProductId}" -> "${productId}"`);
+          }
+
+          if (productDeltaMap.has(productId)) {
+            // Product already exists, ADD the delta
+            const existing = productDeltaMap.get(productId);
+            existing.delta += delta;
+            console.log(`📊 Aggregating delta for ${product.productSnapshot.name}: ${existing.delta}`);
+          } else {
+            // First time seeing this product, create entry
+            productDeltaMap.set(productId, {
+              productId,
+              productRef: doc(firestore, 'products', productId),
+              delta,
               name: product.productSnapshot.name
             });
           }
         }
+
+        // Convert map to array for processing
+        const productsToUpdate = Array.from(productDeltaMap.values());
+
+        console.log(`📦 Products to update: ${productsToUpdate.length}`);
+        productsToUpdate.forEach(p => {
+          console.log(`   - ${p.name} (${p.productId}): delta = ${p.delta}`);
+        });
 
         // Step B: READ ALL products first (Firestore transaction requirement)
         const productSnapshots = [];
@@ -357,20 +401,27 @@ class SyncWorker {
 
       const batch = writeBatch(firestore);
 
+      // Each cart item (product + variant combination) gets its own document
+      // Firestore will auto-generate unique IDs for each document
       for (const product of order.products) {
-        const productSubDocRef = doc(firestore, 'orders', orderId, 'products', product.productId);
+        // Use Firestore auto-generated ID (don't specify document ID)
+        // This ensures each variant combination gets its own document
+        const productSubCollectionRef = collection(firestore, 'orders', orderId, 'products');
+        const newProductDocRef = doc(productSubCollectionRef); // Auto-generate ID
 
-        batch.set(productSubDocRef, {
+        batch.set(newProductDocRef, {
           productSnapshot: product.productSnapshot,
           stock: product.quantity,
           verified: 0, // Start with 0 verified
           selectedVariants: product.selectedVariants,
-          createdAt: serverTimestamp()
+          createdAt: serverTimestamp(),
+          // Store original productId for reference (in case needed)
+          productId: product.productId
         });
       }
 
       await batch.commit();
-      console.log(`✅ Created ${order.products.length} products in subcollection`);
+      console.log(`✅ Created ${order.products.length} product documents in subcollection`);
 
       // Update metadata catalog (products were updated)
       const metadataRef = doc(firestore, 'metadata', 'catalog');

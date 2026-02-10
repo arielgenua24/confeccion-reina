@@ -81,12 +81,25 @@
 
 /* Results container styles */
 .order-search-container .results-container {
+  display: block;
+  height: 1px;
+  min-height: 1px;
+  max-height: 1px;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
   opacity: 0;
   transform: translateY(-10px);
-  transition: all 0.3s ease;
+  transition: max-height 0.28s ease, opacity 0.2s ease, transform 0.2s ease;
 }
 
 .order-search-container .results-container.visible {
+  height: auto;
+  min-height: 0;
+  max-height: min(65vh, 720px);
+  overflow-y: auto;
+  pointer-events: auto;
   opacity: 1;
   transform: translateY(0);
 }
