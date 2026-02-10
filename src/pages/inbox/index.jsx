@@ -217,25 +217,43 @@ function Inbox() {
       {!isLoading && (
         <div className="apple-inbox-content">
           <header className="apple-header">
-            <h1 className="apple-greeting">Hola!</h1>
+            <h1 className="apple-greeting">Hola! lista para revisar tus ingresos?</h1>
           </header>
 
           {/* Horizontal Scrollable Cards */}
           <div className="apple-cards-scroll">
-            <div className="apple-card" onClick={() => navigateToEarnings('daily')}>
+            <button
+              type="button"
+              className="apple-card apple-card-button"
+              onClick={() => navigateToEarnings('daily')}
+              aria-label="Ver ingresos del día"
+            >
               <span className="apple-card-label">Ingresos del día {today.getDate()}/{today.getMonth() + 1}</span>
               <span className="apple-card-amount">{formatCurrency(dailyEarnings)}</span>
-            </div>
+              <span className="apple-card-cta">Ver detalle</span>
+            </button>
             
-            <div className="apple-card" onClick={() => navigateToEarnings('weekly')}>
+            <button
+              type="button"
+              className="apple-card apple-card-button"
+              onClick={() => navigateToEarnings('weekly')}
+              aria-label="Ver ingresos de la semana"
+            >
               <span className="apple-card-label">Ingresos de la semana</span>
               <span className="apple-card-amount">{formatCurrency(weeklyEarnings)}</span>
-            </div>
+              <span className="apple-card-cta">Ver detalle</span>
+            </button>
             
-            <div className="apple-card" onClick={() => navigateToEarnings('monthly')}>
+            <button
+              type="button"
+              className="apple-card apple-card-button"
+              onClick={() => navigateToEarnings('monthly')}
+              aria-label="Ver ingresos del mes"
+            >
               <span className="apple-card-label">Ingresos del mes</span>
               <span className="apple-card-amount">{formatCurrency(monthlyEarnings)}</span>
-            </div>
+              <span className="apple-card-cta">Ver detalle</span>
+            </button>
           </div>
 
           {/* Chart Section */}

@@ -26,6 +26,64 @@ const compressImage = (file) => {
 };
 
 /**
+ * Check if an error should trigger a retry with fresh token
+ *
+ * Retry scenarios:
+ * 1. Auth errors (token/signature/expire related)
+ * 2. 400 Bad Request (often means invalid token)
+ * 3. 401 Unauthorized (auth failure)
+ *
+ * Do NOT retry:
+ * - Network errors (timeout, connection lost) - not a token issue
+ * - 413 Payload Too Large - file is too big
+ * - 5xx Server errors - ImageKit server issue
+ * - Rate limits (429) - need to back off, not retry immediately
+ */
+const shouldRetryWithFreshToken = (error) => {
+  if (!error || !error.message) return false;
+
+  const errorMessage = error.message.toLowerCase();
+  const errorString = JSON.stringify(error).toLowerCase();
+
+  // Check for explicit auth-related errors
+  const hasAuthKeywords =
+    errorMessage.includes('token') ||
+    errorMessage.includes('signature') ||
+    errorMessage.includes('expire') ||
+    errorMessage.includes('auth') ||
+    errorMessage.includes('unauthorized') ||
+    errorString.includes('401');
+
+  // Check for 400 Bad Request (often means invalid token)
+  const isBadRequest =
+    errorMessage.includes('400') ||
+    errorString.includes('400') ||
+    errorMessage.includes('bad request');
+
+  // Do NOT retry on network errors (not a token issue)
+  const isNetworkError =
+    errorMessage.includes('network') ||
+    errorMessage.includes('timeout') ||
+    errorMessage.includes('fetch') ||
+    errorMessage.includes('connection') ||
+    errorMessage.includes('econnrefused') ||
+    errorMessage.includes('enotfound');
+
+  // Do NOT retry on rate limits or server errors
+  const shouldNotRetry =
+    errorMessage.includes('429') ||
+    errorMessage.includes('rate limit') ||
+    errorMessage.includes('413') ||
+    errorMessage.includes('payload too large') ||
+    errorMessage.includes('500') ||
+    errorMessage.includes('502') ||
+    errorMessage.includes('503');
+
+  // Retry if auth error or bad request, but NOT if network/rate limit error
+  return (hasAuthKeywords || isBadRequest) && !isNetworkError && !shouldNotRetry;
+};
+
+/**
  * Upload a single file to ImageKit
  * Includes automatic retry logic for expired tokens
  */
@@ -40,16 +98,13 @@ const uploadFile = async (file, authData, isRetry = false) => {
       folder: "/products", // Organize images in products folder
     }, async (err, result) => {
       if (err) {
-        // Check if error is related to expired/invalid token
-        const isAuthError =
-          err.message?.toLowerCase().includes('token') ||
-          err.message?.toLowerCase().includes('signature') ||
-          err.message?.toLowerCase().includes('expire') ||
-          err.message?.toLowerCase().includes('auth');
+        // Check if error should trigger a retry with fresh token
+        const shouldRetry = shouldRetryWithFreshToken(err);
 
-        // If it's an auth error and we haven't retried yet, try again with fresh token
-        if (isAuthError && !isRetry) {
-          console.warn('[ImageKit Upload] Auth error detected, retrying with fresh token...');
+        // If it's a retryable error and we haven't retried yet, try again with fresh token
+        if (shouldRetry && !isRetry) {
+          console.warn('[ImageKit Upload] Retryable error detected, fetching fresh token...');
+          console.warn('[ImageKit Upload] Error details:', err.message);
           try {
             const freshAuth = await authCache.forceRefresh();
             const retryResult = await uploadFile(file, freshAuth, true);
@@ -59,6 +114,10 @@ const uploadFile = async (file, authData, isRetry = false) => {
             reject(retryError);
           }
         } else {
+          // Not retryable or already retried - reject with original error
+          if (isRetry) {
+            console.error('[ImageKit Upload] Second attempt failed, giving up');
+          }
           reject(err);
         }
       } else {

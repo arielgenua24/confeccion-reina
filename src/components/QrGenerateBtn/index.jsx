@@ -11,7 +11,7 @@ const QRButton = ({ product, onQRGenerate, }) => {
         onClick={() => onQRGenerate(product)}
       >
        <QrCode size="24" /> 
-        Obtener QR
+        Imprimir QR
       </button>
     </div>
   );
