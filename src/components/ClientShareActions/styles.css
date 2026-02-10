@@ -159,6 +159,7 @@
   outline: none;
   font-size: 16px;
   background: transparent;
+  min-width: 0;
 }
 
 .phone-input::placeholder {
@@ -182,6 +183,12 @@
 
 .send-wa-btn:active {
   filter: brightness(0.95);
+}
+
+.send-wa-btn-block {
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 10px;
 }
 
 .whatsapp-hint {
@@ -268,20 +275,16 @@
 
 /* Input WhatsApp Flotante (compact) */
 .whatsapp-input-floating {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
+  position: relative;
+  width: 100%;
   margin-top: 8px;
   background: white;
   border-radius: 12px;
+  border: 1px solid #e5e5ea;
   box-shadow:
-    0 4px 20px rgba(0, 0, 0, 0.15),
-    0 0 0 1px rgba(0, 0, 0, 0.05);
-  padding: 12px;
-  display: flex;
-  gap: 8px;
-  z-index: 100;
+    0 8px 20px rgba(0, 0, 0, 0.10),
+    0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 14px;
   animation: slideDown 0.2s ease;
 }
 
@@ -303,7 +306,8 @@
 }
 
 .whatsapp-input-floating input {
-  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
   padding: 10px 12px;
   border: 1px solid #e5e5ea;
   border-radius: 8px;
@@ -315,23 +319,44 @@
   border-color: #25D366;
 }
 
-.whatsapp-input-floating button {
-  padding: 10px 16px;
-  background: #25D366;
-  color: white;
+.whatsapp-floating-title {
+  display: block;
+  font-size: 12px;
+  color: #6e6e73;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.whatsapp-floating-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.send-wa-floating-btn,
+.whatsapp-input-floating .close-btn {
+  flex: 1;
+  padding: 10px 12px;
   border: none;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
+  font-size: 13px;
+}
+
+.send-wa-floating-btn {
+  background: #25D366;
+  color: white;
 }
 
 .whatsapp-input-floating .close-btn {
-  width: 36px;
-  padding: 0;
   background: #f5f5f7;
   color: #86868b;
-  font-size: 20px;
+}
+
+.whatsapp-input-floating .close-btn:hover {
+  background: #e8e8ed;
 }
 
 /* ========================================
@@ -500,5 +525,9 @@
 
   .qr-modal-content {
     padding: 20px;
+  }
+
+  .whatsapp-floating-actions {
+    flex-direction: column;
   }
 }

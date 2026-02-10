@@ -129,6 +129,7 @@ function ClientShareActions({ order, variant = 'full' }) {
         {/* Input de WhatsApp flotante */}
         {showWhatsAppInput && (
           <div className="whatsapp-input-floating">
+            <span className="whatsapp-floating-title">Número del cliente</span>
             <input
               type="tel"
               placeholder="Ej: 11 1234-5678"
@@ -137,8 +138,14 @@ function ClientShareActions({ order, variant = 'full' }) {
               onKeyDown={handleSendWhatsApp}
               autoFocus
             />
-            <button onClick={handleSendWhatsApp}>Enviar</button>
-            <button className="close-btn" onClick={() => setShowWhatsAppInput(false)}>×</button>
+            <div className="whatsapp-floating-actions">
+              <button className="send-wa-floating-btn" onClick={handleSendWhatsApp}>
+                Enviar por WhatsApp
+              </button>
+              <button className="close-btn" onClick={() => setShowWhatsAppInput(false)}>
+                Cerrar
+              </button>
+            </div>
           </div>
         )}
 
@@ -230,13 +237,13 @@ function ClientShareActions({ order, variant = 'full' }) {
             onKeyDown={handleSendWhatsApp}
             className="phone-input"
           />
-          <button
-            className="send-wa-btn"
-            onClick={handleSendWhatsApp}
-          >
-            Enviar
-          </button>
         </div>
+        <button
+          className="send-wa-btn send-wa-btn-block"
+          onClick={handleSendWhatsApp}
+        >
+          Enviar por WhatsApp
+        </button>
         <p className="whatsapp-hint">Presiona Enter o click en Enviar para abrir WhatsApp</p>
       </div>
 

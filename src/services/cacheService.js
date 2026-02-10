@@ -92,20 +92,32 @@ export const searchProducts = async (term, limit = 20) => {
     }
 
     const searchTerm = term.toLowerCase().trim();
+    const codeSearchTerms = [searchTerm];
 
-    // Search by name (case-insensitive)
-    const nameResults = await db.products
-      .where('name')
-      .startsWithIgnoreCase(searchTerm)
-      .limit(limit)
-      .toArray();
+    // Allow searching codes with or without "#" (e.g. "011" or "#011")
+    if (!searchTerm.startsWith('#')) {
+      codeSearchTerms.push(`#${searchTerm}`);
+    }
 
-    // Search by product code (case-insensitive)
-    const codeResults = await db.products
-      .where('productCode')
-      .startsWithIgnoreCase(searchTerm)
-      .limit(limit)
-      .toArray();
+    const [nameResults, ...codeResultsByTerm] = await Promise.all([
+      // Search by name (case-insensitive)
+      db.products
+        .where('name')
+        .startsWithIgnoreCase(searchTerm)
+        .limit(limit)
+        .toArray(),
+
+      // Search by product code (case-insensitive)
+      ...codeSearchTerms.map((codeTerm) =>
+        db.products
+          .where('productCode')
+          .startsWithIgnoreCase(codeTerm)
+          .limit(limit)
+          .toArray()
+      )
+    ]);
+
+    const codeResults = codeResultsByTerm.flat();
 
     // Combine and deduplicate results
     const combinedResults = [...nameResults, ...codeResults];
