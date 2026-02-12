@@ -2,6 +2,19 @@ import { useState, useCallback } from 'react';
 import useLocalOrders from '../useLocalOrders';
 import useFirestoreContext from '../useFirestoreContext';
 
+const normalizeVariantToken = (value) => {
+  if (value === undefined || value === null) return 'na';
+  const normalized = String(value).trim().toLowerCase();
+  return normalized || 'na';
+};
+
+const buildLineItemId = (product, index) => {
+  const productId = String(product?.productId ?? product?.id ?? 'unknown');
+  const size = normalizeVariantToken(product?.selectedVariants?.size);
+  const color = normalizeVariantToken(product?.selectedVariants?.color);
+  return `${productId}__${size}__${color}__${index}`;
+};
+
 /**
  * useOrderDetails - Fetch order details from IndexedDB or Firestore
  *
@@ -45,12 +58,13 @@ export default function useOrderDetails() {
         console.log('✅ Found order in IndexedDB:', localOrder);
 
         // Transform to verification format
-        const transformedProducts = localOrder.products.map(product => ({
-          id: product.productId,
+        const transformedProducts = localOrder.products.map((product, index) => ({
+          id: buildLineItemId(product, index),
           stock: product.quantity,
           verified: 0, // Start with 0 verified
           productSnapshot: product.productSnapshot,
           selectedVariants: product.selectedVariants,
+          lineItemId: buildLineItemId(product, index),
           // For compatibility with old UI
           productData: product.productSnapshot
         }));
@@ -81,12 +95,13 @@ export default function useOrderDetails() {
         // NEW FORMAT: Products as array
         console.log('📱 Order uses new format (products array)');
 
-        products = firestoreOrder.products.map(product => ({
-          id: product.productId,
+        products = firestoreOrder.products.map((product, index) => ({
+          id: buildLineItemId(product, index),
           stock: product.quantity,
           verified: 0,
           productSnapshot: product.productSnapshot,
           selectedVariants: product.selectedVariants,
+          lineItemId: buildLineItemId(product, index),
           productData: product.productSnapshot
         }));
       } else {

@@ -355,23 +355,56 @@ const useFirestore = () => {
     console.log(fecha, cliente, telefono, direccion, products);
   
     try {
-        // Validar stock de todos los productos
+        // Aggregate requested quantities by product ID to avoid overwriting stock
+        // when the same product appears in multiple variants.
+        const aggregatedByProduct = {};
+
         for (const element of products) {
-            // Handle both old format (element.item) and new format (element.product)
             const product = element.product || element.item;
-            const productRef = doc(db, "products", product.id);
-            const productSnapshot = await getDoc(productRef);
-            
+            const productId = product?.id;
+            const quantityNumber = Number(element.quantity);
+
+            if (!productId) {
+                console.error('Producto inválido en el pedido:', element);
+                return false;
+            }
+
+            if (!Number.isFinite(quantityNumber) || quantityNumber <= 0) {
+                console.error(`Cantidad inválida para ${productId}:`, element.quantity);
+                return false;
+            }
+
+            if (!aggregatedByProduct[productId]) {
+                aggregatedByProduct[productId] = {
+                    totalRequested: 0,
+                    productRef: doc(db, "products", productId),
+                };
+            }
+
+            aggregatedByProduct[productId].totalRequested += quantityNumber;
+        }
+
+        // Validate stock once per product with aggregated quantity
+        const productSnapshots = {};
+        for (const [productId, aggregate] of Object.entries(aggregatedByProduct)) {
+            const productSnapshot = await getDoc(aggregate.productRef);
+
             if (!productSnapshot.exists()) {
-                console.error(`Producto ${product.id} no existe`);
+                console.error(`Producto ${productId} no existe`);
                 return false;
             }
-            
-            const currentStock = Number(productSnapshot.data().stock);
-            if (currentStock < Number(element.quantity)) {
-                console.error(`Stock insuficiente para ${product.id}`);
+
+            const currentStock = Number(productSnapshot.data().stock) || 0;
+            if (currentStock < aggregate.totalRequested) {
+                console.error(`Stock insuficiente para ${productId}. Pedido total: ${aggregate.totalRequested}, stock: ${currentStock}`);
                 return false;
             }
+
+            productSnapshots[productId] = {
+                snapshot: productSnapshot,
+                currentStock,
+                productRef: aggregate.productRef
+            };
         }
 
         const orderCode = await incrementOrdersCode();
@@ -385,14 +418,21 @@ const useFirestore = () => {
             estado: "pendiente",
         });
 
-        // Procesar productos y actualizar stock
+        // Guardar cada línea del pedido (incluye variantes)
         for (const element of products) {
             // Handle both old format (element.item) and new format (element.product)
             const product = element.product || element.item;
-            const productRef = doc(db, "products", product.id);
-            const productSnapshot = await getDoc(productRef);
-            const currentStock = Number(productSnapshot.data().stock);
-            console.log(productSnapshot.data());
+            const productId = product.id;
+            const snapshotEntry = productSnapshots[productId];
+
+            if (!snapshotEntry?.snapshot?.exists()) {
+                console.error(`Snapshot no encontrado para ${productId}`);
+                return false;
+            }
+
+            const productData = snapshotEntry.snapshot.data();
+            const productRef = snapshotEntry.productRef;
+            console.log(productData);
             
             const quantityNumber = Number(element.quantity);
 
@@ -400,10 +440,10 @@ const useFirestore = () => {
             const orderProduct = {
                 productRef, // Se mantiene la referencia por si se necesita
                 productSnapshot: { // Snapshot de los datos actuales del producto
-                    name: productSnapshot.data().name,
-                    price: productSnapshot.data().price,
-                    productCode: productSnapshot.data().productCode,
-                    details: productSnapshot.data().details || '',
+                    name: productData.name,
+                    price: productData.price,
+                    productCode: productData.productCode,
+                    details: productData.details || '',
                 },
                 stock: quantityNumber,
                 verified: 0
@@ -418,16 +458,19 @@ const useFirestore = () => {
             } else {
                 // Backward compatibility: if it's old format, try to get size/color from product data
                 orderProduct.selectedVariants = {
-                    size: productSnapshot.data().size || null,
-                    color: productSnapshot.data().color || null
+                    size: productData.size || null,
+                    color: productData.color || null
                 };
             }
             
             await addDoc(collection(db, `orders/${pedidoRef.id}/products`), orderProduct);
+        }
 
-            // Actualizar el stock del producto en el inventario
-            const newStockInt = currentStock - quantityNumber;
-            await updateDoc(productRef, {
+        // Actualizar stock una sola vez por producto agregado (sumado)
+        for (const [productId, aggregate] of Object.entries(aggregatedByProduct)) {
+            const snapshotEntry = productSnapshots[productId];
+            const newStockInt = snapshotEntry.currentStock - aggregate.totalRequested;
+            await updateDoc(snapshotEntry.productRef, {
                 stock: newStockInt
             });
         }

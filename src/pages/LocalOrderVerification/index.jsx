@@ -12,6 +12,19 @@ import useLocalOrders from '../../hooks/useLocalOrders';
 import LoadingComponent from '../../components/Loading';
 import './styles.css';
 
+const normalizeVariantToken = (value) => {
+  if (value === undefined || value === null) return 'na';
+  const normalized = String(value).trim().toLowerCase();
+  return normalized || 'na';
+};
+
+const buildLineItemKey = (product, index) => {
+  const productId = String(product?.productId ?? product?.id ?? 'unknown');
+  const size = normalizeVariantToken(product?.selectedVariants?.size);
+  const color = normalizeVariantToken(product?.selectedVariants?.color);
+  return `${productId}__${size}__${color}__${index}`;
+};
+
 function LocalOrderVerification() {
   const { orderId } = useParams();
   const navigate = useNavigate();
@@ -35,12 +48,19 @@ function LocalOrderVerification() {
         }
 
         console.log('✅ Order loaded from IndexedDB:', orderData);
-        setOrder(orderData);
+        const normalizedProducts = (orderData.products || []).map((product, index) => ({
+          ...product,
+          lineKey: buildLineItemKey(product, index)
+        }));
+        setOrder({
+          ...orderData,
+          products: normalizedProducts
+        });
 
         // Initialize verified counts (all at 0)
         const initialCounts = {};
-        orderData.products.forEach(product => {
-          initialCounts[product.productId] = 0;
+        normalizedProducts.forEach(product => {
+          initialCounts[product.lineKey] = 0;
         });
         setVerifiedCounts(initialCounts);
       } catch (err) {
@@ -54,34 +74,31 @@ function LocalOrderVerification() {
     fetchOrder();
   }, [orderId, getOrderById]);
 
-  const handleVerifiedChange = (productId, value) => {
+  const handleVerifiedChange = (lineKey, value) => {
     setVerifiedCounts(prev => ({
       ...prev,
-      [productId]: parseInt(value) || 0
+      [lineKey]: parseInt(value) || 0
     }));
   };
 
-  const handleIncrement = (productId) => {
-    const product = order.products.find(p => p.productId === productId);
-    const maxQuantity = product.quantity;
-
+  const handleIncrement = (lineKey, maxQuantity) => {
     setVerifiedCounts(prev => ({
       ...prev,
-      [productId]: Math.min((prev[productId] || 0) + 1, maxQuantity)
+      [lineKey]: Math.min((prev[lineKey] || 0) + 1, maxQuantity)
     }));
   };
 
-  const handleDecrement = (productId) => {
+  const handleDecrement = (lineKey) => {
     setVerifiedCounts(prev => ({
       ...prev,
-      [productId]: Math.max((prev[productId] || 0) - 1, 0)
+      [lineKey]: Math.max((prev[lineKey] || 0) - 1, 0)
     }));
   };
 
   const isFullyVerified = () => {
     if (!order) return false;
     return order.products.every(product =>
-      verifiedCounts[product.productId] === product.quantity
+      verifiedCounts[product.lineKey] === product.quantity
     );
   };
 
@@ -202,13 +219,13 @@ function LocalOrderVerification() {
         <h2>Productos a Verificar</h2>
         <div className="products-list">
           {order.products.map((product) => {
-            const verified = verifiedCounts[product.productId] || 0;
+            const verified = verifiedCounts[product.lineKey] || 0;
             const total = product.quantity;
             const isComplete = verified === total;
 
             return (
               <div
-                key={product.productId}
+                key={product.lineKey}
                 className="product-verification-card"
                 style={{
                   border: isComplete ? '2px solid #28a745' : '2px solid #ddd',
@@ -244,7 +261,7 @@ function LocalOrderVerification() {
                     <label>Verificados:</label>
                     <div className="counter-controls">
                       <button
-                        onClick={() => handleDecrement(product.productId)}
+                        onClick={() => handleDecrement(product.lineKey)}
                         disabled={verified <= 0}
                         className="counter-btn"
                       >
@@ -256,12 +273,12 @@ function LocalOrderVerification() {
                         min="0"
                         max={total}
                         value={verified}
-                        onChange={(e) => handleVerifiedChange(product.productId, e.target.value)}
+                        onChange={(e) => handleVerifiedChange(product.lineKey, e.target.value)}
                         className="verified-input"
                       />
 
                       <button
-                        onClick={() => handleIncrement(product.productId)}
+                        onClick={() => handleIncrement(product.lineKey, total)}
                         disabled={verified >= total}
                         className="counter-btn"
                       >
@@ -291,7 +308,7 @@ function LocalOrderVerification() {
           <p>
             Productos completamente verificados: {
               order.products.filter(p =>
-                verifiedCounts[p.productId] === p.quantity
+                verifiedCounts[p.lineKey] === p.quantity
               ).length
             } / {order.products.length}
           </p>

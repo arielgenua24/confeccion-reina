@@ -26,8 +26,8 @@ const OrderProvider = ({ children }) => {
     return [];
   });
 
-  function findItem(cartItemOrProduct) {
-    const foundIndex = cart.findIndex((cartItem) => {
+  function findItem(cartItemOrProduct, sourceCart = cart) {
+    const foundIndex = sourceCart.findIndex((cartItem) => {
       // Handle both old format (direct product) and new format (cart item with product)
       const searchId = cartItemOrProduct?.product?.id || cartItemOrProduct?.id;
       const cartId = cartItem?.product?.id || cartItem?.item?.id;
@@ -62,8 +62,8 @@ const OrderProvider = ({ children }) => {
       );
     });
     if (foundIndex !== -1) {
-      console.log('Found item:', cart[foundIndex])
-      return { item: cart[foundIndex], index: foundIndex };
+      console.log('Found item:', sourceCart[foundIndex])
+      return { item: sourceCart[foundIndex], index: foundIndex };
     }
     return null;
   }
@@ -84,27 +84,30 @@ const OrderProvider = ({ children }) => {
         };
       }
       
-      // Check if item already exists in cart
-      const existingItem = findItem(newCartItem);
-      
-      if (existingItem) {
-        // Item exists - accumulate quantities
-        console.log('Item already exists, accumulating quantities');
-        const updatedQuantity = existingItem.item.quantity + newCartItem.quantity;
-        const newCart = [...cart];
-        newCart[existingItem.index] = {
-          ...existingItem.item,
-          quantity: updatedQuantity
-        };
-        setCart(newCart);
-        localStorage.setItem('cart-r-v1.1', JSON.stringify(newCart));
-      } else {
-        // Item doesn't exist - add as new item
-        console.log('añadiendo items al carrito en el localStorage')
-        console.log(newCartItem)
-        setCart((prevState) => [...prevState, newCartItem]);
-        localStorage.setItem('cart-r-v1.1', JSON.stringify([...cart, newCartItem]))
-      }
+      setCart((prevCart) => {
+        // Check if item already exists in cart using latest state snapshot
+        const existingItem = findItem(newCartItem, prevCart);
+        let nextCart;
+
+        if (existingItem) {
+          // Item exists - accumulate quantities
+          console.log('Item already exists, accumulating quantities');
+          const updatedQuantity = existingItem.item.quantity + newCartItem.quantity;
+          nextCart = [...prevCart];
+          nextCart[existingItem.index] = {
+            ...existingItem.item,
+            quantity: updatedQuantity
+          };
+        } else {
+          // Item doesn't exist - add as new item
+          console.log('añadiendo items al carrito en el localStorage');
+          console.log(newCartItem);
+          nextCart = [...prevCart, newCartItem];
+        }
+
+        localStorage.setItem('cart-r-v1.1', JSON.stringify(nextCart));
+        return nextCart;
+      });
     }
 
     function updateQuantity(cartItem, quantity, originalVariants = null) {

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import useFirestoreContext from '../../hooks/useFirestoreContext';
 import { useOrder } from '../../hooks/useOrder';
+import useOrderDetails from '../../hooks/useOrderDetails';
 import LoadingComponent from '../../components/Loading';
 import { useParams, useSearchParams } from 'react-router-dom';
 import QrVerifyProduct from '../../components/QrVerifyProduct';
@@ -19,7 +20,8 @@ const ProductVerification = () => {
   const [verifiedProducts, setVerifiedProducts] = useState(0);
   const [isLoading, setIsLoading] = useState(false)
 
-  const { updateOrder, getProductsByOrder } = useFirestoreContext();
+  const { updateOrder } = useFirestoreContext();
+  const { getOrderWithProducts } = useOrderDetails();
   const { setOrdersState } = useOrder()
 
   const orderEstado = searchParams.get("orderEstado");
@@ -28,13 +30,19 @@ const ProductVerification = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
-      const productsData = await getProductsByOrder(orderId);
-      setProducts(productsData);
-      console.log(productsData)
+      try {
+        const orderDetails = await getOrderWithProducts(orderId);
+        const productsData = orderDetails?.products || [];
+        setProducts(productsData);
+        console.log('Products loaded for verification:', productsData);
+      } catch (error) {
+        console.error('Error loading products for verification:', error);
+        setProducts([]);
+      }
       setLoading(false);
     };
     fetchProducts();
-  }, [orderId]);
+  }, [orderId, getOrderWithProducts]);
 
   const handleVerify = (productId) => {
     console.log(productId)
