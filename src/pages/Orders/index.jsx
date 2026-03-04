@@ -47,14 +47,21 @@ function Orders() {
   console.log('📊 All orders (local + Firestore):', orders)
 
   const handleDelete = async (order) => {
-
-    if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+    if (window.confirm('¿Estás seguro de que deseas eliminar esta orden? El stock de los productos será restaurado.')) {
       setIsLoading(true)
-      setIsNewData(!isNewData)
-      await deleteOrder(order.id);
-      setIsLoading(false)
+      try {
+        const result = await deleteOrder(order.id);
+        if (result?.restoredProducts?.length > 0) {
+          console.log(`✅ Stock restaurado para ${result.restoredProducts.length} productos`);
+        }
+        setIsNewData(!isNewData)
+      } catch (error) {
+        console.error('Error al eliminar la orden:', error);
+        alert('Error al eliminar la orden. Por favor intenta de nuevo.');
+      } finally {
+        setIsLoading(false)
+      }
     }
-
   }
 
   const handleRetrySync = async (orderId) => {
