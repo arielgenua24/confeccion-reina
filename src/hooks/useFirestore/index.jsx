@@ -803,7 +803,7 @@ const useFirestore = () => {
     incrementOrdersCode,
     updateProduct,
     getOrderById,
-    filterOrdersByDate,  
+    filterOrdersByDate,
     updateOrder,
     deleteOrder,
     getProductsByOrder,

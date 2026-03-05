@@ -17,6 +17,8 @@ import {
 import { db as firestore } from '../firebaseSetUp';
 import {
   doc,
+  collection,
+  getDocs,
   writeBatch,
   serverTimestamp,
   runTransaction
@@ -397,7 +399,10 @@ class SyncWorker {
       });
 
       // Handle the "already exists" case after the transaction
+      // FIX: Even if the order exists, the products subcollection might be missing
+      // (e.g., if the batch write failed on a previous attempt)
       if (result.alreadyExists) {
+        await this.ensureProductsSubcollection(orderId, order.products);
         await updatePendingOrder(orderId, { syncStatus: 'synced' });
         console.log(`✅ Order ${orderId} already exists in Firestore (detected inside transaction)`);
         return {
@@ -421,33 +426,7 @@ class SyncWorker {
         .commit();
 
       // Create products subcollection (for backwards compatibility with ProductsVerification)
-      // This allows ProductsVerification to work exactly as before
-      console.log('📦 Creating products subcollection for backwards compatibility...');
-
-      const batch = writeBatch(firestore);
-
-      // Each cart item (product + variant combination) gets its own document
-      // FIX: Use deterministic IDs based on productId + index instead of
-      // auto-generated IDs. This makes the operation idempotent — if the batch
-      // runs twice (e.g., due to a retry), it overwrites the same documents
-      // instead of creating duplicates.
-      for (const [index, product] of order.products.entries()) {
-        // Deterministic ID: productId + index → idempotent write
-        const deterministicId = `${product.productId}_${index}`;
-        const productDocRef = doc(firestore, 'orders', orderId, 'products', deterministicId);
-
-        batch.set(productDocRef, {
-          productSnapshot: product.productSnapshot,
-          stock: product.quantity,
-          verified: 0, // Start with 0 verified
-          selectedVariants: product.selectedVariants,
-          createdAt: serverTimestamp(),
-          productId: product.productId
-        });
-      }
-
-      await batch.commit();
-      console.log(`✅ Created ${order.products.length} product documents in subcollection`);
+      await this.ensureProductsSubcollection(orderId, order.products);
 
       // Update metadata catalog (products were updated)
       const metadataRef = doc(firestore, 'metadata', 'catalog');
@@ -482,6 +461,43 @@ class SyncWorker {
         error: error.message
       };
     }
+  }
+
+  /**
+   * Ensures the products subcollection exists for an order.
+   * Uses deterministic IDs so the operation is idempotent (safe to retry).
+   *
+   * @param {string} orderId - The order ID
+   * @param {Array} products - The products array from the order
+   */
+  async ensureProductsSubcollection(orderId, products) {
+    const productsCollRef = collection(firestore, 'orders', orderId, 'products');
+    const existingDocs = await getDocs(productsCollRef);
+
+    if (existingDocs.size > 0) {
+      console.log(`📦 Products subcollection already exists for ${orderId} (${existingDocs.size} docs)`);
+      return;
+    }
+
+    console.log(`📦 Creating products subcollection for ${orderId}...`);
+    const batch = writeBatch(firestore);
+
+    for (const [index, product] of products.entries()) {
+      const deterministicId = `${product.productId}_${index}`;
+      const productDocRef = doc(firestore, 'orders', orderId, 'products', deterministicId);
+
+      batch.set(productDocRef, {
+        productSnapshot: product.productSnapshot,
+        stock: product.quantity,
+        verified: 0,
+        selectedVariants: product.selectedVariants,
+        createdAt: serverTimestamp(),
+        productId: product.productId
+      });
+    }
+
+    await batch.commit();
+    console.log(`✅ Created ${products.length} product documents in subcollection for ${orderId}`);
   }
 
   /**
