@@ -188,6 +188,29 @@ const useFirestore = () => {
       }
     };
 
+    // Paginated orders, sorted by createdAt descending
+    const getOrdersPaginated = async (limitParam = 10, startAfterDoc = null) => {
+      try {
+        const ordersRef = collection(db, "orders");
+        let q;
+
+        if (startAfterDoc) {
+          q = query(ordersRef, orderBy("createdAt", "desc"), startAfter(startAfterDoc), limit(limitParam));
+        } else {
+          q = query(ordersRef, orderBy("createdAt", "desc"), limit(limitParam));
+        }
+
+        const ordersSnapshot = await getDocs(q);
+        const ordersData = ordersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        const lastVisibleDoc = ordersSnapshot.docs[ordersSnapshot.docs.length - 1];
+
+        return { orders: ordersData, lastVisibleDoc };
+      } catch (error) {
+        console.error("Error al obtener orders paginados:", error);
+        throw error;
+      }
+    };
+
     const filterOrdersByDate = async() => {
       const orders = await getOrders();
 
@@ -793,6 +816,7 @@ const useFirestore = () => {
 
   return {
     getOrders,
+    getOrdersPaginated,
     createOrderWithProducts,
     addProduct,
     getProducts, // La función original con paginación
