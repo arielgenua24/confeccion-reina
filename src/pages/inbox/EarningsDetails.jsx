@@ -8,22 +8,39 @@ import './EarningsDetails.css'
 function EarningsDetails() {
   const { period } = useParams()
   const navigate = useNavigate()
-  const { filterOrdersByDate, getProductsByOrder } = useFirestoreContext()
-  
+  const { getOrdersByDateRange, getProductsByOrder } = useFirestoreContext()
+
   const [orders, setOrders] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedDay, setSelectedDay] = useState(null)
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [modalImage, setModalImage] = useState(null)
 
-  // Fetch orders
+  // Calculate the start date based on the period
+  const startDate = useMemo(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    if (period === 'daily') {
+      return today
+    } else if (period === 'weekly') {
+      const weekAgo = new Date(today)
+      weekAgo.setDate(weekAgo.getDate() - 7)
+      return weekAgo
+    } else if (period === 'monthly') {
+      const monthAgo = new Date(today)
+      monthAgo.setDate(monthAgo.getDate() - 30)
+      return monthAgo
+    }
+    return today
+  }, [period])
+
+  // Fetch only orders within the date range
   useEffect(() => {
     const fetchOrders = async () => {
       setIsLoading(true)
       try {
-        const ordersList = await filterOrdersByDate()
-        // We need to fetch details for all orders to calculate totals correctly
-        // In a real large app, we might want to optimize this, but for now we follow the pattern
+        const ordersList = await getOrdersByDateRange(startDate)
         const ordersWithDetails = await Promise.all(
           ordersList.map(async (order) => {
             const products = await getProductsByOrder(order.id)
@@ -31,12 +48,7 @@ function EarningsDetails() {
               const price = parseFloat(item.productData?.price) || 0
               return acc + (item.stock * price)
             }, 0)
-            
-            return {
-              ...order,
-              total,
-              products: products
-            }
+            return { ...order, total, products }
           })
         )
         setOrders(ordersWithDetails)
@@ -45,9 +57,9 @@ function EarningsDetails() {
       }
       setIsLoading(false)
     }
-    
+
     fetchOrders()
-  }, [filterOrdersByDate, getProductsByOrder])
+  }, [getOrdersByDateRange, getProductsByOrder, startDate])
 
   // Helper: Get Date Object
   const getOrderDate = (order) => {
@@ -72,46 +84,20 @@ function EarningsDetails() {
     return date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })
   }
 
-  // Filter Data based on Period
-  const filteredData = useMemo(() => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    if (period === 'daily') {
-      return orders.filter(order => {
-        const d = getOrderDate(order)
-        if (!d) return false
-        const orderDay = new Date(d)
-        orderDay.setHours(0, 0, 0, 0)
-        return orderDay.getTime() === today.getTime()
-      })
-    } else if (period === 'weekly') {
-      const weekAgo = new Date(today)
-      weekAgo.setDate(weekAgo.getDate() - 7)
-      return orders.filter(order => {
-        const d = getOrderDate(order)
-        return d && d >= weekAgo
-      })
-    } else if (period === 'monthly') {
-      const monthAgo = new Date(today)
-      monthAgo.setDate(monthAgo.getDate() - 30)
-      return orders.filter(order => {
-        const d = getOrderDate(order)
-        return d && d >= monthAgo
-      })
-    }
-    return []
-  }, [orders, period])
+  // Total earnings for the period
+  const totalEarnings = useMemo(() => {
+    return orders.reduce((sum, o) => sum + o.total, 0)
+  }, [orders])
 
   // Group by Day for Weekly/Monthly
   const groupedByDay = useMemo(() => {
     if (period === 'daily') return null
 
     const groups = {}
-    filteredData.forEach(order => {
+    orders.forEach(order => {
       const d = getOrderDate(order)
       if (!d) return
-      const dayKey = d.toLocaleDateString('es-ES') // Simple key
+      const dayKey = d.toLocaleDateString('es-ES')
       if (!groups[dayKey]) {
         groups[dayKey] = {
           date: d,
@@ -124,7 +110,58 @@ function EarningsDetails() {
     })
 
     return Object.values(groups).sort((a, b) => b.date - a.date)
-  }, [filteredData, period])
+  }, [orders, period])
+
+  // Top 5 products for the period
+  const topProducts = useMemo(() => {
+    const productCounts = {}
+    orders.forEach(order => {
+      order.products?.forEach(item => {
+        const productName = item.productData?.name || 'Producto desconocido'
+        productCounts[productName] = (productCounts[productName] || 0) + (item.stock || 0)
+      })
+    })
+    return Object.entries(productCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+  }, [orders])
+
+  const topProductsLabel = period === 'daily'
+    ? '5 más vendidos de hoy'
+    : period === 'weekly'
+      ? 'Top 5 más vendidos de la semana'
+      : 'Top 5 más vendidos del mes'
+
+  // Top Products Section (reusable)
+  const renderTopProducts = () => (
+    <div className="ed-top-products">
+      <div className="ed-top-products-header">
+        <h3 className="ed-section-title" style={{ textTransform: 'none', letterSpacing: 0 }}>Resumen de Elementos</h3>
+        <span className="ed-top-products-badge">{topProductsLabel}</span>
+      </div>
+      <div className="ed-list" style={{ marginTop: '12px' }}>
+        {topProducts.length > 0 ? (
+          topProducts.map(([name, count]) => {
+            const maxCount = topProducts[0][1]
+            const percentage = (count / maxCount) * 100
+            return (
+              <div key={name} className="ed-list-item" style={{ cursor: 'default', flexDirection: 'column', alignItems: 'stretch', gap: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span className="ed-item-name" style={{ fontSize: '15px' }}>{name}</span>
+                  <span style={{ fontSize: '14px', color: '#86868b' }}>{count}</span>
+                </div>
+                <div style={{ height: '6px', background: '#f5f5f7', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${percentage}%`, background: '#1d1d1f', borderRadius: '3px', transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+                </div>
+              </div>
+            )
+          })
+        ) : (
+          <div className="ed-empty">No hay ventas en este periodo</div>
+        )}
+      </div>
+    </div>
+  )
 
   // Render Logic
   const renderContent = () => {
@@ -138,7 +175,7 @@ function EarningsDetails() {
             </button>
             <h2 className="ed-title">Detalle de Venta</h2>
           </div>
-          
+
           <div className="ed-order-summary">
             <span className="ed-order-id">ID: {selectedOrder.id.slice(0, 8)}...</span>
             <span className="ed-order-total">{formatCurrency(selectedOrder.total)}</span>
@@ -165,9 +202,9 @@ function EarningsDetails() {
             {selectedOrder.products?.map((item, idx) => (
               <div key={idx} className="ed-list-item product">
                 {item.productData?.imageUrl && (
-                  <img 
-                    src={item.productData.imageUrl} 
-                    alt={item.productData.name} 
+                  <img
+                    src={item.productData.imageUrl}
+                    alt={item.productData.name}
                     className="ed-product-image"
                     loading="lazy"
                     onClick={(e) => {
@@ -228,12 +265,10 @@ function EarningsDetails() {
           </div>
           <div className="ed-total-banner">
             <span className="ed-banner-label">Total del día</span>
-            <span className="ed-banner-amount">
-              {formatCurrency(filteredData.reduce((sum, o) => sum + o.total, 0))}
-            </span>
+            <span className="ed-banner-amount">{formatCurrency(totalEarnings)}</span>
           </div>
           <div className="ed-list">
-            {filteredData.length > 0 ? filteredData.map(order => (
+            {orders.length > 0 ? orders.map(order => (
               <div key={order.id} className="ed-list-item" onClick={() => setSelectedOrder(order)}>
                 <div className="ed-item-info">
                   <span className="ed-item-name">Venta {getOrderDate(order).toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'})}</span>
@@ -246,6 +281,7 @@ function EarningsDetails() {
               <div className="ed-empty">No hay ventas hoy</div>
             )}
           </div>
+          {renderTopProducts()}
         </div>
       )
     }
@@ -263,9 +299,7 @@ function EarningsDetails() {
         </div>
         <div className="ed-total-banner">
           <span className="ed-banner-label">Total acumulado</span>
-          <span className="ed-banner-amount">
-            {formatCurrency(filteredData.reduce((sum, o) => sum + o.total, 0))}
-          </span>
+          <span className="ed-banner-amount">{formatCurrency(totalEarnings)}</span>
         </div>
         <div className="ed-list">
           {groupedByDay && groupedByDay.length > 0 ? groupedByDay.map(dayGroup => (
@@ -281,6 +315,7 @@ function EarningsDetails() {
             <div className="ed-empty">No hay datos para este periodo</div>
           )}
         </div>
+        {renderTopProducts()}
       </div>
     )
   }
@@ -289,8 +324,8 @@ function EarningsDetails() {
     <div className="ed-container">
       <LoadingComponent isLoading={isLoading} />
       {!isLoading && renderContent()}
-      
-      <ImageModal 
+
+      <ImageModal
         isOpen={!!modalImage}
         imageSrc={modalImage}
         onClose={() => setModalImage(null)}

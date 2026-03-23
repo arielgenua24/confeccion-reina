@@ -211,6 +211,24 @@ const useFirestore = () => {
       }
     };
 
+    // Fetch orders from Firestore filtered by date range (server-side)
+    // Only fetches orders with createdAt >= startDate, saving reads
+    const getOrdersByDateRange = async (startDate) => {
+      try {
+        const ordersRef = collection(db, "orders");
+        const q = query(
+          ordersRef,
+          where("createdAt", ">=", startDate),
+          orderBy("createdAt", "desc")
+        );
+        const ordersSnapshot = await getDocs(q);
+        return ordersSnapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      } catch (error) {
+        console.error("Error fetching orders by date range:", error);
+        throw error;
+      }
+    };
+
     const filterOrdersByDate = async() => {
       const orders = await getOrders();
 
@@ -828,6 +846,7 @@ const useFirestore = () => {
     updateProduct,
     getOrderById,
     filterOrdersByDate,
+    getOrdersByDateRange,
     updateOrder,
     deleteOrder,
     getProductsByOrder,

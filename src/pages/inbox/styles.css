@@ -143,12 +143,6 @@
   border-radius: 6px;
 }
 
-/* Chart */
-.apple-chart-container {
-  height: 200px;
-  width: 100%;
-}
-
 /* List Items */
 .apple-list {
   display: flex;

@@ -208,3 +208,23 @@
 .ed-product-image:hover {
   transform: scale(1.05);
 }
+
+/* Top Products Section */
+.ed-top-products {
+  margin-top: 24px;
+}
+
+.ed-top-products-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.ed-top-products-badge {
+  font-size: 12px;
+  background: white;
+  color: #86868b;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
