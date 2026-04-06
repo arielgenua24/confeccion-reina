@@ -36,6 +36,8 @@ const SyncDebug = lazy(() => import('./pages/SyncDebug'));
 const SearchPage = lazy(() => import('./pages/Search'));
 const TeamNotesPage = lazy(() => import('./pages/TeamNotesPage'));
 const MiCompra = lazy(() => import('./pages/MiCompra'));
+const SoldProducts = lazy(() => import('./pages/SoldProducts'));
+const SoldProductsDetail = lazy(() => import('./pages/SoldProducts/Detail'));
 
 function AppRouter() {
   let router = useRoutes([
@@ -59,6 +61,8 @@ function AppRouter() {
     { path: '/sync-debug', element: <SyncDebug /> },
     { path: '/search', element: <SearchPage /> },
     { path: '/team-notes', element: <TeamNotesPage /> },
+    { path: '/selled-products', element: <SoldProducts /> },
+    { path: '/selled-products/:period', element: <SoldProductsDetail /> },
     // Ruta PÚBLICA - para que clientes vean su compra (no requiere login)
     { path: '/mi-compra/:orderId', element: <MiCompra /> },
   ]);

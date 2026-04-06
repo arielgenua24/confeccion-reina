@@ -229,6 +229,24 @@ const useFirestore = () => {
       }
     };
 
+    // Fetch orders within a bounded date range (both start and end)
+    const getOrdersByDateRangeBounded = async (startDate, endDate) => {
+      try {
+        const ordersRef = collection(db, "orders");
+        const q = query(
+          ordersRef,
+          where("createdAt", ">=", startDate),
+          where("createdAt", "<=", endDate),
+          orderBy("createdAt", "desc")
+        );
+        const ordersSnapshot = await getDocs(q);
+        return ordersSnapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      } catch (error) {
+        console.error("Error fetching orders by bounded date range:", error);
+        throw error;
+      }
+    };
+
     const filterOrdersByDate = async() => {
       const orders = await getOrders();
 
@@ -640,6 +658,7 @@ const useFirestore = () => {
         }
 
         const orderCode = await incrementOrdersCode();
+        const itemCount = products.reduce((s, el) => s + Number(el.quantity || 0), 0);
         // Crear el pedido en la colección "orders"
         const pedidoRef = await addDoc(collection(db, "orders"), {
             orderCode,
@@ -648,6 +667,8 @@ const useFirestore = () => {
             telefono,
             direccion,
             estado: "pendiente",
+            itemCount,
+            createdAt: serverTimestamp(),
         });
 
         // Guardar cada línea del pedido (incluye variantes)
@@ -847,6 +868,7 @@ const useFirestore = () => {
     getOrderById,
     filterOrdersByDate,
     getOrdersByDateRange,
+    getOrdersByDateRangeBounded,
     updateOrder,
     deleteOrder,
     getProductsByOrder,

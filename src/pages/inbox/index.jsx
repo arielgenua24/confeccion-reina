@@ -1,7 +1,9 @@
 import useFirestoreContext from '../../hooks/useFirestoreContext'
 import LoadingComponent from '../../components/Loading'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { getMonthWeeks, getMonthNameEs } from '../../utils/dateUtils'
+import kellyAudio from '../../../../audio/kelly.mp3'
 import './styles.css'
 
 function Inbox() {
@@ -10,14 +12,28 @@ function Inbox() {
   const { getOrdersByDateRange, getProductsByOrder } = useFirestoreContext()
   const navigate = useNavigate()
 
-  // Get today's date at midnight
   const today = useMemo(() => {
     const d = new Date()
     d.setHours(0, 0, 0, 0)
     return d
   }, [])
 
-  // Fetch only today's orders
+  const now = useMemo(() => new Date(), [])
+  const weeks = useMemo(() => getMonthWeeks(now), [now])
+  const monthName = useMemo(() => getMonthNameEs(now), [now])
+  const currentWeek = useMemo(() => weeks.find(w => w.isCurrent), [weeks])
+  const dd = String(now.getDate()).padStart(2, '0')
+  const mm = String(now.getMonth() + 1).padStart(2, '0')
+
+  const audioRef = useRef(null)
+  const playAudio = () => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio(kellyAudio)
+    }
+    audioRef.current.currentTime = 0
+    audioRef.current.play()
+  }
+
   useEffect(() => {
     const fetchOrders = async () => {
       setIsLoading(true)
@@ -39,16 +55,13 @@ function Inbox() {
       }
       setIsLoading(false)
     }
-
     fetchOrders()
   }, [getOrdersByDateRange, getProductsByOrder, today])
 
-  // Calculate daily earnings
   const dailyEarnings = useMemo(() => {
     return orders.reduce((sum, order) => sum + order.total, 0)
   }, [orders])
 
-  // Top 5 products of today
   const topProducts = useMemo(() => {
     const productCounts = {}
     orders.forEach(order => {
@@ -62,15 +75,9 @@ function Inbox() {
       .slice(0, 5)
   }, [orders])
 
-  // Format currency
-  const formatCurrency = (amount) => {
-    return `$${amount.toLocaleString('es-ES')}`
-  }
+  const formatCurrency = (amount) => `$${amount.toLocaleString('es-ES')}`
 
-  // Navigate to earnings detail page
-  const navigateToEarnings = (period) => {
-    navigate(`/inbox/earnings/${period}`)
-  }
+  const navigateToEarnings = (period) => navigate(`/inbox/earnings/${period}`)
 
   return (
     <div className="apple-inbox">
@@ -78,19 +85,20 @@ function Inbox() {
 
       {!isLoading && (
         <div className="apple-inbox-content">
+
           <header className="apple-header">
-            <h1 className="apple-greeting">Hola! lista para revisar tus ingresos?</h1>
+            <h1 className="apple-greeting">Hola! lista para<br />revisar tus ingresos?</h1>
           </header>
 
-          {/* Horizontal Scrollable Cards */}
+          {/* Earnings cards */}
           <div className="apple-cards-scroll">
             <button
               type="button"
               className="apple-card apple-card-button"
               onClick={() => navigateToEarnings('daily')}
-              aria-label="Ver ingresos del día"
             >
-              <span className="apple-card-label">Ingresos del día {today.getDate()}/{today.getMonth() + 1}</span>
+              <span className="apple-card-label">Ingresos del día</span>
+              <span className="apple-card-date">{today.getDate()}/{today.getMonth() + 1}</span>
               <span className="apple-card-amount">{formatCurrency(dailyEarnings)}</span>
               <span className="apple-card-cta">Ver detalle</span>
             </button>
@@ -99,7 +107,6 @@ function Inbox() {
               type="button"
               className="apple-card apple-card-button"
               onClick={() => navigateToEarnings('weekly')}
-              aria-label="Ver ingresos de la semana"
             >
               <span className="apple-card-label">Ingresos de la semana</span>
               <span className="apple-card-cta">Ver detalle</span>
@@ -109,18 +116,17 @@ function Inbox() {
               type="button"
               className="apple-card apple-card-button"
               onClick={() => navigateToEarnings('monthly')}
-              aria-label="Ver ingresos del mes"
             >
               <span className="apple-card-label">Ingresos del mes</span>
               <span className="apple-card-cta">Ver detalle</span>
             </button>
           </div>
 
-          {/* Top Products of Today */}
+          {/* Top Products */}
           <section className="apple-section">
             <div className="apple-section-header">
               <h2 className="apple-section-title">Resumen de Elementos</h2>
-              <span className="apple-section-badge">5 más vendidos de hoy</span>
+              <span className="apple-section-badge">Top 5 hoy</span>
             </div>
 
             <div className="apple-list">
@@ -128,7 +134,6 @@ function Inbox() {
                 topProducts.map(([name, count]) => {
                   const maxCount = topProducts[0][1]
                   const percentage = (count / maxCount) * 100
-
                   return (
                     <div key={name} className="apple-list-item">
                       <div className="apple-item-info">
@@ -136,10 +141,7 @@ function Inbox() {
                         <span className="apple-item-count">{count}</span>
                       </div>
                       <div className="apple-progress-bg">
-                        <div
-                          className="apple-progress-fill"
-                          style={{ width: `${percentage}%` }}
-                        />
+                        <div className="apple-progress-fill" style={{ width: `${percentage}%` }} />
                       </div>
                     </div>
                   )
@@ -149,6 +151,77 @@ function Inbox() {
               )}
             </div>
           </section>
+
+          {/* ── Cuántas prendas has vendido ── */}
+          <section className="sp-section">
+
+            <header className="sp-section-header">
+              <div className="sp-logo-circle" onClick={playAudio} role="button" tabIndex={0}>
+                <img
+                  src="https://ik.imagekit.io/arielgenua/ChatGPT%20Image%206%20abr%202026,%2005_54_51%20p.m..png"
+                  alt="Reina Chura"
+                />
+              </div>
+              <h2 className="sp-section-title">Cuántas prendas has vendido<span className="sp-title-accent">?</span></h2>
+            </header>
+
+            {/* Recientes */}
+            <div className="sp-group">
+              <p className="sp-group-label">Recientes</p>
+              <div className="sp-recientes-row">
+                <button
+                  className="sp-card sp-card-reciente sp-card--active"
+                  onClick={() => navigate('/selled-products/today')}
+                >
+                  <span className="sp-card-eyebrow">HOY</span>
+                  <span className="sp-card-main">{dd}/{mm}</span>
+                </button>
+                <button
+                  className="sp-card sp-card-reciente sp-card--active"
+                  onClick={() => navigate(`/selled-products/week-${currentWeek?.weekNum ?? 1}`)}
+                >
+                  <span className="sp-card-eyebrow">Esta semana</span>
+                  <span className="sp-card-main">{monthName}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Semanas */}
+            <div className="sp-group">
+              <p className="sp-group-label">Semanas</p>
+              <div className="sp-weeks-scroll">
+                {weeks.map((week) => {
+                  const ordinals = ['1ra', '2da', '3ra', '4ta', '5ta']
+                  const ord = ordinals[week.weekNum - 1] || `${week.weekNum}ta`
+                  return (
+                    <button
+                      key={week.weekNum}
+                      className={`sp-card sp-card-week${week.isFuture ? ' sp-card--future' : ''}${week.isCurrent ? ' sp-card--active' : ''}`}
+                      onClick={() => !week.isFuture && navigate(`/selled-products/week-${week.weekNum}`)}
+                      disabled={week.isFuture}
+                    >
+                      <span className="sp-card-eyebrow">{ord} semana</span>
+                      <span className="sp-card-main sp-card-main--sm">de {monthName}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Mes */}
+            <div className="sp-group">
+              <p className="sp-group-label">Mes</p>
+              <button
+                className="sp-card sp-card-month"
+                onClick={() => navigate('/selled-products/month')}
+              >
+                <span className="sp-card-eyebrow">Este mes</span>
+                <span className="sp-card-main">{monthName}</span>
+              </button>
+            </div>
+
+          </section>
+
         </div>
       )}
     </div>
