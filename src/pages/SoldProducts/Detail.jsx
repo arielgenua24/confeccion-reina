@@ -10,6 +10,16 @@ import {
   getMonthNameEs,
   formatDateEs,
 } from '../../utils/dateUtils'
+import {
+  getWithTTL,
+  getWithTTLOrStale,
+  setWithTTL,
+  cacheAgeLabel,
+  todayKey,
+  weekKey,
+  monthKey,
+  TTL_1H,
+} from '../../utils/cache'
 import './styles.css'
 
 // Sum item counts from order documents
@@ -22,37 +32,30 @@ function computeItemCount(orders) {
   }, 0)
 }
 
-function getCacheKey(period) {
-  const today = new Date()
-  const y = today.getFullYear()
-  const m = String(today.getMonth() + 1).padStart(2, '0')
-  if (period === 'today') return null // never cache today
-  if (period === 'month') return `rc_sold_month_${y}_${m}`
-  if (period.startsWith('week-')) return `rc_sold_week_${y}_${m}_${period.replace('week-', '')}`
+// Returns { key, isTTL } or null.
+// isTTL=true  → 1-hour TTL cache (current/mutable periods)
+// isTTL=false → permanent cache (past periods, counts never change)
+function resolveCacheKey(period, weeks) {
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+
+  if (period === 'today') {
+    return { key: todayKey('rc_ttl_today'), isTTL: true }
+  }
+  if (period === 'month') {
+    return { key: monthKey('rc_ttl_month'), isTTL: true }
+  }
+  if (period.startsWith('week-')) {
+    const num = parseInt(period.replace('week-', ''), 10)
+    const week = weeks.find(w => w.weekNum === num)
+    if (!week) return null
+    if (week.isPast) {
+      return { key: `rc_sold_week_${y}_${m}_${num}`, isTTL: false }
+    }
+    return { key: weekKey('rc_ttl_week', num), isTTL: true }
+  }
   return null
-}
-
-function getCached(key) {
-  if (!key) return null
-  try {
-    const raw = localStorage.getItem(key)
-    if (!raw) return null
-    const { count, isPast } = JSON.parse(raw)
-    if (isPast) return count // only past periods are cached (their counts never change)
-    return null // current periods always fetch fresh data
-  } catch {
-    return null
-  }
-}
-
-function setCache(key, count, isPast) {
-  if (!key) return
-  if (!isPast) return // only cache periods fully in the past (their counts never change)
-  try {
-    localStorage.setItem(key, JSON.stringify({ count, isPast: true }))
-  } catch {
-    // ignore quota errors
-  }
 }
 
 function getDateRange(period, weeks) {
@@ -131,14 +134,42 @@ function SoldProductsDetail() {
 
   const [count, setCount] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [cacheInfo, setCacheInfo] = useState(null)
 
   useEffect(() => {
-    const cacheKey = getCacheKey(period)
-    const cached = getCached(cacheKey)
-    if (cached !== null) {
-      setCount(cached)
+    const resolved = resolveCacheKey(period, weeks)
+
+    if (!resolved) {
+      setCount(0)
       setIsLoading(false)
       return
+    }
+
+    const { key, isTTL } = resolved
+
+    // TTL path: serve instantly from cache if still fresh
+    if (isTTL) {
+      const cached = getWithTTL(key)
+      if (cached) {
+        setCount(cached.data.count)
+        setCacheInfo({ cachedAt: cached.cachedAt, isStale: false })
+        setIsLoading(false)
+        return
+      }
+    } else {
+      // Permanent path: past periods never change
+      try {
+        const raw = localStorage.getItem(key)
+        if (raw) {
+          const { count: c, isPast } = JSON.parse(raw)
+          if (isPast) {
+            setCount(c)
+            setCacheInfo(null)
+            setIsLoading(false)
+            return
+          }
+        }
+      } catch { /* ignore */ }
     }
 
     const range = getDateRange(period, weeks)
@@ -153,13 +184,30 @@ function SoldProductsDetail() {
       .then(orders => {
         const total = computeItemCount(orders)
         setCount(total)
+        setCacheInfo(null)
 
-        // Determine if this period is fully in the past
-        const isPast = range.end < getTodayStart()
-        setCache(cacheKey, total, isPast)
+        if (isTTL) {
+          setWithTTL(key, { count: total }, TTL_1H)
+        } else {
+          const isPast = range.end < getTodayStart()
+          if (isPast) {
+            try {
+              localStorage.setItem(key, JSON.stringify({ count: total, isPast: true }))
+            } catch { /* ignore */ }
+          }
+        }
       })
       .catch(err => {
         console.error('Error fetching sold products:', err)
+        // Last resort: show stale data even if TTL expired
+        if (isTTL) {
+          const stale = getWithTTLOrStale(key)
+          if (stale) {
+            setCount(stale.data.count)
+            setCacheInfo({ cachedAt: stale.cachedAt, isStale: true })
+            return
+          }
+        }
         setCount(0)
       })
       .finally(() => setIsLoading(false))
@@ -186,9 +234,21 @@ function SoldProductsDetail() {
               <span className="sp-chat-dot" />
             </p>
           ) : (
-            <p className="sp-chat-message">
-              {buildMessage(period, count, weeks)}
-            </p>
+            <>
+              <p className="sp-chat-message">
+                {buildMessage(period, count, weeks)}
+              </p>
+              {cacheInfo && (
+                <p className="sp-cache-note">
+                  {cacheInfo.isStale
+                    ? `Sin conexión · ${cacheAgeLabel(cacheInfo.cachedAt)}`
+                    : `Datos de ${cacheAgeLabel(cacheInfo.cachedAt)}`}
+                </p>
+              )}
+              <span className="sp-refresh-note">
+                En aproximadamente una hora tendrás un resumen de las nuevas ventas
+              </span>
+            </>
           )}
         </div>
       </div>

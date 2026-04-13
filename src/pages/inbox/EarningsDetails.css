@@ -54,6 +54,16 @@
   color: #1d1d1f;
 }
 
+.ed-banner-sub {
+  font-size: 13px;
+  color: #1d1d1f;
+  background-color: #ff9500;
+  margin-top: 8px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
 .ed-list {
   background: white;
   border-radius: 12px;

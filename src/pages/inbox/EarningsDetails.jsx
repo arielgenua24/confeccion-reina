@@ -266,6 +266,7 @@ function EarningsDetails() {
           <div className="ed-total-banner">
             <span className="ed-banner-label">Total del día</span>
             <span className="ed-banner-amount">{formatCurrency(totalEarnings)}</span>
+            <div className="ed-banner-sub">{orders.length} ventas realizadas</div>
           </div>
           <div className="ed-list">
             {orders.length > 0 ? orders.map(order => (
@@ -300,6 +301,7 @@ function EarningsDetails() {
         <div className="ed-total-banner">
           <span className="ed-banner-label">Total acumulado</span>
           <span className="ed-banner-amount">{formatCurrency(totalEarnings)}</span>
+          <div className="ed-banner-sub">{orders.length} ventas realizadas</div>
         </div>
         <div className="ed-list">
           {groupedByDay && groupedByDay.length > 0 ? groupedByDay.map(dayGroup => (
