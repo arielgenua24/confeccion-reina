@@ -114,15 +114,19 @@ function EarningsDetails() {
 
   // Top 5 products for the period
   const topProducts = useMemo(() => {
-    const productCounts = {}
+    const productMap = {}
     orders.forEach(order => {
       order.products?.forEach(item => {
         const productName = item.productData?.name || 'Producto desconocido'
-        productCounts[productName] = (productCounts[productName] || 0) + (item.stock || 0)
+        const imageUrl = item.productData?.imageUrl
+        if (!productMap[productName]) {
+          productMap[productName] = { count: 0, imageUrl }
+        }
+        productMap[productName].count += (item.stock || 0)
       })
     })
-    return Object.entries(productCounts)
-      .sort((a, b) => b[1] - a[1])
+    return Object.entries(productMap)
+      .sort((a, b) => b[1].count - a[1].count)
       .slice(0, 5)
   }, [orders])
 
@@ -141,12 +145,22 @@ function EarningsDetails() {
       </div>
       <div className="ed-list" style={{ marginTop: '12px' }}>
         {topProducts.length > 0 ? (
-          topProducts.map(([name, count]) => {
-            const maxCount = topProducts[0][1]
+          topProducts.map(([name, data]) => {
+            const { count, imageUrl } = data
+            const maxCount = topProducts[0][1].count
             const percentage = (count / maxCount) * 100
             return (
               <div key={name} className="ed-list-item" style={{ cursor: 'default', flexDirection: 'column', alignItems: 'stretch', gap: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  {imageUrl && (
+                    <img
+                      src={imageUrl}
+                      alt={name}
+                      loading="lazy"
+                      onClick={() => setModalImage(imageUrl)}
+                      style={{ cursor: 'zoom-in', width: '60px', height: '60px', objectFit: 'cover', borderRadius: '4px', marginRight: '8px' }}
+                    />
+                  )}
                   <span className="ed-item-name" style={{ fontSize: '15px' }}>{name}</span>
                   <span style={{ fontSize: '14px', color: '#86868b' }}>{count}</span>
                 </div>
@@ -303,6 +317,8 @@ function EarningsDetails() {
           <span className="ed-banner-amount">{formatCurrency(totalEarnings)}</span>
           <div className="ed-banner-sub">{orders.length} ventas realizadas</div>
         </div>
+        {renderTopProducts()}
+        <h3 className="ed-section-title" style={{ marginTop: '24px', marginBottom: '12px' }}>TUS VENTAS</h3>
         <div className="ed-list">
           {groupedByDay && groupedByDay.length > 0 ? groupedByDay.map(dayGroup => (
             <div key={dayGroup.date.toISOString()} className="ed-list-item" onClick={() => setSelectedDay(dayGroup)}>
@@ -317,7 +333,6 @@ function EarningsDetails() {
             <div className="ed-empty">No hay datos para este periodo</div>
           )}
         </div>
-        {renderTopProducts()}
       </div>
     )
   }

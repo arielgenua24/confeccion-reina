@@ -5,6 +5,58 @@ import { db } from '../../firebaseSetUp';
 import ImageModal from '../../components/ImageModal';
 import './styles.css';
 
+// --- Banner Promocional ---
+const PROMO_HEADLINE = 'Vendé más con menos stock perdido.';
+const PROMO_BULLETS = [
+  'Aprende cuales son tus top productos, cuáles te hacen perder plata y cual reponer mas rapido con el mismo sistema que usa Reina Chura.',
+  'Página web + inventario con QR + análisis de datos con IA.',
+];
+
+const WA_NUMBER = `549${import.meta.env.VITE_PHONE_NUMBER}`;
+const WA_MESSAGE = encodeURIComponent('Hola! Vi el sistema de Reina Chura y me interesa saber más. 📌 Cupón: reina-chura');
+
+function PromoBanner() {
+  const [clicked, setClicked] = useState(false);
+
+  const handleClick = () => {
+    setClicked(true);
+  };
+
+  return (
+    <a
+      href={`https://wa.me/${WA_NUMBER}?text=${WA_MESSAGE}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="promo-banner"
+      onClick={handleClick}
+    >
+      <div className="promo-banner-bg">
+        <img
+          src="https://ik.imagekit.io/arielgenua/orange-backgorund"
+          alt=""
+          className="promo-banner-bg-img"
+          loading="lazy"
+        />
+      </div>
+      <div className="promo-banner-content">
+        <div className="promo-offer-badge">50% OFF <span className="promo-coupon">cupón: reina-chura</span></div>
+        <h3 className="promo-headline">{PROMO_HEADLINE}</h3>
+        <ul className="promo-bullets">
+          {PROMO_BULLETS.map((bullet, i) => (
+            <li key={i}>{bullet}</li>
+          ))}
+        </ul>
+        <span className="promo-cta">
+          {clicked ? '💬 Hablar con un asesor' : 'Quiero saber más'}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </span>
+      </div>
+    </a>
+  );
+}
+
 /**
  * Página PÚBLICA - No requiere autenticación
  * El cliente escanea el QR y ve su compra
@@ -135,9 +187,12 @@ function MiCompra() {
 
         </div>
 
+        {/* Banner promocional */}
+        <PromoBanner />
+
         {/* Lista de productos */}
         <div className="products-section">
-          <h2 className="section-title">Productos</h2>
+          <h2 className="section-title">Tu compra</h2>
 
           <div className="products-list">
             {order.products && order.products.map((product, index) => {

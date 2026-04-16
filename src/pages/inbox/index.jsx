@@ -1,5 +1,6 @@
 import useFirestoreContext from '../../hooks/useFirestoreContext'
 import LoadingComponent from '../../components/Loading'
+import ImageModal from '../../components/ImageModal'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getMonthWeeks, getMonthNameEs } from '../../utils/dateUtils'
@@ -9,6 +10,7 @@ import './styles.css'
 function Inbox() {
   const [orders, setOrders] = useState([])
   const [isLoading, setIsLoading] = useState(false)
+  const [modalImage, setModalImage] = useState(null)
   const { getOrdersByDateRange, getProductsByOrder } = useFirestoreContext()
   const navigate = useNavigate()
 
@@ -63,15 +65,19 @@ function Inbox() {
   }, [orders])
 
   const topProducts = useMemo(() => {
-    const productCounts = {}
+    const productMap = {}
     orders.forEach(order => {
       order.products?.forEach(item => {
         const productName = item.productData?.name || 'Producto desconocido'
-        productCounts[productName] = (productCounts[productName] || 0) + (item.stock || 0)
+        const imageUrl = item.productData?.imageUrl
+        if (!productMap[productName]) {
+          productMap[productName] = { count: 0, imageUrl }
+        }
+        productMap[productName].count += (item.stock || 0)
       })
     })
-    return Object.entries(productCounts)
-      .sort((a, b) => b[1] - a[1])
+    return Object.entries(productMap)
+      .sort((a, b) => b[1].count - a[1].count)
       .slice(0, 5)
   }, [orders])
 
@@ -131,12 +137,22 @@ function Inbox() {
 
             <div className="apple-list">
               {topProducts.length > 0 ? (
-                topProducts.map(([name, count]) => {
-                  const maxCount = topProducts[0][1]
+                topProducts.map(([name, data]) => {
+                  const { count, imageUrl } = data
+                  const maxCount = topProducts[0][1].count
                   const percentage = (count / maxCount) * 100
                   return (
                     <div key={name} className="apple-list-item">
                       <div className="apple-item-info">
+                        {imageUrl && (
+                          <img
+                            src={imageUrl}
+                            alt={name}
+                            loading="lazy"
+                            onClick={() => setModalImage(imageUrl)}
+                            style={{ cursor: 'zoom-in', width: '60px', height: '60px', objectFit: 'cover', borderRadius: '4px', marginRight: '8px' }}
+                          />
+                        )}
                         <span className="apple-item-name">{name}</span>
                         <span className="apple-item-count">{count}</span>
                       </div>
@@ -224,6 +240,12 @@ function Inbox() {
 
         </div>
       )}
+
+      <ImageModal
+        isOpen={!!modalImage}
+        imageSrc={modalImage}
+        onClose={() => setModalImage(null)}
+      />
     </div>
   )
 }
