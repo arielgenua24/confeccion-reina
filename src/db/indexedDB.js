@@ -51,12 +51,20 @@ class ReinaChuraDatabase extends Dexie {
       orderHistory: 'orderId, createdAt, customerName'
     });
 
+    // Version 2: Add image cache tables
+    this.version(2).stores({
+      inboxImageCache: 'url, cachedAt',
+      searchImageCache: 'url, lastAccessed'
+    });
+
     // Define table references with TypeScript-like typing (for better IDE support)
     this.products = this.table('products');
     this.catalogMetadata = this.table('catalogMetadata');
     this.pendingOrders = this.table('pendingOrders');
     this.syncQueue = this.table('syncQueue');
     this.orderHistory = this.table('orderHistory');
+    this.inboxImageCache = this.table('inboxImageCache');
+    this.searchImageCache = this.table('searchImageCache');
   }
 }
 
@@ -90,6 +98,9 @@ export const initializeDB = async () => {
       console.log('✅ IndexedDB already initialized');
     }
 
+    // Prune expired image cache entries (non-blocking, lazy import to avoid circular dep)
+    import('../services/imageCacheService').then(m => m.pruneExpiredInboxImages()).catch(() => {});
+
     return true;
   } catch (error) {
     console.error('❌ Failed to initialize IndexedDB:', error);
@@ -116,6 +127,8 @@ export const clearAllData = async () => {
     await db.pendingOrders.clear();
     await db.syncQueue.clear();
     await db.orderHistory.clear();
+    await db.inboxImageCache.clear();
+    await db.searchImageCache.clear();
 
     console.log('✅ All data cleared from IndexedDB');
 
@@ -147,12 +160,16 @@ export const getDBStats = async () => {
       pendingOrdersCount,
       syncQueueCount,
       orderHistoryCount,
+      inboxImageCacheCount,
+      searchImageCacheCount,
       metadata
     ] = await Promise.all([
       db.products.count(),
       db.pendingOrders.count(),
       db.syncQueue.count(),
       db.orderHistory.count(),
+      db.inboxImageCache.count(),
+      db.searchImageCache.count(),
       db.catalogMetadata.get('local')
     ]);
 
@@ -161,6 +178,8 @@ export const getDBStats = async () => {
       pendingOrders: pendingOrdersCount,
       syncQueue: syncQueueCount,
       orderHistory: orderHistoryCount,
+      inboxImageCache: inboxImageCacheCount,
+      searchImageCache: searchImageCacheCount,
       metadata,
       lastSynced: metadata?.lastSynced,
       syncStatus: metadata?.syncStatus

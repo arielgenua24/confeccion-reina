@@ -1,10 +1,12 @@
 import useFirestoreContext from '../../hooks/useFirestoreContext'
+import useIsAdmin from '../../hooks/useIsAdmin'
 import LoadingComponent from '../../components/Loading'
 import ImageModal from '../../components/ImageModal'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getMonthWeeks, getMonthNameEs } from '../../utils/dateUtils'
 import kellyAudio from '../../../../audio/kelly.mp3'
+import CachedImage from '../../components/CachedImage'
 import './styles.css'
 
 function Inbox() {
@@ -12,6 +14,7 @@ function Inbox() {
   const [isLoading, setIsLoading] = useState(false)
   const [modalImage, setModalImage] = useState(null)
   const { getOrdersByDateRange, getProductsByOrder } = useFirestoreContext()
+  const { isAdmin } = useIsAdmin()
   const navigate = useNavigate()
 
   const today = useMemo(() => {
@@ -109,23 +112,27 @@ function Inbox() {
               <span className="apple-card-cta">Ver detalle</span>
             </button>
 
-            <button
-              type="button"
-              className="apple-card apple-card-button"
-              onClick={() => navigateToEarnings('weekly')}
-            >
-              <span className="apple-card-label">Ingresos de la semana</span>
-              <span className="apple-card-cta">Ver detalle</span>
-            </button>
+            {isAdmin && (
+              <button
+                type="button"
+                className="apple-card apple-card-button"
+                onClick={() => navigateToEarnings('weekly')}
+              >
+                <span className="apple-card-label">Ingresos de la semana</span>
+                <span className="apple-card-cta">Ver detalle</span>
+              </button>
+            )}
 
-            <button
-              type="button"
-              className="apple-card apple-card-button"
-              onClick={() => navigateToEarnings('monthly')}
-            >
-              <span className="apple-card-label">Ingresos del mes</span>
-              <span className="apple-card-cta">Ver detalle</span>
-            </button>
+            {isAdmin && (
+              <button
+                type="button"
+                className="apple-card apple-card-button"
+                onClick={() => navigateToEarnings('monthly')}
+              >
+                <span className="apple-card-label">Ingresos del mes</span>
+                <span className="apple-card-cta">Ver detalle</span>
+              </button>
+            )}
           </div>
 
           {/* Top Products */}
@@ -145,7 +152,8 @@ function Inbox() {
                     <div key={name} className="apple-list-item">
                       <div className="apple-item-info">
                         {imageUrl && (
-                          <img
+                          <CachedImage
+                            cacheStrategy="inbox"
                             src={imageUrl}
                             alt={name}
                             loading="lazy"

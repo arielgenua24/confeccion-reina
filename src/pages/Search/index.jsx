@@ -5,6 +5,7 @@ import useProducts from "../../hooks/useProducts";
 import { useOrder } from "../../hooks/useOrder";
 import { sanitizeVariantInput } from "../../utils/inputSanitizer";
 import ImageModal from "../../components/ImageModal";
+import CachedImage from "../../components/CachedImage";
 import './styles.css';
 
 function SearchPage() {
@@ -380,7 +381,7 @@ function SearchPage() {
                                     style={{ cursor: product.imageUrl ? 'zoom-in' : 'default' }}
                                 >
                                     {product.imageUrl ? (
-                                        <img src={product.imageUrl} alt={product.name} loading="lazy" />
+                                        <CachedImage cacheStrategy="search" src={product.imageUrl} alt={product.name} loading="lazy" />
                                     ) : (
                                         <div className="product-item-placeholder">
                                             <Package size={24} />

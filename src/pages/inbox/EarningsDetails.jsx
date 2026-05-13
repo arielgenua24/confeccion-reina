@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import useFirestoreContext from '../../hooks/useFirestoreContext'
 import LoadingComponent from '../../components/Loading'
 import ImageModal from '../../components/ImageModal'
+import CachedImage from '../../components/CachedImage'
 import './EarningsDetails.css'
 
 function EarningsDetails() {
@@ -153,7 +154,8 @@ function EarningsDetails() {
               <div key={name} className="ed-list-item" style={{ cursor: 'default', flexDirection: 'column', alignItems: 'stretch', gap: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   {imageUrl && (
-                    <img
+                    <CachedImage
+                      cacheStrategy="inbox"
                       src={imageUrl}
                       alt={name}
                       loading="lazy"
@@ -216,7 +218,8 @@ function EarningsDetails() {
             {selectedOrder.products?.map((item, idx) => (
               <div key={idx} className="ed-list-item product">
                 {item.productData?.imageUrl && (
-                  <img
+                  <CachedImage
+                    cacheStrategy="inbox"
                     src={item.productData.imageUrl}
                     alt={item.productData.name}
                     className="ed-product-image"

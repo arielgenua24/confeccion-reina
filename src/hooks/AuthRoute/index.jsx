@@ -54,10 +54,13 @@ function AuthRoute({ children }) {
     }
 
 
-    if (user !== admin && location.pathname === "/inbox") { // Verificamos que admin no sea null antes de comparar
-        console.log("Usuario:", user);
-        console.log("Admin:", admin);
-        navigate("/home");
+    if (!loadingAdmin && user !== admin) {
+        if (
+            location.pathname === '/inbox/earnings/weekly' ||
+            location.pathname === '/inbox/earnings/monthly'
+        ) {
+            navigate("/inbox");
+        }
     }
 
 
