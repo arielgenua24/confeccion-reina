@@ -1,0 +1,46 @@
+/* ─── Reina Insights — animations only, layout is inline ──────────────────── */
+
+@keyframes ri-slide-from-right {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes ri-slide-from-left {
+  from { transform: translateX(-100%); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+@keyframes ri-pulse {
+  0%, 100% { opacity: 1;   transform: scale(1);    }
+  50%       { opacity: 0.4; transform: scale(0.75); }
+}
+@keyframes ri-shimmer-sweep {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.ri-card-from-right {
+  animation: ri-slide-from-right 0.42s cubic-bezier(0.22,1,0.36,1) both;
+}
+.ri-card-from-left {
+  animation: ri-slide-from-left 0.42s cubic-bezier(0.22,1,0.36,1) both;
+}
+.ri-pulse-dot {
+  animation: ri-pulse 2.2s ease-in-out infinite;
+}
+
+.ri-chips-row {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.ri-chips-row::-webkit-scrollbar {
+  display: none;
+}
+
+.ri-shimmer {
+  background: linear-gradient(90deg, #f2e8dc 25%, #e8d8c8 50%, #f2e8dc 75%);
+  background-size: 200% 100%;
+  animation: ri-shimmer-sweep 1.6s ease-in-out infinite;
+}

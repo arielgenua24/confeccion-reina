@@ -7,11 +7,12 @@ import { useNavigate } from 'react-router-dom'
 import { getMonthWeeks, getMonthNameEs } from '../../utils/dateUtils'
 import kellyAudio from '../../../../audio/kelly.mp3'
 import CachedImage from '../../components/CachedImage'
+import ReinaInsights from '../../components/ReinaInsights'
 import './styles.css'
 
 function Inbox() {
   const [orders, setOrders] = useState([])
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [modalImage, setModalImage] = useState(null)
   const { getOrdersByDateRange, getProductsByOrder } = useFirestoreContext()
   const { isAdmin } = useIsAdmin()
@@ -134,6 +135,9 @@ function Inbox() {
               </button>
             )}
           </div>
+
+          {/* AI Insights */}
+          <ReinaInsights />
 
           {/* Top Products */}
           <section className="apple-section">
