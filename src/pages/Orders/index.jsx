@@ -5,11 +5,14 @@ import LoadingComponent from '../../components/Loading'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom';
 import QRmodal from '../../modals/Qrmodal';
+import OrderDeletedModal from '../../modals/OrderDeletedModal';
 import QRButton from '../../components/QrGenerateBtn';
 import ClientShareActions from '../../components/ClientShareActions';
 import qrIcon from '../../assets/icons/icons8-qr-100.png';
 import { useOrder } from '../../hooks/useOrder';
 import OrderSearch from '../../components/OrderSearch';
+import SyncingOrderBanner from '../../components/SyncingOrderBanner';
+import syncEvents from '../../services/syncEvents';
 import './styles.css'
 
 const ORDERS_PER_PAGE = 10;
@@ -26,8 +29,9 @@ function Orders() {
   const [QRcode, setQRcode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [openMenuOrderId, setOpenMenuOrderId] = useState(null);
+  const [deletionSummary, setDeletionSummary] = useState(null);
 
-  const { deleteOrder } = useFirestoreContext()
+  const { deleteOrder, getOrderById } = useFirestoreContext()
   const { getLocalOrders, getFirestoreOrdersPage } = useHybridOrders()
   const { syncOrder } = useLocalOrders()
 
@@ -89,20 +93,51 @@ function Orders() {
     loadInitialOrders()
   }, [loadInitialOrders, isNewData])
 
+  // Auto-update a card when its order finishes syncing to Firestore in the
+  // background, so the employee never has to leave and re-enter the page.
+  useEffect(() => {
+    const unsubscribe = syncEvents.subscribe(async (eventType, data) => {
+      if (eventType !== 'order_synced') return;
+      const syncedId = data?.orderId;
+      if (!syncedId) return;
+
+      // Read the Firestore version FIRST, then swap lists in one batched
+      // update so the card flips straight to "synced" without blinking out.
+      try {
+        const syncedOrder = await getOrderById(syncedId);
+        if (!syncedOrder) return;
+
+        setLocalOrders(prev => prev.filter(o => (o.id || o.orderId) !== syncedId));
+        setFirestoreOrders(prev =>
+          prev.some(o => o.id === syncedId)
+            ? prev
+            : [{ ...syncedOrder, syncStatus: 'synced', isLocal: false }, ...prev]
+        );
+      } catch (error) {
+        console.error('Error refreshing synced order:', error);
+      }
+    });
+
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const handleDelete = async (order) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar esta orden? El stock de los productos será restaurado.')) {
       setIsLoading(true)
       try {
         const result = await deleteOrder(order.id);
-        if (result?.restoredProducts?.length > 0) {
-          console.log(`✅ Stock restaurado para ${result.restoredProducts.length} productos`);
-        }
         // Remove from the appropriate list
         if (order.isLocal) {
           setLocalOrders(prev => prev.filter(o => o.id !== order.id));
         } else {
           setFirestoreOrders(prev => prev.filter(o => o.id !== order.id));
         }
+        setDeletionSummary({
+          orderCode: order.orderCode,
+          restoredProducts: result?.restoredProducts || [],
+          skippedProducts: result?.skippedProducts || []
+        });
       } catch (error) {
         console.error('Error al eliminar la orden:', error);
         alert('Error al eliminar la orden. Por favor intenta de nuevo.');
@@ -160,21 +195,11 @@ function Orders() {
         </div>
 
         {/* Sync Status Indicator */}
-        {order.syncStatus === 'pending' && (
-          <div className="sync-banner sync-banner--pending">
-            <div className="sync-banner-left">
-              <span className="sync-dot"></span>
-              <span>Pendiente de sincronización</span>
-            </div>
-            <span className="sync-hint">Usa Opciones para reintentar</span>
-          </div>
-        )}
-
-        {order.syncStatus === 'syncing' && (
-          <div className="sync-banner sync-banner--syncing">
-            <span className="sync-spinner"></span>
-            <span>Sincronizando</span>
-          </div>
+        {(order.syncStatus === 'pending' || order.syncStatus === 'syncing') && (
+          <SyncingOrderBanner
+            orderId={order.id || order.orderId}
+            onRetry={handleRetrySync}
+          />
         )}
 
         {/* Failed sync status - Only show error and local verification */}
@@ -223,6 +248,7 @@ function Orders() {
             </div>
           </div>
 
+          {!(order.syncStatus === 'pending' || order.syncStatus === 'syncing') && (
           <div className="order-actions-row">
             <span className="actions-label">Acciones de orden</span>
             <div className="order-actions-right">
@@ -233,7 +259,7 @@ function Orders() {
                 />
               )}
 
-              {isNotSynced && (
+              {order.syncStatus === 'failed' && (
                 <div className="menu-wrapper">
                   <button
                     className="menu-btn"
@@ -258,31 +284,24 @@ function Orders() {
                 </div>
               )}
 
-              <button
-                className="delete-btn"
-                onClick={() => handleDelete(order)}
-              >
-                Eliminar orden
-              </button>
+              {!isNotSynced && (
+                <button
+                  className="delete-btn"
+                  onClick={() => handleDelete(order)}
+                >
+                  Eliminar orden
+                </button>
+              )}
             </div>
           </div>
+          )}
 
-          {order.syncStatus !== 'failed' && (
+          {!isNotSynced && (
             <button
               className="verify-button"
               onClick={() => navigate(`/ProductsVerification/${order.id}/?orderEstado=${order.estado}`)}
-              disabled={order.syncStatus === 'pending' || order.syncStatus === 'syncing'}
-              title={
-                order.syncStatus === 'pending'
-                  ? 'Esperando sincronización con Firestore'
-                  : order.syncStatus === 'syncing'
-                  ? 'Sincronizando'
-                  : ''
-              }
             >
-              {order.syncStatus === 'pending' || order.syncStatus === 'syncing'
-                ? 'Sincronizando productos'
-                : 'Verificar productos'}
+              Verificar productos
             </button>
           )}
         </div>
@@ -333,6 +352,13 @@ function Orders() {
           QRcode={QRcode}
           setQRcode={setQRcode}
           orderCode={true}
+        />
+      )}
+
+      {deletionSummary && (
+        <OrderDeletedModal
+          summary={deletionSummary}
+          onClose={() => setDeletionSummary(null)}
         />
       )}
     </div>

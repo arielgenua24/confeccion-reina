@@ -1,0 +1,30 @@
+.sync-banner--loading {
+  background: #eaf7ff;
+  border-color: #bfe5ff;
+  color: #0b4f75;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.sync-loading-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sync-loading-title {
+  font-weight: 700;
+}
+
+.sync-loading-subtitle {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.sync-countdown {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

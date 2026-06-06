@@ -15,6 +15,7 @@ import {
 } from './cacheService';
 
 import { db as firestore } from '../firebaseSetUp';
+import syncEvents from './syncEvents';
 import {
   doc,
   collection,
@@ -405,6 +406,7 @@ class SyncWorker {
         await this.ensureProductsSubcollection(orderId, order.products);
         await updatePendingOrder(orderId, { syncStatus: 'synced' });
         console.log(`✅ Order ${orderId} already exists in Firestore (detected inside transaction)`);
+        syncEvents.emit('order_synced', { orderId });
         return {
           success: true,
           data: { message: 'Order already exists in Firestore' }
@@ -441,6 +443,8 @@ class SyncWorker {
       });
 
       console.log(`✅ Order ${orderId} synced to Firestore with atomic stock updates`);
+
+      syncEvents.emit('order_synced', { orderId });
 
       return {
         success: true,

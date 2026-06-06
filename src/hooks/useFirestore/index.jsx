@@ -319,7 +319,7 @@ const useFirestore = () => {
 
         if (!orderSnap.exists()) {
           console.warn(`⚠️ Order ${orderId} does not exist, nothing to delete`);
-          return { success: true, restoredProducts: [] };
+          return { success: true, restoredProducts: [], skippedProducts: [] };
         }
 
         const orderData = orderSnap.data();
@@ -361,7 +361,7 @@ const useFirestore = () => {
           // Still delete the order and subcollection
           await deleteDoc(orderDocRef);
           console.log(`✅ Order ${orderId} deleted (no stock to restore)`);
-          return { success: true, restoredProducts: [] };
+          return { success: true, restoredProducts: [], skippedProducts: [] };
         }
 
         // ============================================
@@ -372,17 +372,20 @@ const useFirestore = () => {
         // quantities before restoring stock, because there's only ONE stock field
         // per product in Firestore.
         const stockRestoreMap = new Map();
+        const skippedProducts = [];
 
         for (const product of orderProducts) {
           const productId = product.productId;
 
           if (!productId) {
             console.warn(`⚠️ Skipping product without productId:`, product);
+            skippedProducts.push({ name: product.name, reason: 'missing-id' });
             continue;
           }
 
           if (product.quantity <= 0) {
             console.warn(`⚠️ Skipping product with invalid quantity:`, product);
+            skippedProducts.push({ name: product.name, reason: 'invalid-quantity' });
             continue;
           }
 
@@ -409,7 +412,7 @@ const useFirestore = () => {
         // ============================================
         // STEP 3: Restore stock atomically via transaction
         // ============================================
-        const restoredProducts = await runTransaction(db, async (transaction) => {
+        const { restoredProducts, missingProducts } = await runTransaction(db, async (transaction) => {
           // PHASE 1: ALL READS FIRST (Firestore transaction requirement)
           const productSnapshots = [];
           for (const productToRestore of productsToRestore) {
@@ -422,11 +425,13 @@ const useFirestore = () => {
 
           // PHASE 2: ALL WRITES
           const restored = [];
+          const missing = [];
 
           for (const { snap, restoreData } of productSnapshots) {
             if (!snap.exists()) {
-              // Product was deleted from inventory — skip silently
+              // Product was deleted from inventory — record so the UI can warn
               console.warn(`⚠️ Product ${restoreData.productId} ("${restoreData.name}") no longer exists in Firestore. Skipping stock restore.`);
+              missing.push({ name: restoreData.name, reason: 'product-deleted' });
               continue;
             }
 
@@ -451,8 +456,11 @@ const useFirestore = () => {
           // Delete the order document inside the transaction
           transaction.delete(orderDocRef);
 
-          return restored;
+          return { restoredProducts: restored, missingProducts: missing };
         });
+
+        // Merge transaction-detected missing products into the skipped list
+        skippedProducts.push(...missingProducts);
 
         // ============================================
         // STEP 4: Delete subcollection documents
@@ -487,8 +495,41 @@ const useFirestore = () => {
           console.warn(`⚠️ Failed to update metadata:`, metaError);
         }
 
-        console.log(`✅ Order ${orderId} deleted successfully. Stock restored for ${restoredProducts.length} products.`);
-        return { success: true, restoredProducts };
+        // ============================================
+        // STEP 6: Re-read products from Firestore to CONFIRM restoration
+        // ============================================
+        // CRITICAL: the "ahora tenemos" value shown to the user must come from a
+        // fresh DB read, not from a JS calculation. We re-fetch each restored
+        // product to report its authoritative current stock + image + name.
+        const confirmedProducts = await Promise.all(
+          restoredProducts.map(async (p) => {
+            try {
+              const freshSnap = await getDoc(doc(db, "products", p.productId));
+              const data = freshSnap.exists() ? freshSnap.data() : null;
+              return {
+                productId: p.productId,
+                name: data?.name || p.name,
+                imageUrl: data?.imageUrl ?? null,
+                previousStock: p.previousStock,
+                restoredQuantity: p.restoredQuantity,
+                confirmedStock: data ? Number(data.stock) || 0 : p.newStock
+              };
+            } catch (readError) {
+              console.warn(`⚠️ Failed to re-read product ${p.productId}:`, readError);
+              return {
+                productId: p.productId,
+                name: p.name,
+                imageUrl: null,
+                previousStock: p.previousStock,
+                restoredQuantity: p.restoredQuantity,
+                confirmedStock: p.newStock
+              };
+            }
+          })
+        );
+
+        console.log(`✅ Order ${orderId} deleted successfully. Stock restored for ${confirmedProducts.length} products.`);
+        return { success: true, restoredProducts: confirmedProducts, skippedProducts };
       } catch (error) {
         console.error("❌ Error deleting order with stock restoration:", error);
         throw error;

@@ -187,7 +187,11 @@ export default function useReinaInsights() {
         body: JSON.stringify({ summary }),
       })
 
-      if (!response.ok) throw new Error(`API error ${response.status}`)
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}))
+        console.error('[useReinaInsights] API error', response.status, errBody)
+        throw new Error(`API error ${response.status}: ${errBody.error || 'unknown'}`)
+      }
 
       const { insights: aiInsights } = await response.json()
       const now = new Date().toISOString()
