@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import './styles.css';
 
-const COUNTDOWN_SECONDS = 15;
+const COUNTDOWN_SECONDS = 35;
 
 /**
  * Banner shown for orders that are still loading into Firestore (pending/syncing).
  * Tells the employee the order is uploading, that it can't be deleted yet, and
- * counts down 15s before revealing a "retry sync" button.
+ * counts down 35s before revealing a "retry sync" button.
  */
 // eslint-disable-next-line react/prop-types
 function SyncingOrderBanner({ orderId, onRetry }) {

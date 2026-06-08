@@ -549,6 +549,32 @@ export const deleteSyncTask = async (taskId) => {
 };
 
 /**
+ * Delete every queued sync task that targets a given order.
+ *
+ * Used by force-delete so a leftover task can't re-create an order we just
+ * erased from Firestore.
+ *
+ * @param {string} orderId - Order ID
+ * @returns {Promise<boolean>}
+ */
+export const deleteSyncTasksByOrderId = async (orderId) => {
+  try {
+    const tasks = await db.syncQueue.toArray();
+    const matching = tasks.filter(
+      task => task?.payload?.orderId === orderId || task?.orderId === orderId
+    );
+    await Promise.all(matching.map(task => db.syncQueue.delete(task.taskId)));
+    if (matching.length > 0) {
+      console.log(`✅ Deleted ${matching.length} sync task(s) for order ${orderId}`);
+    }
+    return true;
+  } catch (error) {
+    console.error('❌ Failed to delete sync tasks by orderId:', error);
+    return false;
+  }
+};
+
+/**
  * ==========================================
  * ORDER HISTORY OPERATIONS (Optional)
  * ==========================================
@@ -587,6 +613,23 @@ export const getOrderHistory = async (limit = 50) => {
   } catch (error) {
     console.error('❌ Failed to get order history:', error);
     return [];
+  }
+};
+
+/**
+ * Delete an order from local history cache.
+ *
+ * @param {string} orderId - Order ID
+ * @returns {Promise<boolean>}
+ */
+export const deleteOrderHistory = async (orderId) => {
+  try {
+    await db.orderHistory.delete(orderId);
+    console.log(`✅ Deleted order ${orderId} from history`);
+    return true;
+  } catch (error) {
+    console.error('❌ Failed to delete order history:', error);
+    return false;
   }
 };
 

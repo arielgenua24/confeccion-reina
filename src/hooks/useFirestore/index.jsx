@@ -536,6 +536,56 @@ const useFirestore = () => {
       }
     };
 
+    /**
+     * Force-delete ("eliminación por fuerza bruta") a legacy order.
+     *
+     * Unlike deleteOrder, this does NOT restore stock to inventory — it simply
+     * erases the order doc and its products subcollection from Firestore.
+     * Intended for legacy orders that should never have existed.
+     *
+     * @param {string} orderId - The Firestore document ID of the order to delete
+     * @returns {Promise<Object>} - { success: true }
+     */
+    const forceDeleteOrder = async (orderId) => {
+      try {
+        console.log(`💥 Force-deleting order ${orderId} (no stock restore)...`);
+
+        const orderDocRef = doc(db, "orders", orderId);
+
+        // Delete the products subcollection first (Firestore does not cascade).
+        try {
+          const subcollectionSnap = await getDocs(
+            collection(db, "orders", orderId, "products")
+          );
+          if (!subcollectionSnap.empty) {
+            const batch = writeBatch(db);
+            subcollectionSnap.docs.forEach(subDoc => batch.delete(subDoc.ref));
+            await batch.commit();
+            console.log(`🗑️ Deleted ${subcollectionSnap.size} subcollection documents`);
+          }
+        } catch (subError) {
+          console.warn(`⚠️ Failed to clean up subcollection for order ${orderId}:`, subError);
+        }
+
+        // Delete the order document itself (no-op if it doesn't exist).
+        await deleteDoc(orderDocRef);
+
+        // Best-effort metadata bump, consistent with deleteOrder.
+        try {
+          const metadataRef = doc(db, 'metadata', 'catalog');
+          await setDoc(metadataRef, { lastUpdated: serverTimestamp() }, { merge: true });
+        } catch (metaError) {
+          console.warn(`⚠️ Failed to update metadata:`, metaError);
+        }
+
+        console.log(`✅ Order ${orderId} force-deleted (stock untouched).`);
+        return { success: true };
+      } catch (error) {
+        console.error("❌ Error force-deleting order:", error);
+        throw error;
+      }
+    };
+
     const updateOrder = async (orderId, updateData) => {
       try {
         const orderDocRef = doc(db, "orders", orderId);
@@ -912,6 +962,7 @@ const useFirestore = () => {
     getOrdersByDateRangeBounded,
     updateOrder,
     deleteOrder,
+    forceDeleteOrder,
     getProductsByOrder,
     user, setUser, getAdmin,
     searchProductsByNameOrCode

@@ -13,6 +13,7 @@ import { useOrder } from '../../hooks/useOrder';
 import OrderSearch from '../../components/OrderSearch';
 import SyncingOrderBanner from '../../components/SyncingOrderBanner';
 import syncEvents from '../../services/syncEvents';
+import { deletePendingOrder, deleteOrderHistory, deleteSyncTasksByOrderId } from '../../services/cacheService';
 import './styles.css'
 
 const ORDERS_PER_PAGE = 10;
@@ -29,9 +30,10 @@ function Orders() {
   const [QRcode, setQRcode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [openMenuOrderId, setOpenMenuOrderId] = useState(null);
+  const [forceMenuOrderId, setForceMenuOrderId] = useState(null);
   const [deletionSummary, setDeletionSummary] = useState(null);
 
-  const { deleteOrder, getOrderById } = useFirestoreContext()
+  const { deleteOrder, forceDeleteOrder, getOrderById } = useFirestoreContext()
   const { getLocalOrders, getFirestoreOrdersPage } = useHybridOrders()
   const { syncOrder } = useLocalOrders()
 
@@ -147,6 +149,33 @@ function Orders() {
     }
   }
 
+  const handleForceDelete = async (order) => {
+    const orderId = order.id || order.orderId;
+    setForceMenuOrderId(null);
+    if (!window.confirm('⚠️ ELIMINACIÓN POR FUERZA BRUTA\n\nEsta orden se borrará de forma PERMANENTE de Firestore y del dispositivo. El stock NO será devuelto al inventario.\n\n¿Continuar?')) {
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await forceDeleteOrder(orderId);
+      // Purge every local trace so a stale copy or queued task can't revive it.
+      await deletePendingOrder(orderId);
+      await deleteOrderHistory(orderId);
+      await deleteSyncTasksByOrderId(orderId);
+
+      if (order.isLocal) {
+        setLocalOrders(prev => prev.filter(o => (o.id || o.orderId) !== orderId));
+      } else {
+        setFirestoreOrders(prev => prev.filter(o => o.id !== orderId));
+      }
+    } catch (error) {
+      console.error('Error al eliminar la orden por fuerza bruta:', error);
+      alert('Error al eliminar la orden por fuerza bruta. Intenta de nuevo.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   const handleRetrySync = async (orderId) => {
     setOpenMenuOrderId(null);
     if (window.confirm('¿Reintentar sincronización de esta orden?')) {
@@ -166,20 +195,28 @@ function Orders() {
     setOpenMenuOrderId(openMenuOrderId === orderId ? null : orderId);
   }
 
-  // Close menu when clicking outside
+  const toggleForceMenu = (orderId) => {
+    setForceMenuOrderId(forceMenuOrderId === orderId ? null : orderId);
+  }
+
+  // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = () => {
       if (openMenuOrderId) {
         setOpenMenuOrderId(null);
       }
+      if (forceMenuOrderId) {
+        setForceMenuOrderId(null);
+      }
     };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
-  }, [openMenuOrderId]);
+  }, [openMenuOrderId, forceMenuOrderId]);
 
   const renderOrderCard = (order) => {
     const isNotSynced = order.syncStatus === 'pending' || order.syncStatus === 'syncing' || order.syncStatus === 'failed';
     const isMenuOpen = openMenuOrderId === (order.id || order.orderId);
+    const isForceMenuOpen = forceMenuOrderId === (order.id || order.orderId);
 
     return (
       <div key={order.id} className="order-card">
@@ -189,9 +226,34 @@ function Orders() {
             <h3 className="order-code">#{order.orderCode}</h3>
             <span className="order-date">Fecha: {order.fecha}</span>
           </div>
-          <span className={`status-pill ${order.estado === 'listo para despachar' ? 'ready' : 'attention'}`}>
-            Estado: {order.estado}
-          </span>
+          <div className="order-card-top-right">
+            <span className={`status-pill ${order.estado === 'listo para despachar' ? 'ready' : 'attention'}`}>
+              Estado: {order.estado}
+            </span>
+            <div className="kebab-wrapper">
+              <button
+                className="kebab-btn"
+                aria-label="Opciones de orden"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleForceMenu(order.id || order.orderId);
+                }}
+              >
+                😰
+              </button>
+
+              {isForceMenuOpen && (
+                <div className="floating-menu" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    className="menu-item menu-item--danger"
+                    onClick={() => handleForceDelete(order)}
+                  >
+                    Eliminación por fuerza bruta
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Sync Status Indicator */}
