@@ -3,6 +3,8 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 import { db } from "../../firebaseSetUp";
+import { updateProduct as updateLocalProduct } from "../../services/cacheService";
+import syncEvents from "../../services/syncEvents";
 
  // Importa la configuración de Firebase
 import {
@@ -527,6 +529,31 @@ const useFirestore = () => {
             }
           })
         );
+
+        // ============================================
+        // STEP 7: Write restored stock back to local IndexedDB
+        // ============================================
+        // CRITICAL: the entire UI reads stock from IndexedDB (via useProducts →
+        // cacheService), NOT from Firestore. Without this, the device keeps showing
+        // the pre-restore stock until the next periodic sync — which under bad
+        // internet may take minutes or never arrive. The user deletes an order
+        // precisely to re-sell those items immediately, so the local catalog must
+        // reflect the restored stock right away.
+        console.log(`🗄️ [IndexedDB] Writing restored stock for ${confirmedProducts.length} product(s)...`);
+        await Promise.all(
+          confirmedProducts.map(async (p) => {
+            try {
+              await updateLocalProduct(p.productId, { stock: p.confirmedStock });
+              console.log(`🗄️ [IndexedDB] "${p.name}" (${p.productId}): stock actualizado a ${p.confirmedStock} (era ${p.previousStock}, +${p.restoredQuantity})`);
+            } catch (writeError) {
+              console.warn(`⚠️ [IndexedDB] Failed to write restored stock for "${p.name}" (${p.productId}):`, writeError);
+            }
+          })
+        );
+        console.log(`🗄️ [IndexedDB] Stock local sincronizado. Notificando pantallas abiertas...`);
+
+        // Tell any open screen (cart, inventory) to re-read local products.
+        syncEvents.notifyProductsUpdated(confirmedProducts.length);
 
         console.log(`✅ Order ${orderId} deleted successfully. Stock restored for ${confirmedProducts.length} products.`);
         return { success: true, restoredProducts: confirmedProducts, skippedProducts };
