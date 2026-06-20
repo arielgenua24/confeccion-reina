@@ -38,6 +38,7 @@ const TeamNotesPage = lazy(() => import('./pages/TeamNotesPage'));
 const MiCompra = lazy(() => import('./pages/MiCompra'));
 const SoldProducts = lazy(() => import('./pages/SoldProducts'));
 const SoldProductsDetail = lazy(() => import('./pages/SoldProducts/Detail'));
+const DbCleanup = lazy(() => import('./pages/DbCleanup'));
 
 function AppRouter() {
   let router = useRoutes([
@@ -63,6 +64,7 @@ function AppRouter() {
     { path: '/team-notes', element: <TeamNotesPage /> },
     { path: '/selled-products', element: <SoldProducts /> },
     { path: '/selled-products/:period', element: <SoldProductsDetail /> },
+    { path: '/db-cleanup', element: <DbCleanup /> },
     // Ruta PÚBLICA - para que clientes vean su compra (no requiere login)
     { path: '/mi-compra/:orderId', element: <MiCompra /> },
   ]);

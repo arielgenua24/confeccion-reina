@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useOrder } from '../../hooks/useOrder';
-import { Inbox, ShoppingCart, List, Package, MessageSquare } from 'lucide-react';
+import { Inbox, ShoppingCart, List, Package, MessageSquare, Settings } from 'lucide-react';
 import useFirestoreContext from '../../hooks/useFirestoreContext';
 import LoadingComponent from '../../components/Loading';
 import PaymentNavbar from '../../components/PaymentNavbar';
@@ -61,6 +61,9 @@ function Home() {
             <LoadingComponent isLoading={loadingAdmin} />
             <PaymentNavbar />
             <div className="home-container">
+                <Link to="/db-cleanup" className="home-config-btn" aria-label="Configuración y limpieza de base de datos">
+                    <Settings size={22} />
+                </Link>
                 <h2 className="home-welcome-text">
                     Bienvenida a tu sistema de inventario Reina👑
                 </h2>

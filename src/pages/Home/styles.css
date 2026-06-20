@@ -124,4 +124,36 @@
 
 /* Animación al aparecer */
 @keyframes fadeIn {
-    fr
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Posicionar el contenedor para el botón de configuración */
+.home-container {
+    position: relative;
+}
+
+/* Botón de configuración / limpieza de DB (engranaje en la esquina) */
+.home-config-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    color: #888;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+    text-decoration: none;
+    transition: transform 0.2s ease, color 0.2s ease;
+    z-index: 5;
+}
+
+.home-config-btn:hover {
+    transform: rotate(45deg);
+    color: #C25B7C;
+}

@@ -22,6 +22,7 @@ import {
   limit,
   startAfter,
   where,
+  Timestamp,
   serverTimestamp,
   writeBatch,
   runTransaction
@@ -209,6 +210,33 @@ const useFirestore = () => {
         return { orders: ordersData, lastVisibleDoc };
       } catch (error) {
         console.error("Error al obtener orders paginados:", error);
+        throw error;
+      }
+    };
+
+    // Paginated OLD orders only (createdAt <= now - 75 days), oldest first.
+    // Used by the DB cleanup tool: the date filter is applied SERVER-SIDE so
+    // recent orders can never be loaded (and therefore never accidentally deleted).
+    const OLD_ORDER_DAYS = 75;
+    const getOldOrdersPaginated = async (limitParam = 15, startAfterDoc = null) => {
+      try {
+        const ordersRef = collection(db, "orders");
+        const cutoff = Timestamp.fromDate(new Date(Date.now() - OLD_ORDER_DAYS * 86400000));
+        let q;
+
+        if (startAfterDoc) {
+          q = query(ordersRef, where("createdAt", "<=", cutoff), orderBy("createdAt", "asc"), startAfter(startAfterDoc), limit(limitParam));
+        } else {
+          q = query(ordersRef, where("createdAt", "<=", cutoff), orderBy("createdAt", "asc"), limit(limitParam));
+        }
+
+        const snap = await getDocs(q);
+        const orders = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        const lastVisibleDoc = snap.docs[snap.docs.length - 1];
+
+        return { orders, lastVisibleDoc, hasMore: snap.docs.length === limitParam };
+      } catch (error) {
+        console.error("Error al obtener orders antiguos paginados:", error);
         throw error;
       }
     };
@@ -974,6 +1002,7 @@ const useFirestore = () => {
   return {
     getOrders,
     getOrdersPaginated,
+    getOldOrdersPaginated,
     createOrderWithProducts,
     addProduct,
     getProducts, // La función original con paginación
