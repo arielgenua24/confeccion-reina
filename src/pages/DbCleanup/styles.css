@@ -102,6 +102,28 @@
   margin: 0;
 }
 
+/* ----- Delete-whole-page button ----- */
+.dbc-delete-page-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px;
+  margin-bottom: 12px;
+  border: 2px solid #E0405A;
+  border-radius: 12px;
+  background: #FDEBEE;
+  color: #E0405A;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.dbc-delete-page-btn:hover { background: #FBD5DB; }
+.dbc-delete-page-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
 /* ----- Bulk delete bar ----- */
 .dbc-bulk-bar {
   position: sticky;

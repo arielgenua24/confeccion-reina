@@ -1,0 +1,203 @@
+.odc-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 1000;
+}
+
+.odc-card {
+  background: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 360px;
+  padding: 20px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  box-sizing: border-box;
+}
+
+.odc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.odc-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #222;
+}
+
+.odc-close {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  display: flex;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.odc-close:hover {
+  background: #f2f2f2;
+}
+
+.odc-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.odc-nav-btn {
+  background: none;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  display: flex;
+  padding: 6px;
+  border-radius: 8px;
+}
+
+.odc-nav-btn:hover {
+  background: #f2f2f2;
+}
+
+.odc-month {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  text-transform: capitalize;
+}
+
+.odc-weekdays,
+.odc-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.odc-weekdays {
+  margin-bottom: 6px;
+}
+
+.odc-weekday {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #9aa0a6;
+  padding: 4px 0;
+}
+
+.odc-grid {
+  gap: 2px 0;
+}
+
+.odc-day {
+  aspect-ratio: 1 / 1;
+  border: none;
+  background: none;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin: 0 auto;
+  width: 38px;
+  height: 38px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.odc-day:hover {
+  background: #f1f1f1;
+}
+
+.odc-day--muted {
+  color: #c4c8cc;
+}
+
+.odc-day--today {
+  font-weight: 700;
+}
+
+/* Light fill for days inside the selected range */
+.odc-day--in-range {
+  background: #fde8e6;
+  color: #d6453a;
+}
+
+/* Solid endpoints (start / end of range, or the single chosen day) */
+.odc-day--endpoint {
+  background: #e8503a;
+  color: #fff;
+}
+
+.odc-day--endpoint:hover {
+  background: #d6453a;
+}
+
+.odc-warning {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: #d6453a;
+  text-align: center;
+}
+
+.odc-footer {
+  margin-top: 16px;
+  border-top: 1px solid #eee;
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.odc-selection {
+  font-size: 14px;
+  color: #555;
+  text-align: center;
+  text-transform: capitalize;
+}
+
+.odc-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.odc-btn {
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+
+.odc-btn--ghost {
+  background: #f2f2f2;
+  color: #444;
+}
+
+.odc-btn--ghost:hover {
+  background: #e6e6e6;
+}
+
+.odc-btn--primary {
+  background: #e8503a;
+  color: #fff;
+}
+
+.odc-btn--primary:hover {
+  background: #d6453a;
+}
+
+.odc-btn--primary:disabled {
+  background: #f0b8b0;
+  cursor: not-allowed;
+}

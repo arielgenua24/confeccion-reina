@@ -390,7 +390,7 @@ function Orders() {
         </button>
       </div>
 
-      <OrderSearch orders={allLoadedOrders} isActionEnabled={true}/>
+      <OrderSearch isActionEnabled={true}/>
 
 
       <div className="orders-list">

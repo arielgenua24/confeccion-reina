@@ -21,6 +21,9 @@ import {
   orderBy,
   limit,
   startAfter,
+  startAt,
+  endAt,
+  documentId,
   where,
   Timestamp,
   serverTimestamp,
@@ -273,6 +276,46 @@ const useFirestore = () => {
         return ordersSnapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
       } catch (error) {
         console.error("Error fetching orders by bounded date range:", error);
+        throw error;
+      }
+    };
+
+    // Search orders for a single day or a date range using the DOCUMENT ID prefix.
+    // Order doc IDs are `ORD_YYYYMMDD_HHMMSS_RANDOM` built from LOCAL date
+    // (see generateOrderId in useLocalOrders). So a day maps to the prefix
+    // `ORD_YYYYMMDD_`, and querying by documentId():
+    //   - reads ONLY that day's documents (the rest of the collection never
+    //     leaves Firestore — bounded reads no matter how big the collection grows),
+    //   - needs no composite index (document id is always indexed),
+    //   - avoids the UTC/local off-by-one a `createdAt` server-timestamp range
+    //     would introduce near midnight.
+    // Pass a single date for one day, or start + end for an inclusive range.
+    const getOrdersByDayPrefix = async (startDate, endDate = startDate) => {
+      try {
+        const toPrefix = (d) => {
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, "0");
+          const day = String(d.getDate()).padStart(2, "0");
+          return `ORD_${y}${m}${day}_`;
+        };
+
+        // Accept the range in any order.
+        const [from, to] = startDate <= endDate ? [startDate, endDate] : [endDate, startDate];
+        const startPrefix = toPrefix(from);
+        const endPrefix = toPrefix(to) + ""; //  = highest code point → matches any suffix
+
+        const q = query(
+          collection(db, "orders"),
+          orderBy(documentId()),
+          startAt(startPrefix),
+          endAt(endPrefix)
+        );
+
+        const snap = await getDocs(q);
+        // IDs sort chronologically (date + time), so reverse for newest-first.
+        return snap.docs.map((d) => ({ id: d.id, ...d.data() })).reverse();
+      } catch (error) {
+        console.error("Error al buscar orders por día (ID prefix):", error);
         throw error;
       }
     };
@@ -1016,6 +1059,7 @@ const useFirestore = () => {
     filterOrdersByDate,
     getOrdersByDateRange,
     getOrdersByDateRangeBounded,
+    getOrdersByDayPrefix,
     updateOrder,
     deleteOrder,
     forceDeleteOrder,

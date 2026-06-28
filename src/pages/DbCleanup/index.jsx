@@ -10,7 +10,7 @@ import './styles.css';
 
 const PASSWORD = 'Ariel2001';
 const OLD_ORDER_DAYS = 75;
-const PAGE_SIZE = 15;
+const PAGE_SIZE = 400;
 const LONG_PRESS_MS = 450;
 
 // Cutoff date shown in the header (orders strictly older than this are listed).
@@ -176,6 +176,30 @@ function DbCleanup() {
     }
   };
 
+  // Delete every order currently loaded on the page, then refresh with the
+  // next-oldest batch (deleted orders are gone, so the query returns the rest).
+  const deleteAllOnPage = async () => {
+    const ids = orders.map((o) => o.id);
+    if (!ids.length) return;
+    setIsDeleting(true);
+    try {
+      await Promise.allSettled(
+        ids.map(async (id) => {
+          await forceDeleteOrder(id);
+          await purgeLocalTraces(id);
+        })
+      );
+      setSelected(new Set());
+      setLastVisibleDoc(null);
+      await loadInitial();
+    } catch (error) {
+      console.error('Error eliminando los pedidos de la página:', error);
+      alert('Error al eliminar los pedidos. Intenta de nuevo.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   // ----- Long-press multi-select -----
   const toggleSelect = (id) => {
     setSelected((prev) => {
@@ -238,6 +262,17 @@ function DbCleanup() {
           del más antiguo al más reciente. La eliminación es permanente y no devuelve stock.
         </p>
       </div>
+
+      {!isLoading && orders.length > 0 && (
+        <button
+          className="dbc-delete-page-btn"
+          onClick={deleteAllOnPage}
+          disabled={isDeleting}
+        >
+          <Trash2 size={18} />
+          Eliminar todos los de esta página ({orders.length})
+        </button>
+      )}
 
       {selectionMode && (
         <div className="dbc-bulk-bar">

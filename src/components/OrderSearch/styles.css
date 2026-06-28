@@ -60,6 +60,33 @@
   background-color: #eee;
 }
 
+/* Pick-date button */
+.order-search-container .search-date-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid #e8503a;
+  border-radius: 8px;
+  background: #fff;
+  color: #e8503a;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.order-search-container .search-date-btn:hover {
+  background: #fde8e6;
+}
+
+/* Results summary line */
+.order-search-container .search-summary {
+  padding: 0 4px 12px;
+  color: #555;
+  font-size: 14px;
+}
+
 /* Filter button styles */
 .order-search-container .filter-btn {
   display: flex;
