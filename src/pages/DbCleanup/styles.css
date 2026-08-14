@@ -102,6 +102,108 @@
   margin: 0;
 }
 
+/* ----- Payment status ----- */
+.dbc-payment-card {
+  margin: 0 0 20px;
+  padding: 16px;
+  border: 1px solid #B7E4FA;
+  border-radius: 16px;
+  background: #F4FBFF;
+  box-shadow: 0 3px 10px rgba(0, 158, 227, 0.06);
+}
+
+.dbc-payment-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.dbc-payment-icon {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #DFF4FF;
+  color: #009EE3;
+}
+
+.dbc-payment-heading h2 {
+  margin: 0;
+  color: #17334A;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.dbc-payment-heading p {
+  margin: 3px 0 0;
+  color: #61758A;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.dbc-payment-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.dbc-payment-controls label {
+  grid-column: 1 / -1;
+  color: #455A70;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.dbc-payment-controls select {
+  min-width: 0;
+  height: 42px;
+  padding: 0 10px;
+  border: 1px solid #B7D5E5;
+  border-radius: 10px;
+  background: #fff;
+  color: #29465B;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.dbc-payment-update-btn {
+  height: 42px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 10px;
+  background: #009EE3;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.dbc-payment-update-btn:hover { background: #008BC8; }
+.dbc-payment-update-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+
+.dbc-payment-loading,
+.dbc-payment-success,
+.dbc-payment-error {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 14px 0 0;
+  font-size: 12px;
+}
+
+.dbc-payment-loading { color: #61758A; }
+.dbc-payment-success { color: #16784A; }
+.dbc-payment-error { color: #C72B45; }
+
+@media (max-width: 430px) {
+  .dbc-payment-controls { grid-template-columns: 1fr; }
+  .dbc-payment-update-btn { width: 100%; }
+}
+
 /* ----- Delete-whole-page button ----- */
 .dbc-delete-page-btn {
   width: 100%;

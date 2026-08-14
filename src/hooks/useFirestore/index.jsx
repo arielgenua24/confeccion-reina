@@ -12,6 +12,7 @@ import {
   doc,
   addDoc,
   getDoc,
+  getDocFromServer,
   getDocs,
   increment,
   updateDoc,
@@ -59,6 +60,32 @@ const useFirestore = () => {
    
 
   }
+
+  // Payment status intentionally bypasses local Firestore cache. The missing
+  // document is considered unpaid so the payment notice is on by default.
+  const getPaymentStatus = async () => {
+    try {
+      const paymentRef = doc(db, 'metadata', 'paymentStatus');
+      const paymentSnap = await getDocFromServer(paymentRef);
+      return paymentSnap.exists() && paymentSnap.data().isPayed === true;
+    } catch (error) {
+      console.error('Error al obtener el estado de pago:', error);
+      throw error;
+    }
+  };
+
+  const updatePaymentStatus = async (isPayed) => {
+    try {
+      const paymentRef = doc(db, 'metadata', 'paymentStatus');
+      await setDoc(paymentRef, {
+        isPayed: isPayed === true,
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+    } catch (error) {
+      console.error('Error al actualizar el estado de pago:', error);
+      throw error;
+    }
+  };
 
   //OKAY, producto agregado
   const addProduct = async (name, price, details, stock, imageUrl = null) => {
@@ -1065,6 +1092,8 @@ const useFirestore = () => {
     forceDeleteOrder,
     getProductsByOrder,
     user, setUser, getAdmin,
+    getPaymentStatus,
+    updatePaymentStatus,
     searchProductsByNameOrCode
   };
 };

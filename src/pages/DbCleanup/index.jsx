@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Trash2, Lock, Loader2 } from 'lucide-react';
+import { Trash2, Lock, Loader2, CreditCard } from 'lucide-react';
 import useFirestoreContext from '../../hooks/useFirestoreContext';
 import {
   deletePendingOrder,
@@ -61,7 +61,12 @@ function formatCurrency(value) {
 }
 
 function DbCleanup() {
-  const { getOldOrdersPaginated, forceDeleteOrder } = useFirestoreContext();
+  const {
+    getOldOrdersPaginated,
+    forceDeleteOrder,
+    getPaymentStatus,
+    updatePaymentStatus,
+  } = useFirestoreContext();
 
   const [unlocked, setUnlocked] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
@@ -73,6 +78,12 @@ function DbCleanup() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const [isPaymentLoading, setIsPaymentLoading] = useState(false);
+  const [isPaymentSaving, setIsPaymentSaving] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
+  const [paymentSaved, setPaymentSaved] = useState(false);
 
   const [selected, setSelected] = useState(() => new Set());
   const selectionMode = selected.size > 0;
@@ -125,6 +136,39 @@ function DbCleanup() {
   useEffect(() => {
     if (unlocked) loadInitial();
   }, [unlocked, loadInitial]);
+
+  const loadPaymentStatus = useCallback(async () => {
+    setIsPaymentLoading(true);
+    setPaymentError('');
+    try {
+      const isPayed = await getPaymentStatus();
+      setPaymentStatus(isPayed);
+    } catch (error) {
+      console.error('Error cargando el estado de pago:', error);
+      setPaymentError('No se pudo consultar el estado de pago en Firestore.');
+    } finally {
+      setIsPaymentLoading(false);
+    }
+  }, [getPaymentStatus]);
+
+  useEffect(() => {
+    if (unlocked) loadPaymentStatus();
+  }, [unlocked, loadPaymentStatus]);
+
+  const savePaymentStatus = async () => {
+    setIsPaymentSaving(true);
+    setPaymentError('');
+    setPaymentSaved(false);
+    try {
+      await updatePaymentStatus(paymentStatus);
+      setPaymentSaved(true);
+    } catch (error) {
+      console.error('Error actualizando el estado de pago:', error);
+      setPaymentError('No se pudo actualizar el estado de pago. Intenta nuevamente.');
+    } finally {
+      setIsPaymentSaving(false);
+    }
+  };
 
   // ----- Deletion (no confirm: the 75-day filter is the only safeguard) -----
   const purgeLocalTraces = async (id) => {
@@ -262,6 +306,46 @@ function DbCleanup() {
           del más antiguo al más reciente. La eliminación es permanente y no devuelve stock.
         </p>
       </div>
+
+      <section className="dbc-payment-card" aria-labelledby="dbc-payment-title">
+        <div className="dbc-payment-heading">
+          <span className="dbc-payment-icon"><CreditCard size={20} /></span>
+          <div>
+            <h2 id="dbc-payment-title">Estado de pago del sistema</h2>
+            <p>Este valor se consulta directamente en Firestore y controla el aviso de pago de la app.</p>
+          </div>
+        </div>
+
+        {isPaymentLoading ? (
+          <div className="dbc-payment-loading"><Loader2 size={17} className="dbc-spin" /> Consultando estado…</div>
+        ) : (
+          <div className="dbc-payment-controls">
+            <label htmlFor="payment-status">Estado actual</label>
+            <select
+              id="payment-status"
+              value={paymentStatus ? 'true' : 'false'}
+              onChange={(event) => {
+                setPaymentStatus(event.target.value === 'true');
+                setPaymentSaved(false);
+              }}
+              disabled={isPaymentSaving}
+            >
+              <option value="false">Pendiente de pago — mostrar modal</option>
+              <option value="true">Pago recibido — ocultar modal</option>
+            </select>
+            <button
+              type="button"
+              className="dbc-payment-update-btn"
+              onClick={savePaymentStatus}
+              disabled={isPaymentSaving}
+            >
+              {isPaymentSaving ? 'Actualizando…' : 'Actualizar estado'}
+            </button>
+          </div>
+        )}
+        {paymentSaved && <p className="dbc-payment-success" role="status">Estado actualizado. La app se sincroniza automáticamente.</p>}
+        {paymentError && <p className="dbc-payment-error" role="alert">{paymentError}</p>}
+      </section>
 
       {!isLoading && orders.length > 0 && (
         <button

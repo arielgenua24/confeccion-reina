@@ -9,6 +9,7 @@ import QrSearchHandler from './components/QrSearchHandler';
 import AuthRoute from './hooks/AuthRoute';
 import LazyLoadErrorBoundary from './components/LazyLoadErrorBoundary';
 import LazyLoadingFallback from './components/LazyLoadingFallback';
+import PaymentStatusModal from './components/PaymentStatusModal';
 
 import { FirestoreProvider } from './context/firestoreContext';
 import { OrderProvider } from './context/OrderContext';
@@ -107,6 +108,7 @@ export default function App() {
         <OrderProvider>
           <BackNav />
           <AuthRoute>
+            <PaymentStatusModal />
             <LazyLoadErrorBoundary>
               <Suspense fallback={<LazyLoadingFallback />}>
                 <AppRouter />
