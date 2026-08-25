@@ -4,16 +4,23 @@ import LoadingComponent from '../../components/Loading'
 import ImageModal from '../../components/ImageModal'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ArrowRight } from 'lucide-react'
 import { getMonthWeeks, getMonthNameEs } from '../../utils/dateUtils'
 import kellyAudio from '../../../../audio/kelly.mp3'
 import CachedImage from '../../components/CachedImage'
 import ReinaInsights from '../../components/ReinaInsights'
+import OrderDateCalendar from '../../components/OrderDateCalendar'
+import { calculateOrderTotal, getOrderProductsForEarnings } from '../../utils/earnings'
 import './styles.css'
+
+const DATE_EARNINGS_TITLE = 'Revisar ingresos por un día específico'
 
 function Inbox() {
   const [orders, setOrders] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [modalImage, setModalImage] = useState(null)
+  const [showEarningsCalendar, setShowEarningsCalendar] = useState(false)
+  const [typedEarningsTitle, setTypedEarningsTitle] = useState('')
   const { getOrdersByDateRange, getProductsByOrder } = useFirestoreContext()
   const { isAdmin } = useIsAdmin()
   const navigate = useNavigate()
@@ -32,6 +39,7 @@ function Inbox() {
   const mm = String(now.getMonth() + 1).padStart(2, '0')
 
   const audioRef = useRef(null)
+  const hasStartedTitleAnimation = useRef(false)
   const playAudio = () => {
     if (!audioRef.current) {
       audioRef.current = new Audio(kellyAudio)
@@ -47,11 +55,8 @@ function Inbox() {
         const ordersList = await getOrdersByDateRange(today)
         const ordersWithDetails = await Promise.all(
           ordersList.map(async (order) => {
-            const products = await getProductsByOrder(order.id)
-            const total = products.reduce((acc, item) => {
-              const price = parseFloat(item.productData?.price) || 0
-              return acc + (item.stock * price)
-            }, 0)
+            const products = await getOrderProductsForEarnings(order, getProductsByOrder)
+            const total = calculateOrderTotal(products)
             return { ...order, total, products }
           })
         )
@@ -63,6 +68,29 @@ function Inbox() {
     }
     fetchOrders()
   }, [getOrdersByDateRange, getProductsByOrder, today])
+
+  useEffect(() => {
+    if (isLoading || hasStartedTitleAnimation.current) return undefined
+
+    hasStartedTitleAnimation.current = true
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (prefersReducedMotion) {
+      setTypedEarningsTitle(DATE_EARNINGS_TITLE)
+      return undefined
+    }
+
+    let characterIndex = 0
+    const typingTimer = window.setInterval(() => {
+      characterIndex += 1
+      setTypedEarningsTitle(DATE_EARNINGS_TITLE.slice(0, characterIndex))
+
+      if (characterIndex >= DATE_EARNINGS_TITLE.length) {
+        window.clearInterval(typingTimer)
+      }
+    }, 55)
+
+    return () => window.clearInterval(typingTimer)
+  }, [isLoading])
 
   const dailyEarnings = useMemo(() => {
     return orders.reduce((sum, order) => sum + order.total, 0)
@@ -89,6 +117,14 @@ function Inbox() {
 
   const navigateToEarnings = (period) => navigate(`/inbox/earnings/${period}`)
 
+  const openEarningsForDate = (date) => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    setShowEarningsCalendar(false)
+    navigate(`/inbox/earnings/date?date=${year}-${month}-${day}`)
+  }
+
   return (
     <div className="apple-inbox">
       <LoadingComponent isLoading={isLoading} />
@@ -99,6 +135,32 @@ function Inbox() {
           <header className="apple-header">
             <h1 className="apple-greeting">Hola! lista para<br />revisar tus ingresos?</h1>
           </header>
+
+          <button
+            type="button"
+            className="apple-date-earnings-card"
+            onClick={() => setShowEarningsCalendar(true)}
+          >
+            <span className="apple-date-earnings-title" aria-label={DATE_EARNINGS_TITLE}>
+              <span aria-hidden="true">{typedEarningsTitle}</span>
+              {typedEarningsTitle.length < DATE_EARNINGS_TITLE.length && (
+                <span className="apple-date-earnings-cursor" aria-hidden="true" />
+              )}
+            </span>
+            <span className="apple-date-earnings-arrow" aria-hidden="true">
+              <ArrowRight size={30} strokeWidth={2.5} />
+            </span>
+          </button>
+
+          {showEarningsCalendar && (
+            <OrderDateCalendar
+              singleDay
+              title="¿Qué día quieres revisar?"
+              confirmLabel="Ver ingresos"
+              onConfirm={openEarningsForDate}
+              onCancel={() => setShowEarningsCalendar(false)}
+            />
+          )}
 
           {/* Earnings cards */}
           <div className="apple-cards-scroll">

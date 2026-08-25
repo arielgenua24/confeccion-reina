@@ -1,21 +1,33 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import useFirestoreContext from '../../hooks/useFirestoreContext'
 import LoadingComponent from '../../components/Loading'
 import ImageModal from '../../components/ImageModal'
 import CachedImage from '../../components/CachedImage'
+import { calculateOrderTotal, getOrderProductsForEarnings } from '../../utils/earnings'
 import './EarningsDetails.css'
 
 function EarningsDetails() {
   const { period } = useParams()
   const navigate = useNavigate()
-  const { getOrdersByDateRange, getProductsByOrder } = useFirestoreContext()
+  const [searchParams] = useSearchParams()
+  const { getOrdersByDateRange, getOrdersByDayPrefix, getProductsByOrder } = useFirestoreContext()
 
   const [orders, setOrders] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedDay, setSelectedDay] = useState(null)
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [modalImage, setModalImage] = useState(null)
+
+  const selectedDate = useMemo(() => {
+    if (period !== 'date') return null
+    const value = searchParams.get('date')
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || '')
+    if (!match) return null
+
+    const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+    return Number.isNaN(date.getTime()) ? null : date
+  }, [period, searchParams])
 
   // Calculate the start date based on the period
   const startDate = useMemo(() => {
@@ -41,14 +53,13 @@ function EarningsDetails() {
     const fetchOrders = async () => {
       setIsLoading(true)
       try {
-        const ordersList = await getOrdersByDateRange(startDate)
+        const ordersList = period === 'date' && selectedDate
+          ? await getOrdersByDayPrefix(selectedDate)
+          : await getOrdersByDateRange(startDate)
         const ordersWithDetails = await Promise.all(
           ordersList.map(async (order) => {
-            const products = await getProductsByOrder(order.id)
-            const total = products.reduce((acc, item) => {
-              const price = parseFloat(item.productData?.price) || 0
-              return acc + (item.stock * price)
-            }, 0)
+            const products = await getOrderProductsForEarnings(order, getProductsByOrder)
+            const total = calculateOrderTotal(products)
             return { ...order, total, products }
           })
         )
@@ -60,7 +71,7 @@ function EarningsDetails() {
     }
 
     fetchOrders()
-  }, [getOrdersByDateRange, getProductsByOrder, startDate])
+  }, [getOrdersByDateRange, getOrdersByDayPrefix, getProductsByOrder, period, selectedDate, startDate])
 
   // Helper: Get Date Object
   const getOrderDate = (order) => {
@@ -92,7 +103,7 @@ function EarningsDetails() {
 
   // Group by Day for Weekly/Monthly
   const groupedByDay = useMemo(() => {
-    if (period === 'daily') return null
+    if (period === 'daily' || period === 'date') return null
 
     const groups = {}
     orders.forEach(order => {
@@ -133,6 +144,8 @@ function EarningsDetails() {
 
   const topProductsLabel = period === 'daily'
     ? '5 más vendidos de hoy'
+    : period === 'date'
+      ? '5 más vendidos del día'
     : period === 'weekly'
       ? 'Top 5 más vendidos de la semana'
       : 'Top 5 más vendidos del mes'
@@ -271,14 +284,18 @@ function EarningsDetails() {
     }
 
     // 3. Main View: Daily (Orders)
-    if (period === 'daily') {
+    if (period === 'daily' || period === 'date') {
+      const isSpecificDate = period === 'date'
+      const dayTitle = isSpecificDate && selectedDate
+        ? formatDate(selectedDate)
+        : 'Ventas de Hoy'
       return (
         <div className="ed-main-view">
           <div className="ed-header-row">
             <button className="ed-back-btn" onClick={() => navigate('/inbox')}>
               ← Inbox
             </button>
-            <h2 className="ed-title">Ventas de Hoy</h2>
+            <h2 className="ed-title">{dayTitle}</h2>
           </div>
           <div className="ed-total-banner">
             <span className="ed-banner-label">Total del día</span>
@@ -296,7 +313,9 @@ function EarningsDetails() {
                 <span className="ed-chevron">›</span>
               </div>
             )) : (
-              <div className="ed-empty">No hay ventas hoy</div>
+              <div className="ed-empty">
+                {isSpecificDate ? 'No hay ventas en esta fecha' : 'No hay ventas hoy'}
+              </div>
             )}
           </div>
           {renderTopProducts()}

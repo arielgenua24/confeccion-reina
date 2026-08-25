@@ -18,6 +18,8 @@ import { es } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import "./styles.css";
 
+/* eslint-disable react/prop-types */
+
 const WEEKDAYS = ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sá"];
 
 /**
@@ -32,8 +34,14 @@ const WEEKDAYS = ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sá"];
  *
  * onConfirm(startDate, endDate) is called with both bounds (equal for one day).
  */
-// eslint-disable-next-line react/prop-types
-function OrderDateCalendar({ onConfirm, onCancel, maxRangeDays = 15 }) {
+function OrderDateCalendar({
+  onConfirm,
+  onCancel,
+  maxRangeDays = 15,
+  singleDay = false,
+  title = '¿De qué fecha es la orden?',
+  confirmLabel = 'Buscar',
+}) {
   const today = new Date();
   const [viewMonth, setViewMonth] = useState(startOfMonth(today));
   const [rangeStart, setRangeStart] = useState(null);
@@ -48,6 +56,12 @@ function OrderDateCalendar({ onConfirm, onCancel, maxRangeDays = 15 }) {
 
   const handleDayClick = (day) => {
     setLimitWarning(false);
+
+    if (singleDay) {
+      setRangeStart(day);
+      setRangeEnd(day);
+      return;
+    }
 
     // Fresh selection (nothing chosen yet, or a full range already chosen).
     if (!rangeStart || (rangeStart && rangeEnd)) {
@@ -111,7 +125,7 @@ function OrderDateCalendar({ onConfirm, onCancel, maxRangeDays = 15 }) {
     <div className="odc-overlay" onClick={onCancel}>
       <div className="odc-card" onClick={(e) => e.stopPropagation()}>
         <div className="odc-header">
-          <span className="odc-title">¿De qué fecha es la orden?</span>
+          <span className="odc-title">{title}</span>
           <button className="odc-close" aria-label="Cerrar" onClick={onCancel}>
             <X size={20} />
           </button>
@@ -190,7 +204,7 @@ function OrderDateCalendar({ onConfirm, onCancel, maxRangeDays = 15 }) {
               disabled={!rangeStart}
               onClick={confirm}
             >
-              Buscar
+              {confirmLabel}
             </button>
           </div>
         </div>
